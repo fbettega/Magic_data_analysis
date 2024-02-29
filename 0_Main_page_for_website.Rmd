@@ -1,0 +1,25 @@
+---
+title: ""
+output: 
+  html_document:
+date: ""
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout") })
+---
+
+
+
+
+# Outpout
+## [new_card](/result/1_new_card.html)
+Contains an analysis of the cards limited to certain recent sets to assess the impact of the new cards on the archetypes.
+
+## [presence_archetype](/result/2_presence_archetype.html)
+Gives a graphical representation of the distribution in terms of presence of the different modern archetypes over time.
+
+
+## [Card_win_rate_table](/result/3_Card_win_rate_table.html)
+Presents the win rate of each card in each archetype in the form of multiple tables.
+
+## [matrix_WR](/result/4_matrix_WR.html)
+Matrix of win rates for different modern archetypes.
