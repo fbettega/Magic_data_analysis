@@ -1,0 +1,12 @@
+archive/
+MTGOArchetypeParser_20231227/
+.Rproj.user
+.Rhistory
+.RData
+.Ruserdata
+k_centroid.R
+script.R
+Source_mtg_new_card.R
+temp_browser.R
+Test_classif.R
+Win_rate.R
