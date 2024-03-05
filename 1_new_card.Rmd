@@ -30,9 +30,22 @@ source("S2_Source_mtg_new_card.R")
 # Fonction that count cards in given arhcetype 
 
 Count_cards_in_decklist <- function(df,Name_of_card_of_interest,colname_deck_list){
+  
+  if(colname_deck_list == "Mainboard"){
+    expected_min_size <- 60 
+    } else {
+    expected_min_size <- 0 
+    }
+  
   df_new_card_base <- df %>%
     unnest_longer(!!colname_deck_list) %>%
     unnest_wider(!!colname_deck_list,names_sep = "_") %>%
+      group_by(id) %>%
+    # a filtrer mes uniquement pour le main deck
+    mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list,"_Count")))) %>%
+    filter(Number_of_cards >= expected_min_size) %>% 
+
+    
     filter(!!rlang::sym(paste0(colname_deck_list,"_CardName")) %in% Name_of_card_of_interest) %>% 
     mutate(!!rlang::sym(paste0(colname_deck_list,"_CardName")) := Card_agregueur(
       !!rlang::sym(paste0(colname_deck_list,"_CardName")),
@@ -106,12 +119,29 @@ Count_and_winrates_cards_in_decklist <- function(df,Name_of_card_of_interest,col
     )
   # browser()
   
+    if(colname_deck_list == "Mainboard"){
+    expected_min_size <- 60 
+    } else {
+    expected_min_size <- 0 
+    }
+  
+
+
+  
+  
+  
+  
+  
   df_new_card_base <- df %>%
     filter(!is.na(Wins)) %>% 
     filter(!is.null(!!colname_deck_list)) %>% 
     filter(Archetype_count > filter_archetype_count) %>%
     unnest_longer(!!colname_deck_list) %>%
     unnest_wider(!!colname_deck_list,names_sep = "_") %>%
+    group_by(id) %>%
+    # a filtrer mes uniquement pour le main deck
+    mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list,"_Count")))) %>%
+    filter(Number_of_cards >= expected_min_size) %>% 
     filter(!!rlang::sym(paste0(colname_deck_list,"_CardName")) %in% Name_of_card_of_interest) %>%  
     mutate(!!rlang::sym(paste0(colname_deck_list,"_CardName")) := Card_agregueur(
       !!rlang::sym(paste0(colname_deck_list,"_CardName")),
@@ -369,6 +399,8 @@ df_new_card_main_base <- df_export_meta_filter %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_") %>%
   filter(Mainboard_CardName %in% card_of_interest$name)
+
+
 ```
 
 

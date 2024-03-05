@@ -37,7 +37,7 @@ fichiers_rmd <- c(
                   )
 
 
-rmarkdown::render(input = "0_Main_page_for_website.Rmd",
+rmarkdown::render(input = "index.Rmd",
                   envir =  new.env(),
                   output_dir = "outpout/")
 

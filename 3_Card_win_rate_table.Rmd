@@ -89,6 +89,13 @@ Count_and_winrates_cards_in_decklist_total <- function(df,group_var,colname_deck
     select_group_var <- c(group_var,"Archetype")
   }else{select_group_var <- group_var }
   
+  
+    if(colname_deck_list == "Mainboard"){
+    expected_min_size <- 60 
+    } else {
+    expected_min_size <- 0 
+    }
+  
   winrate_by_archetype <- df %>%
     group_by(across(all_of(select_group_var))) %>% 
     summarise(Wins_total = sum(Wins),
@@ -98,10 +105,16 @@ Count_and_winrates_cards_in_decklist_total <- function(df,group_var,colname_deck
     )
   
   
-
+  
+  
+  
   df_new_card_base <- df %>%
     unnest_longer(!!colname_deck_list) %>%
     unnest_wider(!!colname_deck_list,names_sep = "_") %>%
+    group_by(id) %>%
+    # a filtrer mes uniquement pour le main deck
+    mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list,"_Count")))) %>%
+    filter(Number_of_cards >= expected_min_size) %>%
     mutate(!!rlang::sym(paste0(colname_deck_list,"_CardName")) := Card_agregueur(
       !!rlang::sym(paste0(colname_deck_list,"_CardName")),
       fetch = TRUE,
@@ -424,7 +437,7 @@ selection_content[0].innerHTML = content_str;
 
 
 ```{r}
-win_rate_main_board <- Count_and_winrates_cards_in_decklist_total(
+win_rate_main_boarda <- Count_and_winrates_cards_in_decklist_total(
   df_Archetype,
   "Archetype",
   "Mainboard"
@@ -446,9 +459,9 @@ win_rate_side_board <- Count_and_winrates_cards_in_decklist_total(
 
 
 # Archetype
-## Mainboard_card
+## Mainboard cards
 
-### Deck base 
+### ### Base cards Mainboard  
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
@@ -485,7 +498,7 @@ options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
 
 
 
-### Variable Cards 
+### Variable Cards Side
 
 
 ```{r}
@@ -519,7 +532,7 @@ onfly_filter_js)
 
 ## sideboard_card
 
-### Side base 
+### ### Base cards Side  
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
@@ -599,9 +612,9 @@ win_rate_side_board_based_arch <- Count_and_winrates_cards_in_decklist_total(
 
 
 
-## Mainboard_card
+## Mainboard cards
 
-### Deck base 
+### Base cards Mainboard
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
@@ -657,10 +670,10 @@ onfly_filter_js)) ,
 
 
 
-## sideboard_card
+## sideboard cards
 
 
-### Deck base 
+### Base cards
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 

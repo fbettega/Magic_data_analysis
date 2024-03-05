@@ -45,6 +45,13 @@ Réfléchir pour les couleurs et meilleurs distances
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
 
 Presence_df_base <- loaded_base_data %>%
+  mutate(
+    Date = as_datetime(Date),
+    Week =      as.integer(ceiling(difftime(Sys.Date(),
+               Date,
+               units = "weeks"
+      )))
+    ) %>% 
   filter(Tournament != "Modern League") %>%
   group_by(Archetype) %>%
   mutate(
@@ -83,33 +90,25 @@ colors_scales_presence <- scheme$hex(
 
 one_week_inline <- Presence_df_base_all_data %>%
     filter(
-      difftime(Sys.Date(),
-               Date,
-               units = "weeks"
-      ) < 2
+      Week < 2
     )
 
 two_week_inline <- Presence_df_base_all_data %>%
     filter(
-      difftime(Sys.Date(),
-               Date,
-               units = "weeks"
-      ) < 3
+      Week < 3
     )
 
 
 one_month_inline <- Presence_df_base_all_data %>%
     filter(
-      difftime(Sys.Date(),
-               Date,
-               units = "weeks"
-      ) < 5
+      Week < 5
     )
 ```
 
 
 
 ```{r}
+
 spaghetti_plot_df <- Presence_df_base %>% 
   arrange(desc(Archetype_count)) %>%
     mutate(
@@ -124,7 +123,7 @@ spaghetti_plot_df <- Presence_df_base %>%
       )
 ) %>% 
   
-  select(Week,Archetype,Base_Archetype) %>% 
+  select(Week,Meta,Archetype,Base_Archetype) %>% 
   # add_count(Week,Archetype,
   #           name = "Count_arch") %>% 
   group_by(Week,Archetype) %>% 
