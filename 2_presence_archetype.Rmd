@@ -31,7 +31,7 @@ loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
 
 # Manque ajouter du texte après les % pour la variation
-
+conflicted::conflicts_prefer(dplyr::filter)
 ```
 
 Réfléchir pour les couleurs et meilleurs distances

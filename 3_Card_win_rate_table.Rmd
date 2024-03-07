@@ -24,7 +24,7 @@ library(htmltools)
 
 source("S2_Source_mtg_new_card.R")
 
-
+conflicted::conflicts_prefer(dplyr::filter)
 # All table include tooltip column description  
 # Reflechir a carte de side vs maccro archetype
 ```

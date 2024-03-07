@@ -11,18 +11,33 @@ run_command_from_dir <- function(cmd,dir_cmd){
   # Return
   NULL
 }
+# conflicted::conflicts_prefer(dplyr::filter)
+
+
+# library(git2r)
+# conflicted::conflict_prefer("pull", "dplyr")
+# 
+#  git2r::config( global = TRUE, user.name = "fbettega", user.email = "francois.bettega@gmail.com")
+# 
+# a <- git2r::pull(repo = "MTGOArchetypeParser_20231227/MTGODecklistCache/")
+# 
+# a <- git2r::pull(repo = "MTGOArchetypeParser_20231227/MTGOFormatData/")
 
 
 
-# git2r::config( global = TRUE, user.name = "fbettega", user.email = "francois.bettega@gmail.com")
- # git2r::pull(repo = "MTGOArchetypeParser_20231227/MTGODecklistCache/")
+
+
+
 
 
 run_command_from_dir("./MTGOArchetypeParser.App.exe json detect","MTGOArchetypeParser_20231227/")
 
 
 
-# run_command_from_dir("git pull","MTGOArchetypeParser_20231227/MTGODecklistCache/")
+
+
+
+#run_command_from_dir("git pull","MTGOArchetypeParser_20231227/MTGODecklistCache/")
 
 
 

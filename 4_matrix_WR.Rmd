@@ -26,7 +26,8 @@ library(ggfittext)
   # css: TOC.css
 
 source("S2_Source_mtg_new_card.R")
-
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(plotly::layout)
 loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
 # Je ne compte pas faire de matrix pour les SUB archetype pour le moment Car les sample sizes sont trop souvent ridicules a réfléchir
@@ -441,7 +442,7 @@ plot_win_rate_mat <- function(
     ggplotly(tooltip = c("text"),
              height = (480*size_multiplier),width = (640*size_multiplier)
     ) %>% 
-    layout(margin = marges)
+    plotly::layout(margin = marges)
   
   
   
@@ -653,7 +654,7 @@ plot_archetype_spaghetti <- (ggplot(
   ) %>% 
    ggplotly(tooltip = c("text"),height = (480*2.25),width = (640*4) 
             )  %>%
-  layout(legend = list(
+  plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
     title = list(text = "")
