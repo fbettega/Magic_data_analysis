@@ -41,24 +41,21 @@ Réfléchir pour les couleurs et meilleurs distances
 
 
 ```{r}
+
+
+
 # Generate different color scheme for close archetype
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
 
 Presence_df_base <- loaded_base_data %>%
-  mutate(
-    Date = as_datetime(Date),
-    Week =      as.integer(ceiling(difftime(Sys.Date(),
-               Date,
-               units = "weeks"
-      )))
-    ) %>% 
   filter(Tournament != "Modern League") %>%
   group_by(Archetype) %>%
   mutate(
     Archetype_count = n()
   ) %>%
   arrange(Archetype_count) %>%
-  filter(Archetype_count > 50)
+  filter(Archetype_count > 50) %>%
+  ungroup()  
 
 
 Presence_df_base_all_data <- Presence_df_base %>%
@@ -90,20 +87,21 @@ colors_scales_presence <- scheme$hex(
 
 one_week_inline <- Presence_df_base_all_data %>%
     filter(
-      Week < 2
+      Week > (max(Week) - 2)
     )
 
 two_week_inline <- Presence_df_base_all_data %>%
     filter(
-      Week < 3
+      Week > (max(Week) - 3)
     )
 
 
 one_month_inline <- Presence_df_base_all_data %>%
     filter(
-      Week < 5
+      Week > (max(Week) - 5)
     )
 ```
+
 
 
 
@@ -279,12 +277,10 @@ DF_presence_fun <- function(
   
   
   Presence_df_base <- df_base %>%
-    filter(
-      difftime(Sys.Date(),
-               Date,
-               units = "weeks"
-      ) < time_limit
-    ) %>%
+    ungroup() %>% 
+      filter(
+      Week > (max(Week) - time_limit)
+    )  %>%
     group_by(Archetype) %>%
     mutate(
       Archetype_count = n(),

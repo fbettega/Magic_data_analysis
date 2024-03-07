@@ -1,5 +1,47 @@
 
-
+onfly_filter_js <- c( r"{
+function onlyUnique(value, index, self) {
+return self.indexOf(value) === index;
+};
+var table_header = table.table().header();
+var column_nodes = $(table_header).find('tr:nth-child(2) > td');
+var input_nodes = $(column_nodes).find('input.form-control');
+for (let i = 0; i < input_nodes.length; i++){
+data_type_attr = $(input_nodes[i]).closest('td').attr('data-type');
+if (data_type_attr == 'factor'){
+$(input_nodes[i]).on('input propertychange', function(){
+if (typeof unique_values !== 'undefined'){
+selection_content = $(input_nodes[i]).closest('td').find('div.selectize-dropdown-content');
+var content_str = '';
+for (let j = 0; j < unique_values.length; j++){
+content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
+}
+selection_content[0].innerHTML = content_str;
+}
+})
+}
+}
+column_nodes.on('click', function(){
+setTimeout(function(){
+for (let i = 0; i < column_nodes.length; i++){
+data_type_attr = $(column_nodes[i]).attr('data-type');
+if (data_type_attr == 'factor'){
+selection_div = $(column_nodes[i]).find('div.selectize-input');
+if($(selection_div).hasClass('dropdown-active')){
+values = table.column(i, {pages: 'all', search: 'applied'}).data();
+unique_values = Array.from(values.filter(onlyUnique));
+selection_content = $(column_nodes[i]).find('div.selectize-dropdown-content');
+var content_str = '';
+for (let j = 0; j < unique_values.length; j++){
+content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
+}
+selection_content[0].innerHTML = content_str;
+}
+}
+}
+}, 50);
+})
+}")
 
 ################################################################################
 # Format table résult removing space and shorten name make some variables factor
@@ -464,29 +506,70 @@ Card_agregueur <- function(
 
 `%notin%` <- Negate(`%in%`)
 
-CI_prop <- function(p,n,alpha =0.95){
-  ifelse(n < 5,
-         0,
-         (qt((1 - alpha)/2,n-1) * sqrt((p*(1-p))/n))
-         )
+CI_2_prop <- function(p1,p2,n1,n2,alpha =0.95){
+  Wins1 = round(p1*n1,0)
+  Wins2 = round(p2*n2,0)
+  # using agresti-coull CI
+  z = qnorm((1 - alpha)/2)#qt((1 - alpha)/2,n-1)
+  z_square = z^2
+  n1_tide = n1 + z_square
+  n2_tide = n2 + z_square
+  
+  x1_tide = Wins1 + 0.5 * z_square
+  p1_tide = x1_tide/n1_tide   
+  x2_tide = Wins2 + 0.5 * z_square
+  p2_tide = x2_tide/n2_tide
+  
+  
+  q1 <- (1-p1_tide)
+  q2 <- (1-p2_tide)
+  
+  
+  upper_bound <- (p1_tide - p2_tide) - z * sqrt(
+    (p1_tide*(1-p1_tide)/n1_tide) +
+      (p2_tide*(1-p2_tide)/n2_tide)
+  )
+  
+  result <- ifelse(
+    (n1 < 5 | n2 <5),
+    0,
+    # je retire le vai win rate identique a celui du tableaux afin de conserver seulement le CI
+    p1 - p2 - upper_bound
+    
+  )
+  return(
+    result
+  )
 }
 
 
-CI_2_prop <- function(p1,p2,n1,n2,alpha =0.95){
-  q1 <- (1-p1)
-  q2 <- (1-p2)
+
+
+
+CI_prop <- function(p,n,alpha =0.95){
+  # using agresti-coull CI
+  Wins = round(p*n,0)
   
-  ifelse(
-    (n1 < 5 | n2 <5),
-    0,
-    (qt((1 - alpha)/2,(n1+n2)-1) * 
-       sqrt(
-         ((p1*q1)/n1)+
-           ((p2*q2)/n2)
-       )
-    )
-    
-    )
+  z = qnorm((1 - alpha)/2)#qt((1 - alpha)/2,n-1)
+  z_square = z^2
+  n_tide = n + z_square
+  x_tide = Wins + 0.5 * z_square
+  p_tide = x_tide/n_tide
+  upper_bound <- p_tide - z * sqrt(
+    p_tide*(1-p_tide)/n_tide
+  )
+  
+  
+  result <- ifelse(n < 5,
+                   0,
+                   # je retire le vai win rate identique a celui du tableaux afin de conserver seulement le CI
+                   p - upper_bound
+  )
+  return(
+    result
+    # upper_bound
+  )
+  
   
 }
 

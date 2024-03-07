@@ -24,7 +24,17 @@ df_export <-  json_parsing %>%
   group_by(Archetype) %>% 
   mutate(
     Archetype_count = n()
-  ) 
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    Date = as_datetime(Date),
+    Week =      as.integer(ceiling(
+      difftime(
+        Date,
+        (min(Date) - as.difftime(1, unit="days")),
+        units = "weeks"
+      )))
+  )
 
 
 write_rds(df_export,"data/data_meta_en_cours.rds")

@@ -437,7 +437,7 @@ selection_content[0].innerHTML = content_str;
 
 
 ```{r}
-win_rate_main_boarda <- Count_and_winrates_cards_in_decklist_total(
+win_rate_main_board <- Count_and_winrates_cards_in_decklist_total(
   df_Archetype,
   "Archetype",
   "Mainboard"
@@ -461,7 +461,7 @@ win_rate_side_board <- Count_and_winrates_cards_in_decklist_total(
 # Archetype
 ## Mainboard cards
 
-### ### Base cards Mainboard  
+### Base cards Mainboard  
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
@@ -484,7 +484,11 @@ for (var i = 0; i < tips.length; i++) {
 onfly_filter_js
 )
 ),
-options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
+options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Base cards in Mainboard'
+  )
 )
 
 
@@ -519,7 +523,11 @@ for (var i = 0; i < tips.length; i++) {
 onfly_filter_js)
 ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
+    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Mainboard cards'
+  )
 )
 
 
@@ -532,7 +540,7 @@ onfly_filter_js)
 
 ## sideboard_card
 
-### ### Base cards Side  
+### Base cards Side  
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
@@ -555,7 +563,11 @@ for (var i = 0; i < tips.length; i++) {
 onfly_filter_js)
 ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
+    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Sideboard base cards'
+  )
 )
 
 
@@ -583,7 +595,11 @@ for (var i = 0; i < tips.length; i++) {
 onfly_filter_js)
 ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
+    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Sideboard cards'
+  )
 )
 
 ```
@@ -637,7 +653,11 @@ for (var i = 0; i < tips.length; i++) {
 onfly_filter_js)
 ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
+    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Mainboards base cards'
+  )
 )
 
 ```
@@ -663,7 +683,11 @@ for (var i = 0; i < tips.length; i++) {
 ",
 onfly_filter_js)) ,
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
+    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Mainboard cards'
+  )
 )
 
 ```
@@ -695,7 +719,11 @@ for (var i = 0; i < tips.length; i++) {
 ",
 onfly_filter_js)),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25)
+    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Sideboard base cards'
+  )
 )
 
 
@@ -728,7 +756,11 @@ onfly_filter_js)),
   filter = "top", rownames = FALSE,
   options = list(dom = 'ltipr',
                 # autoWidth = TRUE,
-                 pageLength = 25)
+                 pageLength = 25),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Sideboard cards'
+  )
 )
 
 ```

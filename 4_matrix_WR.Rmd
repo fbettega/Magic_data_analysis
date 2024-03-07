@@ -68,10 +68,6 @@ Other_Archetype <- df_base %>%
   filter(Archetype_count < Archetype_cut_of | Archetype == "Unknown") %>% 
   pull(Archetype) %>% unique()
 
-  
-
-
-
 
 df_base_all_data <- df_base %>%
     mutate(
@@ -96,7 +92,6 @@ df_base_all_data <- df_base %>%
         level = unique(.$Base_Archetype)
       )
   )
-
 ```
 
 
@@ -225,7 +220,7 @@ plot_win_rate_mat <- function(
     b = 50, # marge basse (par exemple)
     t = 50  # marge haute (par exemple)
   )
-
+  
   
   Df_winrate_format_filter_base <- Df_winrate_format %>% 
     filter(number_of_games > 0) %>% 
@@ -328,6 +323,7 @@ plot_win_rate_mat <- function(
     ) %>% 
     ungroup() 
   
+
   
   label_x <- paste0(
     "<span style='font-size:",17-size_multiplier,"px;'> <b>",
@@ -336,10 +332,11 @@ plot_win_rate_mat <- function(
       unique(),
     "</b> </span>",
     "<br /> n : ", Df_winrate_format_filter  %>%
+      select(Archetype,all_of(paste0("Archetype_presence_",group_column))) %>% 
+      distinct() %>% 
       pull(
         !!rlang::sym(paste0("Archetype_presence_",group_column))
-      ) %>% 
-      unique(),
+      ),
     "<br /> ",Df_winrate_format_filter  %>%
       pull(
         !!rlang::sym(paste0("Archetype_CI_WR_format_",group_column))
@@ -355,10 +352,11 @@ plot_win_rate_mat <- function(
       unique(),
     "</b> </span>",
     "<br /> n : ", Df_winrate_format_filter  %>%
+      select(Archetype,all_of(paste0("Archetype_presence_",group_column))) %>% 
+      distinct() %>% 
       pull(
         !!rlang::sym(paste0("Archetype_presence_",group_column))
-      ) %>%
-      unique(),
+      ) ,
     "<br /> ",Df_winrate_format_filter  %>%
       pull(
         !!rlang::sym(paste0("Archetype_CI_WR_format_",group_column))
@@ -366,12 +364,7 @@ plot_win_rate_mat <- function(
       unique()
   )
   
-  
-  
-  
-  
-  
-  
+
   
   plot_en_cours <- (
     ggplot(Df_winrate_format_filter,
@@ -435,7 +428,7 @@ plot_win_rate_mat <- function(
                 fill="transparent",
                 colour="black", 
                 size=1)  +
- 
+      
       theme(
         axis.title=element_blank(),
         legend.position='none',
@@ -520,3 +513,245 @@ plot_win_rate_mat(Df_win_rate_matrix_format,"matches",
                   simplify_tab_ratio = 0.5,
                   size_multiplier=3)
 ```
+
+
+
+
+
+
+##  Best deck 
+
+Tentative de multiplier la matrice de win rate (WR ou borne inférieure du CI) par la présence hebdomadaire des decks afin de calculer diviser par le nombre total de decks afin de calculer un expected winrate moyen pour un field donnée. 
+
+
+Ne sont considéré que les decks avec un CI
+```{r}
+Df_Expected_number_of_win_by_week <- df_base_all_data %>%
+  group_by(Archetype,Week) %>% 
+  summarise(n = n(),.groups = "drop") %>%
+  rename(Matchups_OpponentArchetype = Archetype) %>% 
+  full_join(Df_win_rate_matrix_summarise %>% 
+              filter(CI_WR_matches != 0,
+                     !is.na(CI_WR_matches)) %>% 
+              mutate(lower_ci_bound = WR_matches + CI_WR_matches) %>% 
+              select(
+                Archetype,WR_matches,
+                lower_ci_bound ,
+                     Matchups_OpponentArchetype), 
+            by = c("Matchups_OpponentArchetype")) %>% 
+  mutate(
+    lower_ci_bounda = replace(
+      replace(lower_ci_bound, lower_ci_bound < 0, 0),
+      lower_ci_bound > 1, 1),
+    lower_ci_bound = ifelse(Matchups_OpponentArchetype == Archetype,
+                            0.5,lower_ci_bound),
+    expected_win_WR = WR_matches * n,
+    expected_win_lower_ci = lower_ci_bound * n
+    ) %>% 
+   drop_na() %>%
+  ungroup()
+
+
+
+Df_expected_of_week_sum <- rbind(
+  Df_Expected_number_of_win_by_week %>% 
+    mutate(Week = as.character(Week)) %>% 
+    group_by(Archetype,Week) %>% 
+    summarise(
+      S_wr = sum(expected_win_WR)/sum(n),
+      S_ci = sum(expected_win_lower_ci)/sum(n),
+      .groups = "drop"
+      ) %>% 
+    distinct(),
+  Df_Expected_number_of_win_by_week %>% 
+    group_by(Archetype) %>% 
+    summarise(
+      
+      S_wr = sum(expected_win_WR)/sum(n),
+      S_ci = sum(expected_win_lower_ci)/sum(n),
+      Week = "All",
+      .groups = "drop"
+      ) %>% 
+    distinct()
+) %>% 
+  mutate(
+    Week = factor(
+      Week,
+      levels = c(1:max(df_base_all_data$Week),"All")
+                       )
+         )
+
+
+Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>% 
+  arrange(Week) %>% 
+  pivot_wider(names_from = Week,
+              values_from = c(S_wr,S_ci)) 
+
+
+
+
+```
+
+
+
+```{r}
+Presence_for_best_deck_plot <- rbind(
+  Df_Expected_number_of_win_by_week %>%
+  distinct(Matchups_OpponentArchetype, Week, n),
+  Df_Expected_number_of_win_by_week %>%
+  distinct(Matchups_OpponentArchetype, Week, n) %>%
+    group_by(Matchups_OpponentArchetype) %>%  summarise(
+    n = sum(n),
+    Week = "All",
+    .groups = "drop"
+      )
+  ) %>%
+  mutate(
+    Week = factor(
+      Week,
+      levels = c(1:max(Df_Expected_number_of_win_by_week$Week),"All"
+                 )
+                       )
+         ) %>% 
+  group_by(Week) %>% 
+  mutate(
+    presence_percent = n/sum(n)
+    )
+
+scheme <- iwanthue(seed = 42, force_init = TRUE)
+# Plot color scales
+colors_scales_presence <- scheme$hex(
+    length(levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype))
+)
+
+
+plot_archetype_spaghetti <- (ggplot(
+  Presence_for_best_deck_plot,
+       aes(x = Week,
+           y = presence_percent,
+           color = Matchups_OpponentArchetype,
+           text = paste(
+            "Archetype: ", Matchups_OpponentArchetype,"<br>", # Archetype name
+            "n : ", n," (",round(presence_percent*100,2)," %)" , "<br>",
+            sep = ""
+          ),
+          group=1
+           )
+       ) +
+  geom_line(
+           ) +
+  geom_point()+ 
+  scale_color_manual(
+          values = colors_scales_presence
+        ) +
+    ylab("Archetype presence") +
+    scale_y_continuous(labels = function(x) scales::percent(x)) +
+    theme(
+        axis.title=element_blank(),
+        panel.border = element_blank()
+        )
+  ) %>% 
+   ggplotly(tooltip = c("text"),height = (480*2.25),width = (640*4) 
+            )  %>%
+  layout(legend = list(
+    orientation = "h",
+    y = 1.1,
+    title = list(text = "")
+    )
+    )
+
+
+```
+
+
+
+
+
+```{r out.width="100%"}
+plot_archetype_spaghetti
+```
+
+
+```{r}
+DT::datatable(Df_wide_expected_of_week_sum %>% 
+                select(Archetype,starts_with("S_ci_")) %>% 
+                rename_with(~str_replace(.,"S_ci_","Week "))
+              ,
+  filter = "top", rownames = FALSE,
+        callback = DT::JS(
+#         paste0(
+#         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+onfly_filter_js
+# )
+),
+options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Best deck using Confidence intervalle lower bound'
+  )
+) %>%
+   DT::formatRound(
+     columns=2:ncol(
+       Df_wide_expected_of_week_sum %>% 
+         select(Archetype,starts_with("S_ci_"))
+     ), 
+     digits=2)
+```
+
+
+
+
+
+
+```{r out.width="100%"}
+plot_archetype_spaghetti
+```
+
+
+
+
+```{r}
+DT::datatable(Df_wide_expected_of_week_sum %>% 
+                select(Archetype,starts_with("S_wr_")) %>% 
+                rename_with(~str_replace(.,"S_wr_","Week ")),
+  filter = "top", rownames = FALSE,
+        callback = DT::JS(
+#         paste0(
+#         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+onfly_filter_js
+# )
+),
+options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Best deck using Win rate'
+  )
+) %>%
+   DT::formatRound(
+     columns=2:ncol(
+       Df_wide_expected_of_week_sum %>% 
+         select(Archetype,starts_with("S_wr_"))
+     ), 
+     digits=2)
+
+```
+
+
+
+
+
+
+
+
+
+

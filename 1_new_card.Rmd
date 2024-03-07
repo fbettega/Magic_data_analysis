@@ -9,20 +9,32 @@ knit: (function(inputFile, encoding) {
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
+# Note globale
+
+# probablement reformater le code des CI plus présentations en un fonction renvoyant X colonnes WR upper and lower
+
+# Reflechir a passer en shiny
+# 
+# ajouter une colonne nombre de deck
+
+
+
+
+
+
 knitr::opts_chunk$set(
   echo = FALSE,
   message = FALSE,
   warning = FALSE
 )
-# Reflechir a passer en shiny
-# 
-# ajouter une colonne nombre de deck
 
+library(binom)
 library("rjson")
 library(kableExtra)
 library(tidyverse)
 
 source("S2_Source_mtg_new_card.R")
+
 ```
 
 
