@@ -25,3 +25,6 @@ Presents the win rate of each card in each archetype in the form of multiple tab
 
 ## [Matrix WR](/result/4_matrix_WR.html)
 Matrix of win rates for different modern archetypes.
+
+## [Matrix WR](/result/5_Deck_analysis.html)
+Cards win rates Analysis by deck
