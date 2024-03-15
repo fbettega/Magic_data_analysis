@@ -1,4 +1,140 @@
 
+
+################################################################################
+####################### Patch foireux pour ban #################################
+
+
+Search_for_ban_cards <- function(vec_of_ban_cards,df,colname_deck_list){
+  
+  main_remove_id <- df %>%
+    unnest_longer(!!colname_deck_list
+    ) %>%
+    unnest_wider(!!colname_deck_list
+                 ,names_sep = "_") %>% 
+    filter(!!rlang::sym(paste0(colname_deck_list,"_CardName")) %in% vec_of_ban_cards) %>% 
+    distinct(id) %>%
+    unlist
+  
+  return(main_remove_id)
+  
+}
+
+
+
+
+
+
+
+
+
+
+
+# prévoir exact résultat en supprimant les résultats obtenue contre des deck ban mais douteux risque de biais ++
+Ban_patch <- function(vec_of_ban_cards,df#,exact_result = FALSE
+){
+  
+  
+  Main_board_remove_id <- Search_for_ban_cards(vec_of_ban_cards,df,"Mainboard")
+  Side_board_remove_id <- Search_for_ban_cards(vec_of_ban_cards,df,"Sideboard")
+  
+  
+  Remove_id <- unique(c(Main_board_remove_id,Side_board_remove_id))
+  
+  temp_remove <- df %>% filter(id %in% Remove_id)
+  
+  
+  
+  # search for remove player
+  Remove_id_temp <- df %>%
+    filter(id %in% Remove_id) %>% 
+    select(TournamentFile,Player,ReferenceArchetype_Archetype) %>% 
+    group_by(TournamentFile) %>% 
+    summarise(
+      remove_matchup = list(
+        paste0(Player,"_",ReferenceArchetype_Archetype)
+      )
+    )
+  
+  
+  # Remove remove player from each matchup
+  Matchup_issue <- df %>%
+    filter(!(id %in% Remove_id)) %>% 
+    left_join(Remove_id_temp,by = "TournamentFile") %>%
+    select(-Mainboard,-Sideboard,-Week,-Meta) %>% 
+    unnest_longer(
+      Matchups
+    ) %>%
+    unnest_wider(
+      Matchups,
+      names_sep = "_"
+    ) %>% 
+    rowwise() %>% 
+    mutate(
+      id_player_tournament = paste0(TournamentFile,"_",Player ),
+      remove_match_cuz_of_oppo = paste0(Matchups_Opponent,"_",Matchups_OpponentArchetype )  %in% remove_matchup
+    ) %>% 
+    filter(!remove_match_cuz_of_oppo) %>% 
+    # group_by(id_player_tournament) %>% 
+    rowwise() %>% 
+    mutate(
+      Matchups = list(
+        list(
+          Opponent  = Matchups_Opponent,
+          OpponentArchetype = Matchups_OpponentArchetype ,
+          Wins = Matchups_Wins,
+          Losses = Matchups_Losses, 
+          Draws = Matchups_Draws
+        )
+      ) 
+    ) %>% 
+    select(-c(
+      Matchups_Opponent,Matchups_OpponentArchetype,Matchups_Wins,
+      Matchups_Losses,Matchups_Draws,remove_match_cuz_of_oppo,remove_matchup)
+    ) %>% 
+    group_by(id_player_tournament) %>%
+    mutate(
+      Matchups = list(
+        Matchups  
+      )
+    ) %>% 
+    ungroup() %>% 
+    rename(Matchups = Matchups) %>% 
+    distinct() %>% 
+    select(id,Matchups)
+  
+  
+  
+  Df_final <- df %>% 
+    select(-Matchups) %>% 
+    filter(!(id %in% Remove_id)) %>% 
+    left_join(Matchup_issue,by = "id")
+  
+  
+  
+  
+  return(Df_final)
+  
+}
+##################################################################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 onfly_filter_js <- c( r"{
 function onlyUnique(value, index, self) {
 return self.indexOf(value) === index;
@@ -101,15 +237,6 @@ format_df_result_card_table <- function(
 
 
 
-
-
-
-
-
-
-
-
-
 # IZET mid = deck de nassif a voir pour parser
 
 # Aggregation a regarder  
@@ -120,24 +247,33 @@ format_df_result_card_table <- function(
 # [13] "Izzet Aggro"                   "Boros Blink"                   "Zombies"                       "Green Devotion"               
 # [17] "Grixis Kiki Jiki"              "Mono Green Midrange _fallback" "Azorius Midrange"              "Boros Midrange _fallback"     
 # [21] "Bant Midrange _fallback"       "5 Color Midrange _fallback"    "Temur Midrange _fallback"      "Mono White Midrange _fallback"
-# [25] "Enduring Ideal"                "Midrange _fallback"            "Ensoul"                        "Oops All Spells"              
+# [25] "Enduring Ideal"                "Midrange _fallback"            "Ensoul"                                     
 # [29] "Crabvine"                      "Reclamation"                   "Neobrand"                      "WUBG Midrange _fallback"      
 # [33] "Ascendancy Combo"              "Grixis Aggro"                  "Slivers"                       "Skelementals"                 
 # [37] "Naya Midrange _fallback"       "Mono Blue Control _fallback"   "Rakdos Sacrifice"              "Tameshi Bloom"                
 # [41] "WBRG Midrange _fallback"       "Hollow One"                    "Devoted Combo"                 "Spirits"                      
 # [45] "Izzet Midrange _fallback"      "Soul Sisters"                  "Land Destruction"              "Glimpse Combo"                
 # [49] "Manufactor Combo"              "Lantern"                       "Boros Aggro"                   "Enchantress"                  
-# [53] "The Rack"                      "Calibrated Blast"              "Timeless Lotus"                "Infect"                       
+# [53] "The Rack"                      "Calibrated Blast"              "              "Infect"                       
 # [57] "Elves"                         "Blink"                         "Kuldotha Aggro"                "Bogles"                       
-# [61] "Faeries"                       "Taxes"                         "Goblins"                       "Belcher"                      
-# [65] "Blue Scapeshift"               "Ad Nauseam"                    "Elementals"                    "Affinity"                     
-# [69] "REdx Midrange"                 "Orzhov Midrange"               "Scapeshift"                       
+# [61] "Faeries"                       "Taxes"                         "Goblins"                                            
+#             "Ad Nauseam"                                     "Affinity"                     
+#               "Orzhov Midrange"               "Scapeshift"                       
 
 ################################################################################
 
 
 
 
+
+
+
+
+
+################################################################################
+# A evaluer 
+# "Mono Green Midrange _fallback"
+# "Green Devotion" 
 
 
 
@@ -165,7 +301,11 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   )
   
   
-  UR_controle_group <- c("Izzet Control _fallback", "Temur Control _fallback")
+  UR_controle_group <- c(
+    "Izzet Control _fallback","Temur Control _fallback",
+    "Temur Midrange _fallback","Grixis Aggro",
+    "Faeries"
+    )
   
   
   
@@ -187,17 +327,18 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
                               
   )
   
-  
   # Regroupement du split de creativity sur persist
   Archetype_to_agreg = ifelse(str_detect(Archetype_to_agreg,
                                          "Creativity"
   ),
   "Creativity",Archetype_to_agreg)
   
-  # Blink except boros
+  # Blink except 
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% 
-                                c( "Azorius Blink","Bant Blink" ,"WURG Blink",
-                                   "Jeskai Blink",  "Esper Blink"),
+                                c(
+                                  "Azorius Blink","Bant Blink" ,"WURG Blink",
+                                  "Jeskai Blink",  "Esper Blink","Boros Blink"
+                                  ),
                               "Blink",Archetype_to_agreg)
   
   
@@ -228,18 +369,23 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
                               "Tron",Archetype_to_agreg)
   # Regroupement de rakdos midrange et scam
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% 
-                                c("Rakdos Midrange _fallback",
-                                  "Mardu Midrange _fallback"),
+                                c(
+                                  "Rakdos Midrange _fallback",
+                                  "Mardu Midrange _fallback",
+                                  "Skelementals"
+                                  ),
                               "Scam",Archetype_to_agreg)
   
   # Regroupement de mono B midrange et coffer
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Mono Black Midrange _fallback",
                               "Coffers Control",Archetype_to_agreg)
   # Gestion des 2 fallback qui n'en sont pas vraiment
-  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c("Gruul Midrange _fallback",
-                                                        "Mono Red Midrange _fallback",
-                                                        "Mardu Midrange _fallback"
-                                                        
+  Archetype_to_agreg = ifelse(
+    Archetype_to_agreg %in% c(
+      "Gruul Midrange _fallback","Mono Red Midrange _fallback",
+      "Mardu Midrange _fallback","Boros Aggro",  "Naya Midrange _fallback",
+      "Boros Midrange _fallback",
+      "Mono Red Aggro"
   ),
   "REdx Midrange",Archetype_to_agreg)
   
@@ -250,7 +396,7 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
     "Golgari Midrange _fallback","Jund Midrange _fallback",
-    "Abzan Midrange _fallback"),
+    "Abzan Midrange _fallback","Jund Aggro","Jund Midrange"),
     "Golgarix Midrange",Archetype_to_agreg)
   
   # Merge the two combo breach 
@@ -269,19 +415,43 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   # Merge tout les titan sauf titan shift
   Archetype_to_agreg = ifelse(str_detect(Archetype_to_agreg,"Titan$"),
                               "Amulet Titan",Archetype_to_agreg)
+  Archetype_to_agreg = ifelse(Archetype_to_agreg == "Timeless Lotus",
+                              "Amulet Titan",Archetype_to_agreg)
+  
   
   #Merge les 2 version de gob 
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Goblin Whack",
                               "Goblins",Archetype_to_agreg)
   
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
-    "Grixis Storm","Boros Storm","Gifts Storm","Twiddle Storm"),
+    "Grixis Storm","Boros Storm","Mono Red Storm",
+    "Gifts Storm","Twiddle Storm"
+    ),
     "Storm",Archetype_to_agreg)
   
+  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
+    "Guildpact Valakut","Blue Scapeshift"),
+                              "Scapeshift",Archetype_to_agreg)
   
+  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
+    "Elementals","Beans Cascade","Saheeli Combo"),
+    "Omnath Control",Archetype_to_agreg)
   
+ 
+  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c( "Oops All Spells" ),
+    "Belcher",Archetype_to_agreg)
+  
+  Archetype_to_agreg = ifelse(str_detect(Archetype_to_agreg,"Burn"),
+                              "Burn",Archetype_to_agreg)
+  
+  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
+    "Asmo Food","Manufactor Combo" 
+    ),
+                              "Food",Archetype_to_agreg)
+
   return(Archetype_to_agreg)
 }
+
 
 
 

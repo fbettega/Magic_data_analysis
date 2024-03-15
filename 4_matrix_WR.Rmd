@@ -748,9 +748,121 @@ caption = htmltools::tags$caption(
 ```
 
 
+## Best deck if some deck are remove
+```{r}
+Custom_presence_base_df <- xlsx::read.xlsx("data/best_deck_presence_customizable.xlsx",sheetIndex = 1)
+
+update_presence_from_data <- df_base_all_data %>%
+  group_by(Archetype) %>% 
+  summarise(n = n(),.groups = "drop") %>%
+  rename(Matchups_OpponentArchetype = Archetype) %>% 
+  arrange(desc(n))
+
+
+Updated_presence_rewrite <- full_join(update_presence_from_data,
+                              Custom_presence_base_df %>%
+                                select(-n),
+                              by = "Matchups_OpponentArchetype",keep = TRUE) %>% 
+  select(-Matchups_OpponentArchetype.y) %>% 
+  rename(Matchups_OpponentArchetype = Matchups_OpponentArchetype.x)
+
+
+xlsx::write.xlsx(
+  as.data.frame(Updated_presence_rewrite),
+  file = "data/best_deck_presence_customizable.xlsx",
+  showNA = FALSE,
+  row.names = FALSE
+                 )
+```
+
+
+Deck remove from the metagame : `r Updated_presence_rewrite %>% filter(Custom_meta_less == 0) %>% pull(Matchups_OpponentArchetype) %>% as.character() %>% cat(sep = ", ")`
+
+
+```{r}
+Updated_presence <- Updated_presence_rewrite %>%
+  mutate(
+    Custom_meta_less = if_else(is.na(Custom_meta_less),n,Custom_meta_less ),
+    Custom_meta_less = Custom_meta_less/(sum(Custom_meta_less)/sum(n))
+    ) %>%
+  filter(Custom_meta_less > 0)
+
+
+Df_Expected_number_of_win_custom_less <- Updated_presence %>%
+  select(Matchups_OpponentArchetype,Custom_meta_less ) %>% 
+  full_join(Df_win_rate_matrix_summarise %>% 
+              mutate(no_data_arch = Archetype %in% (
+                Updated_presence_rewrite %>% 
+                  filter(Custom_meta_less == 0) %>%
+                  pull(Matchups_OpponentArchetype)
+              ) 
+              ) %>% 
+              filter(!no_data_arch) %>% 
+              select(-no_data_arch) %>% 
+              
+              filter(CI_WR_matches != 0,
+                     !is.na(CI_WR_matches)) %>% 
+              
+              
+              mutate(lower_ci_bound = WR_matches + CI_WR_matches) %>% 
+              select(
+                Archetype,WR_matches,
+                lower_ci_bound ,
+                Matchups_OpponentArchetype), 
+            by = c("Matchups_OpponentArchetype"),relationship = "many-to-many") %>% 
+  mutate(
+    lower_ci_bounda = replace(
+      replace(lower_ci_bound, lower_ci_bound < 0, 0),
+      lower_ci_bound > 1, 1),
+    lower_ci_bound = ifelse(Matchups_OpponentArchetype == Archetype,
+                            0.5,lower_ci_bound),
+    expected_win_WR = WR_matches * Custom_meta_less,
+    expected_win_lower_ci = lower_ci_bound * Custom_meta_less
+  ) %>% 
+  drop_na() %>%
+  ungroup()
 
 
 
+Df_expected_of_custom_less_sum <- 
+  Df_Expected_number_of_win_custom_less %>% 
+    group_by(Archetype) %>% 
+    summarise(
+      S_wr = sum(expected_win_WR)/sum(Custom_meta_less ),
+      S_ci = sum(expected_win_lower_ci)/sum(Custom_meta_less ),
+      number_of_matchup = n(),
+      .groups = "drop"
+    ) %>% 
+    distinct() 
+
+```
+
+
+
+```{r}
+DT::datatable(Df_expected_of_custom_less_sum,
+  filter = "top", rownames = FALSE,
+        callback = DT::JS(
+#         paste0(
+#         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+onfly_filter_js
+# )
+),
+options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = nrow(Df_expected_of_custom_less_sum)),
+caption = htmltools::tags$caption(
+  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
+  'Table : Best deck using Win rate'
+  )
+) %>%
+   DT::formatRound(
+     columns=2:3, 
+     digits=2)
+```
 
 
 

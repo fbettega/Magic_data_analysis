@@ -598,7 +598,7 @@ plot_presence_fun(
 # 1 Month
 
 * 1 Month data : `r format(as.Date(min(one_month_inline$Date)), "%d-%m-%Y")` to `r format(as.Date(max(one_month_inline$Date)), "%d-%m-%Y")`.
-* Duration `r round(max(difftime(Sys.Date(),one_month_inline$Date,units = "days")),0)` weeks.
+* Duration `r round(max(difftime(Sys.Date(),one_month_inline$Date,units = "days")),0)` days.
 * Include meta : `r unique(one_month_inline$Meta)`.
 
 

@@ -37,14 +37,62 @@ df_export <-  json_parsing %>%
   )
 
 
-write_rds(df_export,"data/data_meta_en_cours.rds")
+df_export_remove_bann <- Ban_patch(
+  df =  df_export,
+  vec_of_ban_cards = c("Violent Outburst")
+                                   )
+
+
+write_rds(df_export_remove_bann,"data/data_meta_en_cours.rds")
 
 
 
 
-# Bordel d'exploration
+  
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+# 
+
 # 
 # 
+# df <- df_export %>% 
+#   filter(Tournament != "Modern League") %>% 
+#   group_by(Archetype) %>% 
+#   mutate(
+#     Archetype_count = n()
+#   ) 
+# 
+# 
+# df_encours <- df %>% filter(
+#   Archetype_count < 100,
+#                              # Archetype_count > 100
+#                             )
+# 
+# 
+# sort(table(df_encours$Archetype), decreasing = TRUE)
+# 
+# 
+# 
+# 
+# df_export %>% filter(id == 27181 ) %>% unnest_longer(Mainboard)  %>%
+#   unnest_wider(Mainboard,names_sep = "_") %>% view()
+# 
+# 
+# # Bordel d'exploration
+# # 
+# # 
 # Count_cards_in_decklist <- function(df,colname_deck_list){
 # 
 #   df_new_card_base <- df %>%
@@ -93,49 +141,59 @@ write_rds(df_export,"data/data_meta_en_cours.rds")
 # 
 # 
 # 
-# 
-# 
-# sort(unique(df_export$Archetype))
-# 
-# 
-# 
-# # handle UWx
-# # Handdle UBx
-# # RAkdos midrange
-# 
-# # Check jund
-# # check omnath C
-# 
-# 
+# # 
+# # 
+# # sort(unique(df_export$Archetype))
+# # 
+# # 
+# # 
+# # # handle UWx
+# # # Handdle UBx
+# # # RAkdos midrange
+# # 
+# # # Check jund
+# # # check omnath C
+# # 
+# # 
 # fall_back <- df_export %>%
 #   filter(str_detect(Archetype,
-#                     "Burn"
-#                     #"Rakdos Midrange"
+#                     "Midrange _fallback"
 #   ) ) #%>%
 #   # ungroup() %>%
 #   # mutate(Archetype = "a",
 #   #        Archetype_count = n())
-# 
-# 
-# unique(fall_back$Archetype)
-# 
+# # 
+# # 
+# # unique(fall_back$Archetype)
+# # 
 # fall_back_control <- df_export %>%
 #   filter(str_detect(Archetype,
-#                     "Creativity"
+#                     "Skelementals"
 #                     #"Rakdos Midrange"
 #   ) )
 # 
+# fall_back_control <- df_export %>%
+#   filter(Archetype %in% c(
+#     "Naya Midrange _fallback",
+#     "Boros Midrange _fallback",
+#     "Mono Red Aggro")
+#                     #"Rakdos Midrange"
+#   ) 
 # 
 # 
 # 
-# test_absence <-df_export  %>%
-#   filter(Archetype == "Goryo Reanimator") %>%
-#   filter(ReferenceArchetype_Archetype != "Reanimator",
-#          ReferenceArchetype_Archetype != "Goryo Reanimator"
-#          )
-# 
-# 
-# card_count_en_cours <- Count_cards_in_decklist(fall_back_control,"Mainboard")
+# # 
+# # "Grixis Aggro",
+# # 
+# # 
+# # test_absence <-df_export  %>%
+# #   filter(Archetype == "Goryo Reanimator") %>%
+# #   filter(ReferenceArchetype_Archetype != "Reanimator",
+# #          ReferenceArchetype_Archetype != "Goryo Reanimator"
+# #          )
+# # 
+# # 
+# card_count_en_cours <- Count_cards_in_decklist(fall_back_control %>% mutate(Archetype = "a"),"Mainboard")
 # 
 # count_card_absence <- Count_cards_in_decklist(test_absence,"Mainboard")
 # 

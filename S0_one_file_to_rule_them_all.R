@@ -48,7 +48,8 @@ rm(calledProgram)
 
 fichiers_rmd <- c(
   "1_new_card.Rmd", "2_presence_archetype.Rmd",
-  "3_Card_win_rate_table.Rmd","4_matrix_WR.Rmd"
+  "3_Card_win_rate_table.Rmd","4_matrix_WR.Rmd",
+  "5_Deck_analysis.Rmd"
                   )
 
 

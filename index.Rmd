@@ -20,11 +20,15 @@ Contains an analysis of the cards limited to certain recent sets to assess the i
 Gives a graphical representation of the distribution in terms of presence of the different modern archetypes over time.
 
 
-## [Card win rate table](/result/3_Card_win_rate_table.html)
+## Card win rate analysis  
+
+
+### [Card win rate table](/result/3_Card_win_rate_table.html)
 Presents the win rate of each card in each archetype in the form of multiple tables.
+
+### [Cards WR models](/result/5_Deck_analysis.html)
+Cards win rates Analysis by deck using regression
 
 ## [Matrix WR](/result/4_matrix_WR.html)
 Matrix of win rates for different modern archetypes.
 
-## [Matrix WR](/result/5_Deck_analysis.html)
-Cards win rates Analysis by deck
