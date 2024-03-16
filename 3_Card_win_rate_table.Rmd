@@ -83,6 +83,8 @@ df_base_Archetype <-  df_export %>%
 ```
 
 
+
+
 ```{r}
 Count_and_winrates_cards_in_decklist_total <- function(df,group_var,colname_deck_list){
   if(group_var == "Base_Archetype"){

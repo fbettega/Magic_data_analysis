@@ -4,8 +4,8 @@
 ####################### Patch foireux pour ban #################################
 
 
+# Take simple df from json curated and search for a vector of ban cards
 Search_for_ban_cards <- function(vec_of_ban_cards,df,colname_deck_list){
-  
   main_remove_id <- df %>%
     unnest_longer(!!colname_deck_list
     ) %>%
@@ -14,37 +14,26 @@ Search_for_ban_cards <- function(vec_of_ban_cards,df,colname_deck_list){
     filter(!!rlang::sym(paste0(colname_deck_list,"_CardName")) %in% vec_of_ban_cards) %>% 
     distinct(id) %>%
     unlist
-  
   return(main_remove_id)
-  
 }
-
-
-
-
-
-
-
-
-
 
 
 # prévoir exact résultat en supprimant les résultats obtenue contre des deck ban mais douteux risque de biais ++
 Ban_patch <- function(vec_of_ban_cards,df#,exact_result = FALSE
 ){
   
-  
+  # Search deck id with ban cards in side or deck
   Main_board_remove_id <- Search_for_ban_cards(vec_of_ban_cards,df,"Mainboard")
   Side_board_remove_id <- Search_for_ban_cards(vec_of_ban_cards,df,"Sideboard")
   
   
+  # Get unique id when ban cards is in both side and main
   Remove_id <- unique(c(Main_board_remove_id,Side_board_remove_id))
   
-  temp_remove <- df %>% filter(id %in% Remove_id)
-  
-  
+
   
   # search for remove player
+  # Create a df of with a list of key by pasting player and archetype use after for remove player in matchup list
   Remove_id_temp <- df %>%
     filter(id %in% Remove_id) %>% 
     select(TournamentFile,Player,ReferenceArchetype_Archetype) %>% 
@@ -56,11 +45,15 @@ Ban_patch <- function(vec_of_ban_cards,df#,exact_result = FALSE
     )
   
   
-  # Remove remove player from each matchup
+  # Remove remove player from each matchup by unlisting matchup and remove player using Remove_id_temp
   Matchup_issue <- df %>%
+    # In order to speed up remove already remove deck because of ban cards
     filter(!(id %in% Remove_id)) %>% 
+    # joining with list of remove id present in tournament
     left_join(Remove_id_temp,by = "TournamentFile") %>%
     select(-Mainboard,-Sideboard,-Week,-Meta) %>% 
+    
+    # unnest the col
     unnest_longer(
       Matchups
     ) %>%
@@ -69,12 +62,16 @@ Ban_patch <- function(vec_of_ban_cards,df#,exact_result = FALSE
       names_sep = "_"
     ) %>% 
     rowwise() %>% 
+    
+    # make a col for each oppo and checking if this var is in remove matchup
     mutate(
       id_player_tournament = paste0(TournamentFile,"_",Player ),
       remove_match_cuz_of_oppo = paste0(Matchups_Opponent,"_",Matchups_OpponentArchetype )  %in% remove_matchup
     ) %>% 
     filter(!remove_match_cuz_of_oppo) %>% 
     # group_by(id_player_tournament) %>% 
+    
+    # Recreate matchup by renesting
     rowwise() %>% 
     mutate(
       Matchups = list(
@@ -87,6 +84,7 @@ Ban_patch <- function(vec_of_ban_cards,df#,exact_result = FALSE
         )
       ) 
     ) %>% 
+    # remove temp column created in process
     select(-c(
       Matchups_Opponent,Matchups_OpponentArchetype,Matchups_Wins,
       Matchups_Losses,Matchups_Draws,remove_match_cuz_of_oppo,remove_matchup)
@@ -98,12 +96,12 @@ Ban_patch <- function(vec_of_ban_cards,df#,exact_result = FALSE
       )
     ) %>% 
     ungroup() %>% 
-    rename(Matchups = Matchups) %>% 
+    # rename(Matchups = Matchups) %>% 
     distinct() %>% 
     select(id,Matchups)
   
   
-  
+  # ADD new matchup column with a join in order to get null in empty matchups
   Df_final <- df %>% 
     select(-Matchups) %>% 
     filter(!(id %in% Remove_id)) %>% 
@@ -131,9 +129,8 @@ Ban_patch <- function(vec_of_ban_cards,df#,exact_result = FALSE
 
 
 
-
-
-
+################################################################################
+################# Json function to auto update filter ##########################
 
 onfly_filter_js <- c( r"{
 function onlyUnique(value, index, self) {
@@ -178,16 +175,25 @@ selection_content[0].innerHTML = content_str;
 }, 50);
 })
 }")
+################################################################################
+
+
+
+
 
 ################################################################################
+############################## Format table  ###################################
 # Format table résult removing space and shorten name make some variables factor
+# Used in 3_Card_win_rate_table
+
 format_df_result_card_table <- function(
-    df_base_fun,
-    colname_deck_list,
-    df_Archetyp_fun,
-    Based_Archetyp_fun = FALSE
+    df_base_fun, # data frame from xx
+    colname_deck_list, # "Mainboard" or "Sideboard"
+    df_Archetyp_fun,  # df Used to put corect order for archetype or based archetype 
+    Based_Archetyp_fun = FALSE # function use deagregeted archetype
 ){
   if(Based_Archetyp_fun){
+    # juste reordor Based archetype level and make cardname and count factor
     df_temp_fun <- df_base_fun %>%
       mutate(
         Base_Archetype = factor(
@@ -198,10 +204,15 @@ format_df_result_card_table <- function(
           Archetype, 
           levels = unique(df_Archetyp_fun$Archetype)
         ),
-        !!rlang::sym(paste0(colname_deck_list,"_CardName")) := as.factor(!!rlang::sym(paste0(colname_deck_list,"_CardName"))),
-        !!rlang::sym(paste0(colname_deck_list,"_Count")) := as.factor(!!rlang::sym(paste0(colname_deck_list,"_Count")))
+        !!rlang::sym(paste0(colname_deck_list,"_CardName")) := as.factor(
+          !!rlang::sym(paste0(colname_deck_list,"_CardName"))
+          ),
+        !!rlang::sym(paste0(colname_deck_list,"_Count")) := as.factor(
+          !!rlang::sym(paste0(colname_deck_list,"_Count"))
+          )
       ) 
   }else{
+    # juste  make archetype level, cardname and count factor
     df_temp_fun <-  df_base_fun %>%
       mutate(
         Archetype = factor(
@@ -213,6 +224,7 @@ format_df_result_card_table <- function(
       ) 
   }
   
+  # Remove _ and shorten some column
   df_res_fun <- df_temp_fun %>% 
     rename_with(
       ~str_replace(
@@ -227,7 +239,7 @@ format_df_result_card_table <- function(
   
   return(df_res_fun)
 }
-
+################################################################################
 
 
 
@@ -281,17 +293,19 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   
   
   
-  
-  UW_controle_group <- c("Azorius Control _fallback",
-                         "Bant Control _fallback","Jeskai Control _fallback",
+  # Group UW base control and midrange in maccro archetype also contain archetype share with dimir
+  UW_controle_group <- c(
+    "Azorius Control _fallback",
+    "Bant Control _fallback","Jeskai Control _fallback",
                          "Taking Turns",
                          # soupe liée a dimir
                          "Esper Control _fallback","Esper Midrange _fallback","WUBG Control _fallback",
                          "WUBR Control _fallback","WURG Control _fallback",
                          "5 Color Control _fallback") 
   
+  
+  # Group UB base control and midrange in maccro archetype deck share with UW are in the UW groups
   UB_controle_group <- c(
-    
     "Dimir Control _fallback","Dimir Midrange _fallback",
     "Sultai Control _fallback","Sultai Midrange _fallback",
     
@@ -301,6 +315,7 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   )
   
   
+  # Not murktide UR control
   UR_controle_group <- c(
     "Izzet Control _fallback","Temur Control _fallback",
     "Temur Midrange _fallback","Grixis Aggro",
@@ -312,7 +327,7 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   
   
   
-  # Gestion des controles en classe large
+  # Gestion des controles en classe large définis au dessus
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% UW_controle_group,
                               "UWhiteX Control",
                               ifelse(Archetype_to_agreg %in% UB_controle_group,
@@ -333,14 +348,27 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   ),
   "Creativity",Archetype_to_agreg)
   
-  # Blink except 
+  
+################################################################################
+############################ Réfléxion a mener #################################
+  # All Blink decks (weak groups because deck can be really differents)
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% 
                                 c(
                                   "Azorius Blink","Bant Blink" ,"WURG Blink",
                                   "Jeskai Blink",  "Esper Blink","Boros Blink"
                                   ),
                               "Blink",Archetype_to_agreg)
+  # groupe all deck blade a reflechir sur le fait de grouper avec blink
+  Archetype_to_agreg = ifelse(Archetype_to_agreg =="Grief Blade",
+                              "Stoneblade",Archetype_to_agreg)
   
+  # A reflechir sur groupement avec blink ou taxes
+  Archetype_to_agreg = ifelse(
+    Archetype_to_agreg %in% c("Orzhov Midrange _fallback",
+                              "Orzhov Blink","Mono White Blink",
+                              "Abzan Blink"),
+                              "Orzhov Midrange",Archetype_to_agreg)
+  ##############################################################################  
   
   # Delver Gestion
   # Gestion du problème de l'absence des couleurs dans les archetypes des mathcups
@@ -348,26 +376,26 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
     Archetype_to_agreg = ifelse(Archetype_to_agreg =="Delver",
                                 "URedX Control",Archetype_to_agreg)
   } else{
+  # split des 2 types de dever dans leur archetype par couleurs
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Delver" & color_agreg == "UR",
                               "Murktide",Archetype_to_agreg)
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Delver" & color_agreg == "UBR",
                               "UBlackX Control",Archetype_to_agreg)
-  
   }
   
+  # Groupe breach value and murktide 
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Breach Value",
                               "Murktide",Archetype_to_agreg)
   
-  
-  Archetype_to_agreg = ifelse(Archetype_to_agreg =="Grief Blade",
-                              "Stoneblade",Archetype_to_agreg)
+
   # Pack rhinos
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Footfalls 4 C",
                               "Footfalls",Archetype_to_agreg)
   # Pack tron
   Archetype_to_agreg = ifelse(str_detect(Archetype_to_agreg,"Tron$"),
                               "Tron",Archetype_to_agreg)
-  # Regroupement de rakdos midrange et scam
+  
+  # Regroupement de tout les rakdos midrange et scam
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% 
                                 c(
                                   "Rakdos Midrange _fallback",
@@ -379,7 +407,11 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   # Regroupement de mono B midrange et coffer
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Mono Black Midrange _fallback",
                               "Coffers Control",Archetype_to_agreg)
-  # Gestion des 2 fallback qui n'en sont pas vraiment
+  
+  
+
+  
+  # Groupement des différentes version R midrange ou aggros en 1 maccro arc
   Archetype_to_agreg = ifelse(
     Archetype_to_agreg %in% c(
       "Gruul Midrange _fallback","Mono Red Midrange _fallback",
@@ -389,17 +421,13 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   ),
   "REdx Midrange",Archetype_to_agreg)
   
-  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c("Orzhov Midrange _fallback",
-                                                        "Orzhov Blink","Mono White Blink",
-                                                        "Abzan Blink"),
-                              "Orzhov Midrange",Archetype_to_agreg)
-  
+  # Merge all rock soupes together
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
     "Golgari Midrange _fallback","Jund Midrange _fallback",
     "Abzan Midrange _fallback","Jund Aggro","Jund Midrange"),
     "Golgarix Midrange",Archetype_to_agreg)
   
-  # Merge the two combo breach 
+  # Merge the two combo breach potentiellement breach storm groupable avec les autres storms
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
     "Breach Storm","Grinding Breach"),
     "Breach combo",Archetype_to_agreg)
@@ -408,7 +436,11 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Reanimator",
                               "Goryo Reanimator",Archetype_to_agreg)
   
-  # Merge titan shift avec scapshift
+  # Regroupement de toutes les version tuant avec vaalakut, gros doutes sur l'inclusion de titanshift
+  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
+    "Guildpact Valakut","Blue Scapeshift"),
+    "Scapeshift",Archetype_to_agreg)
+  # Merge titan shift avec scapshift 
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Titan Shift",
                               "Scapeshift",Archetype_to_agreg)
   
@@ -419,31 +451,34 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
                               "Amulet Titan",Archetype_to_agreg)
   
   
-  #Merge les 2 version de gob 
+  #Merge les 2 versions de gob 
   Archetype_to_agreg = ifelse(Archetype_to_agreg =="Goblin Whack",
                               "Goblins",Archetype_to_agreg)
   
+  # Groupement de tout les storms
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
     "Grixis Storm","Boros Storm","Mono Red Storm",
     "Gifts Storm","Twiddle Storm"
     ),
     "Storm",Archetype_to_agreg)
   
-  Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
-    "Guildpact Valakut","Blue Scapeshift"),
-                              "Scapeshift",Archetype_to_agreg)
+
   
+  
+  # Regroupement de toutes les 4/5C soupe avec des betes
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
     "Elementals","Beans Cascade","Saheeli Combo"),
     "Omnath Control",Archetype_to_agreg)
   
- 
+  # Regroupement de toutes les soupes sans lands
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c( "Oops All Spells" ),
     "Belcher",Archetype_to_agreg)
   
+  # Groupement de tout les Burn quelquesois les couleurs
   Archetype_to_agreg = ifelse(str_detect(Archetype_to_agreg,"Burn"),
                               "Burn",Archetype_to_agreg)
   
+  # Meta groupes avec les soupes foods
   Archetype_to_agreg = ifelse(Archetype_to_agreg %in% c(
     "Asmo Food","Manufactor Combo" 
     ),
@@ -462,8 +497,8 @@ Archetype_agreger <- function(Archetype_to_agreg,color_agreg = NULL){
 
 
 
-
-
+################################################################################
+############# Simple function that agregate some land together #################
 
 Card_agregueur <- function(
     string,
@@ -488,6 +523,7 @@ Card_agregueur <- function(
     "arid mesa", "windswept heath", "scalding tarn", "prismatic vista",
     "misty rainforest", "bloodstained mire", "marsh flats"
   )
+  
   Tron_land <- c("Urza's Mine", "Urza's Power Plant", "Urza's Tower")
   
   
@@ -662,6 +698,7 @@ Card_agregueur <- function(
   }
    
   
+  # A laisser après snow qui permet de regrouper les snow land avec les basic au besoin
   if (basic_land){
     
     base_string <- ifelse(base_string %in% basic_land_list,
@@ -673,13 +710,28 @@ Card_agregueur <- function(
   return(base_string)
     
 }
+################################################################################
 
+################################################################################
+#######################  Not in function  ######################################
 `%notin%` <- Negate(`%in%`)
+################################################################################
+
+
+
+################################################################################
+####################### Ci functionusing agresti-coull #########################
+
+# Réflechir a un merge entre les function selon les paramètres
 
 CI_2_prop <- function(p1,p2,n1,n2,alpha =0.95){
+  
+  # Compute number of win from P and n
   Wins1 = round(p1*n1,0)
   Wins2 = round(p2*n2,0)
   # using agresti-coull CI
+              ##############################################
+              ########## Agresti coulli formula ############
   z = qnorm((1 - alpha)/2)#qt((1 - alpha)/2,n-1)
   z_square = z^2
   n1_tide = n1 + z_square
@@ -691,19 +743,16 @@ CI_2_prop <- function(p1,p2,n1,n2,alpha =0.95){
   p2_tide = x2_tide/n2_tide
   
   
-  q1 <- (1-p1_tide)
-  q2 <- (1-p2_tide)
-  
-  
   upper_bound <- (p1_tide - p2_tide) - z * sqrt(
     (p1_tide*(1-p1_tide)/n1_tide) +
       (p2_tide*(1-p2_tide)/n2_tide)
   )
+            ###################################################  
   
+  # Gestion des cas ou le sample size est trop faible
   result <- ifelse(
     (n1 < 5 | n2 <5),
     0,
-    # je retire le vai win rate identique a celui du tableaux afin de conserver seulement le CI
     p1 - p2 - upper_bound
     
   )
@@ -742,8 +791,11 @@ CI_prop <- function(p,n,alpha =0.95){
   
   
 }
+################################################################################
 
-
+################################################################################
+###########################  Compute WR  #######################################
+# merge les 2 selon les paramètres
 winrate_1_data <- function(win,loose){win/(win + loose)}
 winrate_2_data <- function(win_base,loose_base,win_diff,loose_diff){
   (
@@ -753,6 +805,8 @@ winrate_2_data <- function(win_base,loose_base,win_diff,loose_diff){
       (loose_base - loose_diff) 
   )
 }
+
+################################################################################
 
 Draw_diff_2_data <- function(
     win_base,draw_base,loose_base,
@@ -772,7 +826,10 @@ Draw_diff_2_data <- function(
     )
 }
 
+################################################################################
+###########################  Format and CI   ###################################
 
+# transforming a bound in CI like that [x ; y] 
 formating_CI <- function(value,
                          CI,round_val = 2,
                          percent = TRUE,
@@ -811,7 +868,7 @@ formating_CI <- function(value,
 
   
 }
-
+################################################################################
 
 
 

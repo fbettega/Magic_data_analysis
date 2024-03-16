@@ -41,9 +41,6 @@ Réfléchir pour les couleurs et meilleurs distances
 
 
 ```{r}
-
-
-
 # Generate different color scheme for close archetype
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
 
@@ -413,9 +410,12 @@ DF_presence_fun <- function(
   } else {
     df_presence_res <- Presence_df_base
   }
+  return(df_presence_res)
 }
 
 ```
+
+
 
 
 

@@ -11,9 +11,8 @@ run_command_from_dir <- function(cmd,dir_cmd){
   # Return
   NULL
 }
+
 # conflicted::conflicts_prefer(dplyr::filter)
-
-
 # library(git2r)
 # conflicted::conflict_prefer("pull", "dplyr")
 # 
@@ -24,24 +23,9 @@ run_command_from_dir <- function(cmd,dir_cmd){
 # a <- git2r::pull(repo = "MTGOArchetypeParser_20231227/MTGOFormatData/")
 
 
-
-
-
-
-
-
 run_command_from_dir("./MTGOArchetypeParser.App.exe json detect","MTGOArchetypeParser_20231227/")
 
-
-
-
-
-
 #run_command_from_dir("git pull","MTGOArchetypeParser_20231227/MTGODecklistCache/")
-
-
-
-
 
 source("S1_Json_to_Curated_data.R", local = calledProgram <- new.env(), echo=TRUE)
 rm(calledProgram)

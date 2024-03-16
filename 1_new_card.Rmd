@@ -38,6 +38,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 ```
 
 
+
 ```{r}
 # Fonction that count cards in given arhcetype 
 
@@ -107,8 +108,14 @@ Count_cards_in_decklist <- function(df,Name_of_card_of_interest,colname_deck_lis
     arrange(desc(Archetype_count),Archetype,    !!rlang::sym(paste0(colname_deck_list,"_CardName")),
             !!rlang::sym(paste0(colname_deck_list,"_Count"))) %>%
     select(-Archetype_count)
+  
+  return(df_new_card_total)
 }
 ```
+
+
+
+
 
 
 ```{r}

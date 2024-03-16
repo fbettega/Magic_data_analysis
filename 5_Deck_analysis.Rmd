@@ -18,8 +18,8 @@ knit: (function(inputFile, encoding) {
 knitr::opts_chunk$set(
   echo = FALSE,
   message = FALSE,
-  warning = FALSE,
-  cache = TRUE
+  warning = FALSE#,
+  #cache = TRUE
 )
 library(pander)
 library("rjson")
@@ -29,8 +29,6 @@ conflicted::conflicts_prefer(dplyr::lag)
 source("S2_Source_mtg_new_card.R")
 
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
-
-
 
 modern_DB_card <- read_csv("data/DBcarte_modern.csv")
 
@@ -70,7 +68,9 @@ df_export <- readRDS("data/data_meta_en_cours.rds") %>%
 # Projet detection automatiques des cartes nested par exemple : felidar et sahelli  dans l'idéal devrait détecter zulaport et bloodartist
 
 # check with codetools::checkUsage(f) and all fun
+
 ```
+
 
 
 ```{r function}
@@ -207,59 +207,6 @@ Agreg_count_by_cards <- function(df,
   
   return(df_final)
   
-}
-
-
-
-get_inertia_from_tree <- function(tree, k_max = 15) {
-  if (inherits(tree, "HCPC"))
-    tree <- tree$call$t$tree
-  if (!inherits(tree, "hclust"))
-    tree <- as.hclust(tree)
-  inertia <- tree$height |> 
-    sort(decreasing = TRUE) |> 
-    head(k_max)
-  prev_inertia <- dplyr::lag(inertia)
-  dplyr::tibble(
-    k = seq_along(inertia),
-    inertia = inertia,
-    absolute_loss = inertia - prev_inertia,
-    relative_loss = (inertia - prev_inertia) / prev_inertia
-  )
-}
-
-plot_inertia_from_tree <- function(tree, k_max = 15) {
-  d <- get_inertia_from_tree(tree, k_max)
-  p_inertia <- 
-    ggplot2::ggplot(d) +
-    ggplot2::aes(x = k, y = inertia) +
-    ggplot2::geom_step() +
-    ggplot2::ylab("Inertia")
-  p_absolute <-
-    ggplot2::ggplot(d) +
-    ggplot2::aes(x = k, y = absolute_loss) +
-    ggplot2::geom_bar(stat = "identity", fill = "#4477AA") +
-    ggplot2::ylab("Absolute loss")
-  p_relative <-
-    ggplot2::ggplot(d) +
-    ggplot2::aes(x = k, y = relative_loss) +
-    ggplot2::geom_line(color = "#AA3377") +
-    ggplot2::geom_point(size = 3, color = "#AA3377") +
-    ggplot2::scale_y_continuous(label = scales::percent) +
-    ggplot2::ylab("Relative loss")
-  patchwork::wrap_plots(
-    p_inertia,
-    p_absolute,
-    p_relative,
-    ncol = 1
-  ) &
-    ggplot2::theme_light() &
-    ggplot2::xlab("Number of clusters") &
-    ggplot2::scale_x_continuous(
-      breaks = d$k,
-      minor_breaks = NULL,
-      limits = c(1, k_max)
-    )
 }
 
 
