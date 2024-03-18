@@ -13,7 +13,7 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE
 )
-#  
+#
 
 library("rjson")
 library(lubridate)
@@ -23,7 +23,7 @@ library(plotly)
 library("rwantshue")
 library(htmltools)
 
-  # css: TOC.css
+# css: TOC.css
 
 source("S2_Source_mtg_new_card.R")
 
@@ -52,7 +52,7 @@ Presence_df_base <- loaded_base_data %>%
   ) %>%
   arrange(Archetype_count) %>%
   filter(Archetype_count > 50) %>%
-  ungroup()  
+  ungroup()
 
 
 Presence_df_base_all_data <- Presence_df_base %>%
@@ -66,9 +66,9 @@ Presence_df_base_all_data <- Presence_df_base %>%
         level = rev(unique(.$Archetype))
       )
     ),
-    Base_Archetype = 
-      
-      factor( Base_Archetype,
+    Base_Archetype =
+
+      factor(Base_Archetype,
         level = unique(.$Base_Archetype)
       ),
 
@@ -83,79 +83,71 @@ colors_scales_presence <- scheme$hex(
 
 
 one_week_inline <- Presence_df_base_all_data %>%
-    filter(
-      Week > (max(Week) - 2)
-    )
+  filter(
+    Week > (max(Week) - 2)
+  )
 
 two_week_inline <- Presence_df_base_all_data %>%
-    filter(
-      Week > (max(Week) - 3)
-    )
+  filter(
+    Week > (max(Week) - 3)
+  )
 
 
 one_month_inline <- Presence_df_base_all_data %>%
-    filter(
-      Week > (max(Week) - 5)
-    )
+  filter(
+    Week > (max(Week) - 5)
+  )
 ```
 
 
 
 
 ```{r}
-
-spaghetti_plot_df <- Presence_df_base %>% 
+spaghetti_plot_df <- Presence_df_base %>%
   arrange(desc(Archetype_count)) %>%
-    mutate(
+  mutate(
     Archetype =
       factor(Archetype,
         level = unique(.$Archetype)
       ),
-        Base_Archetype = 
-      
-      factor( str_remove(Base_Archetype," _fallback"),
-        level = unique( str_remove(.$Base_Archetype," _fallback"))
+    Base_Archetype =
+
+      factor(str_remove(Base_Archetype, " _fallback"),
+        level = unique(str_remove(.$Base_Archetype, " _fallback"))
       )
-) %>% 
-  
-  select(Week,Meta,Archetype,Base_Archetype) %>% 
+  ) %>%
+  select(Week, Meta, Archetype, Base_Archetype) %>%
   # add_count(Week,Archetype,
-  #           name = "Count_arch") %>% 
-  group_by(Week,Archetype) %>% 
-  mutate(Count_arch = n())  %>% 
-  ungroup() %>% 
-  group_by(Week) %>% 
-  mutate(Week_deck_number = n() ) %>% 
-  ungroup() %>% 
-  mutate(Archetype_percent = (Count_arch/Week_deck_number)
-         ) %>% 
+  #           name = "Count_arch") %>%
+  group_by(Week, Archetype) %>%
+  mutate(Count_arch = n()) %>%
+  ungroup() %>%
+  group_by(Week) %>%
+  mutate(Week_deck_number = n()) %>%
+  ungroup() %>%
+  mutate(Archetype_percent = (Count_arch / Week_deck_number)) %>%
   # add_count(Week,Base_Archetype,
-  #           name = "Count_base_arch") %>% 
-  group_by(Week,Base_Archetype) %>% 
-  mutate(Count_base_arch = n())  %>% 
-  ungroup() %>% 
-  mutate(Base_Archetype_percent = (Count_base_arch/Week_deck_number)
-         ) %>% 
-  distinct() 
+  #           name = "Count_base_arch") %>%
+  group_by(Week, Base_Archetype) %>%
+  mutate(Count_base_arch = n()) %>%
+  ungroup() %>%
+  mutate(Base_Archetype_percent = (Count_base_arch / Week_deck_number)) %>%
+  distinct()
 
 
 
-Low_Arch_spaghetti <- as.character(spaghetti_plot_df %>% 
-  distinct(Week,Archetype,Archetype_percent) %>% 
-  group_by(Archetype) %>% 
-  summarise(Archetype_percent = sum(Archetype_percent)/max(Week),
-            ) %>% 
+Low_Arch_spaghetti <- as.character(spaghetti_plot_df %>%
+  distinct(Week, Archetype, Archetype_percent) %>%
+  group_by(Archetype) %>%
+  summarise(Archetype_percent = sum(Archetype_percent) / max(Week), ) %>%
   filter(Archetype_percent < 0.03) %>% pull(Archetype))
-  
 
-Low_base_Arch_spaghetti <- as.character(spaghetti_plot_df %>% 
-  distinct(Week,Base_Archetype,Base_Archetype_percent) %>% 
-  group_by(Base_Archetype) %>% 
-  summarise(Base_Archetype_percent = sum(Base_Archetype_percent)/max(Week),
-            ) %>% 
+
+Low_base_Arch_spaghetti <- as.character(spaghetti_plot_df %>%
+  distinct(Week, Base_Archetype, Base_Archetype_percent) %>%
+  group_by(Base_Archetype) %>%
+  summarise(Base_Archetype_percent = sum(Base_Archetype_percent) / max(Week), ) %>%
   filter(Base_Archetype_percent < 0.015) %>% pull(Base_Archetype))
-
-
 ```
 
 
@@ -166,46 +158,45 @@ Low_base_Arch_spaghetti <- as.character(spaghetti_plot_df %>%
 ```{r out.width="100%"}
 plot_archetype_spaghetti <- (ggplot(
   spaghetti_plot_df,
-       aes(x = Week,
-           y = Archetype_percent,
-           color = Archetype,
-           text = paste(
-            "Archetype: ", Archetype,"<br>", # Archetype name
-            "Archetype percent: ",round(Archetype_percent*100,2)," %" , "<br>",
-            sep = ""
-          ), 
-          group=1
-           )
-       ) +
-  geom_line(
-           ) +
-  geom_point()+ 
-    scale_x_continuous("Week", 
-                       breaks = unique(spaghetti_plot_df$Week)
-                    ) +
+  aes(
+    x = Week,
+    y = Archetype_percent,
+    color = Archetype,
+    text = paste(
+      "Archetype: ", Archetype, "<br>", # Archetype name
+      "Archetype percent: ", round(Archetype_percent * 100, 2), " %", "<br>",
+      sep = ""
+    ),
+    group = 1
+  )
+) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous("Week",
+    breaks = unique(spaghetti_plot_df$Week)
+  ) +
   scale_color_manual(
-          values = colors_scales_presence[1:length(
-              unique(spaghetti_plot_df$Base_Archetype)
-            )]
-        ) + 
-    ylab("Archetype presence") +
-    scale_y_continuous(labels = function(x) scales::percent(x))
-  ) %>% 
-   ggplotly(tooltip = c("text"),height = (480*2.25),width = (640*2.25)  )
+    values = colors_scales_presence[1:length(
+      unique(spaghetti_plot_df$Base_Archetype)
+    )]
+  ) +
+  ylab("Archetype presence") +
+  scale_y_continuous(labels = function(x) scales::percent(x))
+) %>%
+  ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
 
 
 plot_archetype_spaghetti$x$data <- lapply(
-  plot_archetype_spaghetti$x$data, function(y){
-    
-    if(y$name %in% Low_Arch_spaghetti){
-      y$visible <- 'legendonly' 
-      
+  plot_archetype_spaghetti$x$data, function(y) {
+    if (y$name %in% Low_Arch_spaghetti) {
+      y$visible <- "legendonly"
     }
-    
-    
-      return(y)
-  })
-  
+
+
+    return(y)
+  }
+)
+
 
 plot_archetype_spaghetti
 ```
@@ -215,47 +206,46 @@ plot_archetype_spaghetti
 
 ```{r out.width="100%"}
 plot_base_archetype_spaghetti <- (ggplot(
-  spaghetti_plot_df ,
-       aes(x = Week,
-           y = Base_Archetype_percent,
-           color = Base_Archetype,
-           text = paste(
-            "Archetype: ", Base_Archetype,"<br>", # Archetype name
-            "Archetype percent: ",round(Base_Archetype_percent*100,2)," %" , "<br>",
-            sep = ""
-          ), 
-          group=1
-           )
-       ) +
-  geom_line(
-           ) +
-  geom_point()+ 
-    scale_x_continuous("Week", 
-                       breaks = unique(spaghetti_plot_df$Week)
-                    ) +
+  spaghetti_plot_df,
+  aes(
+    x = Week,
+    y = Base_Archetype_percent,
+    color = Base_Archetype,
+    text = paste(
+      "Archetype: ", Base_Archetype, "<br>", # Archetype name
+      "Archetype percent: ", round(Base_Archetype_percent * 100, 2), " %", "<br>",
+      sep = ""
+    ),
+    group = 1
+  )
+) +
+  geom_line() +
+  geom_point() +
+  scale_x_continuous("Week",
+    breaks = unique(spaghetti_plot_df$Week)
+  ) +
   scale_color_manual(
-          values = colors_scales_presence[1:length(
-              unique(spaghetti_plot_df$Base_Archetype)
-            )]
-        ) + 
-    ylab("Archetype presence") +
-    scale_y_continuous(labels = function(x) scales::percent(x))
-  ) %>% 
-   ggplotly(tooltip = c("text"),height = (480*2.25),width = (640*2.25))
+    values = colors_scales_presence[1:length(
+      unique(spaghetti_plot_df$Base_Archetype)
+    )]
+  ) +
+  ylab("Archetype presence") +
+  scale_y_continuous(labels = function(x) scales::percent(x))
+) %>%
+  ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
 
 
 
 plot_base_archetype_spaghetti$x$data <- lapply(
-  plot_base_archetype_spaghetti$x$data, function(y){
-    
-    if(y$name %in% Low_base_Arch_spaghetti){
-      y$visible <- 'legendonly' 
-      
+  plot_base_archetype_spaghetti$x$data, function(y) {
+    if (y$name %in% Low_base_Arch_spaghetti) {
+      y$visible <- "legendonly"
     }
-    
-    
-      return(y)
-  })
+
+
+    return(y)
+  }
+)
 plot_base_archetype_spaghetti
 ```
 
@@ -266,33 +256,31 @@ plot_base_archetype_spaghetti
 
 ```{r}
 # plot_presence_fun
- #   color_scheme,
+#   color_scheme,
 DF_presence_fun <- function(
     df_base,
     time_limit = Inf,
-    compare_time_limit = NULL){
-  
-  
+    compare_time_limit = NULL) {
   Presence_df_base <- df_base %>%
-    ungroup() %>% 
-      filter(
+    ungroup() %>%
+    filter(
       Week > (max(Week) - time_limit)
-    )  %>%
+    ) %>%
     group_by(Archetype) %>%
     mutate(
       Archetype_count = n(),
       Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
-      CI_Arch_winrate = CI_prop(Arch_winrate,sum(Losses + Wins, na.rm = TRUE)),
-    ) %>% 
+      CI_Arch_winrate = CI_prop(Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
+    ) %>%
     arrange(Archetype_count) %>%
     mutate(
       Archetype =
         factor(Archetype,
-               level = unique(.$Archetype)
+          level = unique(.$Archetype)
         ),
       Rank = as.numeric(
         factor(Archetype,
-               level = rev(unique(.$Archetype))
+          level = rev(unique(.$Archetype))
         )
       ),
       Base_Archetype = as.factor(Base_Archetype),
@@ -303,116 +291,94 @@ DF_presence_fun <- function(
     mutate(
       Based_Archetype_count = n(),
       Based_Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
-      CI_Based_Arch_winrate = CI_prop(Based_Arch_winrate,sum(Losses + Wins, na.rm = TRUE)),
+      CI_Based_Arch_winrate = CI_prop(Based_Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
       Based_Archetype_percent = round((Based_Archetype_count / nrow(.)) * 100, 2),
       Based_Archetype_inside_main_percent = round(
         (Based_Archetype_count / Archetype_count) * 100, 2
       ),
-     Arch_winrate_format = paste0(
-        round(Arch_winrate*100,2),
-        formating_CI(Arch_winrate,CI_Arch_winrate)
+      Arch_winrate_format = paste0(
+        round(Arch_winrate * 100, 2),
+        formating_CI(Arch_winrate, CI_Arch_winrate)
       ),
-      
       Based_Arch_winrate_format = paste0(
-        round(Based_Arch_winrate*100,2),
-        formating_CI(Based_Arch_winrate,CI_Based_Arch_winrate)
+        round(Based_Arch_winrate * 100, 2),
+        formating_CI(Based_Arch_winrate, CI_Based_Arch_winrate)
       )
     )
-  
-  if (!is.null(compare_time_limit)){
-    df_comparisson <- DF_presence_fun(df_base,time_limit = compare_time_limit)
 
-    
-    df_presence_res <- Presence_df_base   %>% 
-      inner_join(df_comparisson %>%
-                   select(
-                     id,Rank,Archetype_count,
-                     Archetype_percent,Based_Archetype_count,
-                     Based_Archetype_inside_main_percent,
-                     Arch_winrate,CI_Arch_winrate,
-                     Based_Arch_winrate,CI_Based_Arch_winrate
-                   ),
-                 by = "id",
-                 suffix = c("",paste0("_",compare_time_limit -1))
-      ) %>% 
+  if (!is.null(compare_time_limit)) {
+    df_comparisson <- DF_presence_fun(df_base, time_limit = compare_time_limit)
+
+
+    df_presence_res <- Presence_df_base %>%
+      inner_join(
+        df_comparisson %>%
+          select(
+            id, Rank, Archetype_count,
+            Archetype_percent, Based_Archetype_count,
+            Based_Archetype_inside_main_percent,
+            Arch_winrate, CI_Arch_winrate,
+            Based_Arch_winrate, CI_Based_Arch_winrate
+          ),
+        by = "id",
+        suffix = c("", paste0("_", compare_time_limit - 1))
+      ) %>%
       mutate(
         Delta_rank = if_else(
-          Rank - !!rlang::sym(paste0("Rank_",compare_time_limit -1)) == 0,
+          Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)) == 0,
           "",
-          ifelse(Rank - !!rlang::sym(paste0("Rank_",compare_time_limit -1)) < 0,
-                 paste0("+ ",abs(Rank - !!rlang::sym(paste0("Rank_",compare_time_limit -1)))),
-                 paste0("- ",Rank - !!rlang::sym(paste0("Rank_",compare_time_limit -1)))
+          ifelse(Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)) < 0,
+            paste0("+ ", abs(Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)))),
+            paste0("- ", Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)))
           )
-          
         ),
-        Num_delta_perc_arch = Archetype_percent - !!rlang::sym(paste0("Archetype_percent_",compare_time_limit -1)),
-        Num_Delta_Arch_win_rate = Arch_winrate - !!rlang::sym(paste0("Arch_winrate_",compare_time_limit -1)),
-        Num_Delta_based_Arch_win_rate = Based_Arch_winrate - !!rlang::sym(paste0("Based_Arch_winrate_",compare_time_limit -1)),
-        
+        Num_delta_perc_arch = Archetype_percent - !!rlang::sym(paste0("Archetype_percent_", compare_time_limit - 1)),
+        Num_Delta_Arch_win_rate = Arch_winrate - !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1)),
+        Num_Delta_based_Arch_win_rate = Based_Arch_winrate - !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1)),
         Delta_percent_arch = ifelse(Num_delta_perc_arch > 0,
-                                    paste0("+ ",round(Num_delta_perc_arch *100,2)),
-                                    paste0(round(Num_delta_perc_arch *100,2))
+          paste0("+ ", round(Num_delta_perc_arch * 100, 2)),
+          paste0(round(Num_delta_perc_arch * 100, 2))
         ),
-        Delta_Arch_count = Archetype_count - !!rlang::sym(paste0("Archetype_count_",compare_time_limit -1)),
-        
-        
-
+        Delta_Arch_count = Archetype_count - !!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1)),
         CI_Delta_Arch_win_rate = CI_2_prop(
           Arch_winrate,
-          !!rlang::sym(paste0("Arch_winrate_",compare_time_limit -1)),
+          !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1)),
           Archetype_count,
-          !!rlang::sym(paste0("Archetype_count_",compare_time_limit -1))
+          !!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1))
         ),
-        
         CI_Delta_based_Arch_win_rate = CI_2_prop(
           Based_Arch_winrate,
-          !!rlang::sym(paste0("Based_Arch_winrate_",compare_time_limit -1)),
+          !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1)),
           Based_Archetype_count,
-          !!rlang::sym(paste0("Based_Archetype_count_",compare_time_limit -1))
+          !!rlang::sym(paste0("Based_Archetype_count_", compare_time_limit - 1))
         ),
-        
-        
-
         Delta_Arch_win_rate = ifelse(
           Num_Delta_Arch_win_rate > 0,
           paste0(
-            "+ ",round(Num_Delta_Arch_win_rate*100,2),
-            formating_CI(Num_Delta_Arch_win_rate,CI_Delta_Arch_win_rate)
-            ),
+            "+ ", round(Num_Delta_Arch_win_rate * 100, 2),
+            formating_CI(Num_Delta_Arch_win_rate, CI_Delta_Arch_win_rate)
+          ),
           paste0(
-            round(Num_Delta_Arch_win_rate*100,2),
-            formating_CI(Num_Delta_Arch_win_rate,CI_Delta_Arch_win_rate))
+            round(Num_Delta_Arch_win_rate * 100, 2),
+            formating_CI(Num_Delta_Arch_win_rate, CI_Delta_Arch_win_rate)
+          )
         ),
-        
-
         Delta_based_Arch_win_rate = ifelse(Num_Delta_based_Arch_win_rate > 0,
-                                           
-                                           paste0(
-                                             "+ ",round(Num_Delta_based_Arch_win_rate*100,2),
-                                             formating_CI(Num_Delta_based_Arch_win_rate,CI_Delta_based_Arch_win_rate)
-                                             ),
-                                           paste0(
-                                             round(Num_Delta_based_Arch_win_rate*100,2),
-                                             formating_CI(Num_Delta_based_Arch_win_rate,CI_Delta_based_Arch_win_rate)
-                                             )
+          paste0(
+            "+ ", round(Num_Delta_based_Arch_win_rate * 100, 2),
+            formating_CI(Num_Delta_based_Arch_win_rate, CI_Delta_based_Arch_win_rate)
+          ),
+          paste0(
+            round(Num_Delta_based_Arch_win_rate * 100, 2),
+            formating_CI(Num_Delta_based_Arch_win_rate, CI_Delta_based_Arch_win_rate)
+          )
         )
-        
-        
       )
-    
-    
-
-   
-
-    
-    
-    
   } else {
     df_presence_res <- Presence_df_base
   }
   return(df_presence_res)
 }
-
 ```
 
 
@@ -427,15 +393,13 @@ plot_presence_fun <- function(
     df_base,
     color_scheme,
     time_limit = Inf,
-    compare_time_limit = NULL
-){
-  
+    compare_time_limit = NULL) {
   # browser()
-  
+
   df_plot_presence <- DF_presence_fun(
-    df_base,time_limit,compare_time_limit
+    df_base, time_limit, compare_time_limit
   )
-  if(!is.null(compare_time_limit)){
+  if (!is.null(compare_time_limit)) {
     Plot_presence <- (
       ggplot(
         df_plot_presence,
@@ -447,13 +411,13 @@ plot_presence_fun <- function(
           # Delta_rank = Delta_rank,
           # Delta_percent_arch = Delta_percent_arch,
           text = paste(
-            "Archetype: ", Archetype,"<br>", # Archetype name
-            "Base Archetype: ", Base_Archetype, "<br>",  # Base Archetype name
-            "Rank: ",Rank,if_else(Delta_rank == "","",paste0(" (",Delta_rank, ")") )," [n = ",Archetype_count,"]" , "<br>",
-            "Archetype Win rate: ",Arch_winrate_format," "," (",Delta_Arch_win_rate,")","<br>",
-            "Base Archetype Win rate: ",Based_Arch_winrate_format," "," (",Delta_based_Arch_win_rate,")","<br>",
-            "Delta Archetype percent: ", Delta_percent_arch," %", "<br>",
-            "Base Archetype count: ", Based_Archetype_count," (",Based_Archetype_percent," %" , ")", "<br>",
+            "Archetype: ", Archetype, "<br>", # Archetype name
+            "Base Archetype: ", Base_Archetype, "<br>", # Base Archetype name
+            "Rank: ", Rank, if_else(Delta_rank == "", "", paste0(" (", Delta_rank, ")")), " [n = ", Archetype_count, "]", "<br>",
+            "Archetype Win rate: ", Arch_winrate_format, " ", " (", Delta_Arch_win_rate, ")", "<br>",
+            "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", " (", Delta_based_Arch_win_rate, ")", "<br>",
+            "Delta Archetype percent: ", Delta_percent_arch, " %", "<br>",
+            "Base Archetype count: ", Based_Archetype_count, " (", Based_Archetype_percent, " %", ")", "<br>",
             sep = ""
           )
         )
@@ -497,9 +461,8 @@ plot_presence_fun <- function(
           ]
         )
     ) %>%
-      ggplotly(tooltip = c("text"),height = (480*2.25),width = (640*2.25))
-    
-  } else{
+      ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
+  } else {
     Plot_presence <- (
       ggplot(
         df_plot_presence,
@@ -511,9 +474,9 @@ plot_presence_fun <- function(
           text = paste(
             "Archetype: ", Archetype, "<br>",
             "Base Archetype: ", Base_Archetype, "<br>",
-            "Rank: ",Rank," [n = ",Archetype_count ,"]", "<br>",
-            "Archetype Win rate: ",Arch_winrate_format," ", "<br>",
-            "Base Archetype Win rate: ",Based_Arch_winrate_format," ", "<br>",
+            "Rank: ", Rank, " [n = ", Archetype_count, "]", "<br>",
+            "Archetype Win rate: ", Arch_winrate_format, " ", "<br>",
+            "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", "<br>",
             "Archetype: ", Based_Archetype_percent, "<br>",
             "Base Archetype count: ", Based_Archetype_count, "<br>",
             sep = ""
@@ -546,26 +509,18 @@ plot_presence_fun <- function(
           ]
         )
     ) %>%
-      ggplotly(tooltip = c("text"),height = (480*2.25),width = (640*2.25))
-    
-    
-    
-    
+      ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
   }
-  
+
   # Truc compliqué pour enlever l'overlay du texte
   Plot_presence$x$data[[which(
     sapply(Plot_presence$x$data, function(x) {
       x$mode == "text"
     }) == TRUE
   )]]$hoverinfo <- "none"
-  
+
   return(Plot_presence)
-  
-  
 }
-
-
 ```
 
 
@@ -588,11 +543,11 @@ plot_presence_fun <- function(
 
 ```{r out.width="100%"}
 plot_presence_fun(
-    df_base = Presence_df_base,
-    color_scheme = colors_scales_presence,
-    time_limit = Inf,
-    compare_time_limit = NULL
-    )
+  df_base = Presence_df_base,
+  color_scheme = colors_scales_presence,
+  time_limit = Inf,
+  compare_time_limit = NULL
+)
 ```
 
 # 1 Month
@@ -604,11 +559,11 @@ plot_presence_fun(
 
 ```{r out.width="100%"}
 plot_presence_fun(
-    df_base = Presence_df_base,
-    color_scheme = colors_scales_presence,
-    time_limit = 5,
-    compare_time_limit = Inf
-    )
+  df_base = Presence_df_base,
+  color_scheme = colors_scales_presence,
+  time_limit = 5,
+  compare_time_limit = Inf
+)
 ```
 
 
@@ -621,11 +576,11 @@ plot_presence_fun(
 
 ```{r ,out.height = "100%",out.width="100%"}
 plot_presence_fun(
-    df_base = Presence_df_base,
-    color_scheme = colors_scales_presence,
-    time_limit = 3,
-    compare_time_limit = 5
-    )
+  df_base = Presence_df_base,
+  color_scheme = colors_scales_presence,
+  time_limit = 3,
+  compare_time_limit = 5
+)
 ```
 
 
@@ -638,10 +593,9 @@ plot_presence_fun(
 
 ```{r out.width="100%"}
 plot_presence_fun(
-    df_base = Presence_df_base,
-    color_scheme = colors_scales_presence,
-    time_limit = 2,
-    compare_time_limit = 5
-    )
-
+  df_base = Presence_df_base,
+  color_scheme = colors_scales_presence,
+  time_limit = 2,
+  compare_time_limit = 5
+)
 ```

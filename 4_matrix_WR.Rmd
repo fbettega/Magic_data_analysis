@@ -14,7 +14,7 @@ knitr::opts_chunk$set(
   message = FALSE,
   warning = FALSE
 )
-#  
+#
 
 library("rjson")
 library(lubridate)
@@ -23,7 +23,7 @@ library(tidyverse)
 library(plotly)
 library("rwantshue")
 library(ggfittext)
-  # css: TOC.css
+# css: TOC.css
 
 source("S2_Source_mtg_new_card.R")
 conflicted::conflicts_prefer(dplyr::filter)
@@ -34,14 +34,13 @@ loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
 
 # Reflechir a inclusion player
-# 
+#
 # A reflechir :
 # * WR matrix a l'échelle du match
 # * WR including player perf
 # * Combination
 
 # X et Y en bilattérale
-
 ```
 
 
@@ -60,23 +59,24 @@ df_base <- loaded_base_data %>%
   mutate(
     Archetype_count = n()
   ) %>%
-  arrange(Archetype_count) 
+  arrange(Archetype_count)
 
 
 
 
-Other_Archetype <- df_base %>% 
-  filter(Archetype_count < Archetype_cut_of | Archetype == "Unknown") %>% 
-  pull(Archetype) %>% unique()
+Other_Archetype <- df_base %>%
+  filter(Archetype_count < Archetype_cut_of | Archetype == "Unknown") %>%
+  pull(Archetype) %>%
+  unique()
 
 
 df_base_all_data <- df_base %>%
-    mutate(
-      Archetype = ifelse(Archetype %in% Other_Archetype,
-                         "Other",
-                         Archetype
-                         )
-      ) %>% 
+  mutate(
+    Archetype = ifelse(Archetype %in% Other_Archetype,
+      "Other",
+      Archetype
+    )
+  ) %>%
   mutate(
     Archetype =
       factor(Archetype,
@@ -87,9 +87,9 @@ df_base_all_data <- df_base %>%
         level = rev(unique(.$Archetype))
       )
     ),
-    Base_Archetype = 
-      
-      factor( Base_Archetype,
+    Base_Archetype =
+
+      factor(Base_Archetype,
         level = unique(.$Base_Archetype)
       )
   )
@@ -109,42 +109,43 @@ df_base_all_data <- df_base %>%
 
 
 ```{r}
-Df_win_rate_matrix_base <- df_base_all_data %>% 
-  rowwise() %>% 
-  filter(!is.null(Matchups)) %>% 
+Df_win_rate_matrix_base <- df_base_all_data %>%
+  rowwise() %>%
+  filter(!is.null(Matchups)) %>%
   unnest_longer(Matchups) %>%
-  unnest_wider(Matchups,names_sep = "_") %>% 
+  unnest_wider(Matchups, names_sep = "_") %>%
   select(
-    id,Meta,Week,Date,Archetype,Player,
-    Matchups_Opponent,Matchups_OpponentArchetype,Matchups_Wins,
-         Matchups_Losses,Matchups_Draws,matches) %>% 
+    id, Meta, Week, Date, Archetype, Player,
+    Matchups_Opponent, Matchups_OpponentArchetype, Matchups_Wins,
+    Matchups_Losses, Matchups_Draws, matches
+  ) %>%
   mutate(
     Matchups_Opponent_basedArchetype = Matchups_OpponentArchetype,
     Matchups_OpponentArchetype = Archetype_agreger(Matchups_OpponentArchetype),
     Matchups_OpponentArchetype = ifelse(Matchups_OpponentArchetype %in% Other_Archetype,
-                         "Other",
-                         Matchups_OpponentArchetype
-                         ),
-    Matchups_OpponentArchetype = factor(Matchups_OpponentArchetype,levels = rev(levels(Archetype)))
-         ) 
+      "Other",
+      Matchups_OpponentArchetype
+    ),
+    Matchups_OpponentArchetype = factor(Matchups_OpponentArchetype, levels = rev(levels(Archetype)))
+  )
 
 
 
 
 
-Df_win_rate_matrix_summarise <- Df_win_rate_matrix_base %>% 
+Df_win_rate_matrix_summarise <- Df_win_rate_matrix_base %>%
   select(
-    Archetype,Matchups_OpponentArchetype,
-    Matchups_Wins,Matchups_Losses
-    ) %>% 
+    Archetype, Matchups_OpponentArchetype,
+    Matchups_Wins, Matchups_Losses
+  ) %>%
   mutate(
     Result = Matchups_Wins > Matchups_Losses,
     Draw = Matchups_Wins == Matchups_Losses
-    ) %>% 
+  ) %>%
   group_by(
     Archetype,
     Matchups_OpponentArchetype
-    ) %>%
+  ) %>%
   summarise(
     number_of_matches = n() - sum(Draw),
     Win_matches = sum(Result),
@@ -154,49 +155,50 @@ Df_win_rate_matrix_summarise <- Df_win_rate_matrix_base %>%
     .groups = "drop"
   ) %>%
   mutate(
-         WR_games = winrate_1_data(Matchups_Wins,Matchups_Losses),
-         CI_WR_games = CI_prop(WR_games,number_of_games),
-         CI_WR_sign_games = factor(
-             ifelse(CI_WR_games == 0,"0",
-                    ifelse(
-                      ((WR_games - 0.5) + (CI_WR_games)) > 0,
-                      "+",
-                      ifelse(
-                        ((WR_games - 0.5) - (CI_WR_games)) < 0,
-                        "-","0"
-        ))),
-        levels = c("+","0","-")
-        ),
-          
-         WR_matches = winrate_1_data(Win_matches,(number_of_matches - Win_matches)),
-         CI_WR_matches = CI_prop(WR_matches,number_of_matches),
-        CI_WR_sign_matches = factor(
-                       ifelse(CI_WR_matches == 0,"0",
-                    ifelse(
-        ((WR_matches - 0.5) + (CI_WR_matches)) > 0,
-        "+",
+    WR_games = winrate_1_data(Matchups_Wins, Matchups_Losses),
+    CI_WR_games = CI_prop(WR_games, number_of_games),
+    CI_WR_sign_games = factor(
+      ifelse(CI_WR_games == 0, "0",
         ifelse(
-          ((WR_matches - 0.5) - (CI_WR_matches)) < 0,
-          "-","0"
-        ))),levels = c("+","0","-") ),
-         
-         ) 
+          ((WR_games - 0.5) + (CI_WR_games)) > 0,
+          "+",
+          ifelse(
+            ((WR_games - 0.5) - (CI_WR_games)) < 0,
+            "-", "0"
+          )
+        )
+      ),
+      levels = c("+", "0", "-")
+    ),
+    WR_matches = winrate_1_data(Win_matches, (number_of_matches - Win_matches)),
+    CI_WR_matches = CI_prop(WR_matches, number_of_matches),
+    CI_WR_sign_matches = factor(
+      ifelse(CI_WR_matches == 0, "0",
+        ifelse(
+          ((WR_matches - 0.5) + (CI_WR_matches)) > 0,
+          "+",
+          ifelse(
+            ((WR_matches - 0.5) - (CI_WR_matches)) < 0,
+            "-", "0"
+          )
+        )
+      ),
+      levels = c("+", "0", "-")
+    ),
+  )
 
 
-Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>% 
+Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>%
   mutate(
-    number_format_games = paste0("n = ",number_of_games," [",Matchups_Wins ,"-",Matchups_Losses,"]"),
-    number_format_matches = paste0("n = ",number_of_matches," [",Win_matches ,"-",(number_of_matches - Win_matches),"]"),
-    CI_WR_format_matches = paste0(round(WR_matches*100,1), "%",formating_CI(WR_matches,CI_WR_matches,round_val = 1,limit = c(0,1))),
-    CI_WR_format_games = paste0(round(WR_games*100,1), "%",formating_CI(WR_games,CI_WR_games,round_val = 1,limit = c(0,1)))
-  ) %>% 
+    number_format_games = paste0("n = ", number_of_games, " [", Matchups_Wins, "-", Matchups_Losses, "]"),
+    number_format_matches = paste0("n = ", number_of_matches, " [", Win_matches, "-", (number_of_matches - Win_matches), "]"),
+    CI_WR_format_matches = paste0(round(WR_matches * 100, 1), "%", formating_CI(WR_matches, CI_WR_matches, round_val = 1, limit = c(0, 1))),
+    CI_WR_format_games = paste0(round(WR_games * 100, 1), "%", formating_CI(WR_games, CI_WR_games, round_val = 1, limit = c(0, 1)))
+  ) %>%
   mutate(
     CI_WR_sign_diff_0_games = CI_WR_sign_games != "0",
     CI_WR_sign_diff_0_matches = CI_WR_sign_matches != "0"
-    )
-
-
-
+  )
 ```
 
 
@@ -213,196 +215,192 @@ plot_win_rate_mat <- function(
     simplify_tab_ratio = 0,
     only_signif = FALSE,
     tiles_size = 1,
-    size_multiplier = 5
-){
+    size_multiplier = 5) {
   marges <- list(
-    l = 0,  # marge gauche
+    l = 0, # marge gauche
     r = 50, # marge droite (par exemple)
     b = 50, # marge basse (par exemple)
-    t = 50  # marge haute (par exemple)
+    t = 50 # marge haute (par exemple)
   )
-  
-  
-  Df_winrate_format_filter_base <- Df_winrate_format %>% 
-    filter(number_of_games > 0) %>% 
+
+
+  Df_winrate_format_filter_base <- Df_winrate_format %>%
+    filter(number_of_games > 0) %>%
     # filtre surement a déplacé pour opti
-    filter(Archetype != Matchups_OpponentArchetype) %>% 
-    filter(!!rlang::sym(paste0("number_of_",group_column)) > Cut_of_number_of_data) 
-  
-  if(only_signif){
-    
-    Df_winrate_format_filter_base <- Df_winrate_format_filter_base %>% 
-      filter(!!rlang::sym(paste0("CI_WR_sign_diff_0_",group_column)))
+    filter(Archetype != Matchups_OpponentArchetype) %>%
+    filter(!!rlang::sym(paste0("number_of_", group_column)) > Cut_of_number_of_data)
+
+  if (only_signif) {
+    Df_winrate_format_filter_base <- Df_winrate_format_filter_base %>%
+      filter(!!rlang::sym(paste0("CI_WR_sign_diff_0_", group_column)))
   }
-  
-  
-  
-  Df_winrate_format_filter <- Df_winrate_format_filter_base %>% 
-    group_by(Archetype) %>% 
+
+
+
+  Df_winrate_format_filter <- Df_winrate_format_filter_base %>%
+    group_by(Archetype) %>%
     mutate(
-      ratio_matchup_arch = n()/(length(unique(Df_winrate_format_filter_base$Archetype))-1)
-    )  %>%
-    ungroup() %>% 
-    group_by(Matchups_OpponentArchetype) %>% 
+      ratio_matchup_arch = n() / (length(unique(Df_winrate_format_filter_base$Archetype)) - 1)
+    ) %>%
+    ungroup() %>%
+    group_by(Matchups_OpponentArchetype) %>%
     mutate(
-      ratio_matchup_oppoarch = n()/(length(unique(Df_winrate_format_filter_base$Matchups_OpponentArchetype))-1)
-    )  %>%
-    ungroup() %>% 
-    filter(ratio_matchup_arch >= simplify_tab_ratio ) %>% 
-    filter(ratio_matchup_oppoarch >= simplify_tab_ratio) %>% 
-    select(-ratio_matchup_arch , -ratio_matchup_oppoarch) %>% 
-    
-    
-    group_by(Archetype ) %>% 
+      ratio_matchup_oppoarch = n() / (length(unique(Df_winrate_format_filter_base$Matchups_OpponentArchetype)) - 1)
+    ) %>%
+    ungroup() %>%
+    filter(ratio_matchup_arch >= simplify_tab_ratio) %>%
+    filter(ratio_matchup_oppoarch >= simplify_tab_ratio) %>%
+    select(-ratio_matchup_arch, -ratio_matchup_oppoarch) %>%
+    group_by(Archetype) %>%
     mutate(
       Archetype_presence_matches = sum(number_of_matches),
       Archetype_presence_games = sum(number_of_games),
-      
-      Archetype_WR_matches = winrate_1_data(sum(Win_matches),sum(number_of_matches - Win_matches)),
-      Archetype_CI_WR_matches = CI_prop(Archetype_WR_matches,Archetype_presence_matches),
+      Archetype_WR_matches = winrate_1_data(sum(Win_matches), sum(number_of_matches - Win_matches)),
+      Archetype_CI_WR_matches = CI_prop(Archetype_WR_matches, Archetype_presence_matches),
       Archetype_CI_WR_format_matches = paste0(
-        round(Archetype_WR_matches*100,1),
+        round(Archetype_WR_matches * 100, 1),
         "%",
         formating_CI(
           Archetype_WR_matches,
           Archetype_CI_WR_matches,
-          round_val = 1,limit = c(0,1)
+          round_val = 1, limit = c(0, 1)
         )
       ),
-      
-      Archetype_WR_games = winrate_1_data(sum(Matchups_Wins),sum(Matchups_Losses)),
-      Archetype_CI_WR_games = CI_prop(Archetype_WR_games,Archetype_presence_games),
+      Archetype_WR_games = winrate_1_data(sum(Matchups_Wins), sum(Matchups_Losses)),
+      Archetype_CI_WR_games = CI_prop(Archetype_WR_games, Archetype_presence_games),
       Archetype_CI_WR_format_games = paste0(
-        round(Archetype_WR_games*100,1),
+        round(Archetype_WR_games * 100, 1),
         "%",
         formating_CI(
           Archetype_WR_games,
           Archetype_CI_WR_games,
-          round_val = 1,limit = c(0,1)
+          round_val = 1, limit = c(0, 1)
         )
       )
-    )  %>% 
+    ) %>%
     select(
-      -Archetype_WR_games,-Archetype_CI_WR_games,
-      -Archetype_WR_matches,-Archetype_CI_WR_matches
-    ) %>% 
-    ungroup() %>% 
-    group_by(Matchups_OpponentArchetype ) %>% 
+      -Archetype_WR_games, -Archetype_CI_WR_games,
+      -Archetype_WR_matches, -Archetype_CI_WR_matches
+    ) %>%
+    ungroup() %>%
+    group_by(Matchups_OpponentArchetype) %>%
     mutate(
       oppo_Archetype_presence_matches = sum(number_of_matches),
       oppo_Archetype_presence_games = sum(number_of_games),
-      
-      oppo_Archetype_WR_matches = winrate_1_data(sum(number_of_matches - Win_matches),sum(Win_matches)),
-      oppo_Archetype_CI_WR_matches = CI_prop(oppo_Archetype_WR_matches,oppo_Archetype_presence_matches),
+      oppo_Archetype_WR_matches = winrate_1_data(sum(number_of_matches - Win_matches), sum(Win_matches)),
+      oppo_Archetype_CI_WR_matches = CI_prop(oppo_Archetype_WR_matches, oppo_Archetype_presence_matches),
       oppo_Archetype_CI_WR_format_matches = paste0(
-        round(oppo_Archetype_WR_matches*100,1),
+        round(oppo_Archetype_WR_matches * 100, 1),
         "%",
         formating_CI(
           oppo_Archetype_WR_matches,
           oppo_Archetype_CI_WR_matches,
-          round_val = 1,limit = c(0,1)
+          round_val = 1, limit = c(0, 1)
         )
       ),
-      
-      oppo_Archetype_WR_games = winrate_1_data(sum(Matchups_Wins),sum(Matchups_Losses)),
-      oppo_Archetype_CI_WR_games = CI_prop(oppo_Archetype_WR_games,oppo_Archetype_presence_games),
+      oppo_Archetype_WR_games = winrate_1_data(sum(Matchups_Wins), sum(Matchups_Losses)),
+      oppo_Archetype_CI_WR_games = CI_prop(oppo_Archetype_WR_games, oppo_Archetype_presence_games),
       oppo_Archetype_CI_WR_format_games = paste0(
-        round(oppo_Archetype_WR_games*100,1),
+        round(oppo_Archetype_WR_games * 100, 1),
         "%",
         formating_CI(
           oppo_Archetype_WR_games,
           oppo_Archetype_CI_WR_games,
-          round_val = 1,limit = c(0,1)
+          round_val = 1, limit = c(0, 1)
         )
       )
-      
-      
-    ) %>% 
+    ) %>%
     select(
-      -oppo_Archetype_WR_games,-oppo_Archetype_CI_WR_games,
-      -oppo_Archetype_WR_matches,-oppo_Archetype_CI_WR_matches
-    ) %>% 
-    ungroup() 
-  
+      -oppo_Archetype_WR_games, -oppo_Archetype_CI_WR_games,
+      -oppo_Archetype_WR_matches, -oppo_Archetype_CI_WR_matches
+    ) %>%
+    ungroup()
 
-  
+
+
   label_x <- paste0(
-    "<span style='font-size:",17-size_multiplier,"px;'> <b>",
-    Df_winrate_format_filter  %>%
-      pull(Archetype) %>% 
-      unique(),
-    "</b> </span>",
-    "<br /> n : ", Df_winrate_format_filter  %>%
-      select(Archetype,all_of(paste0("Archetype_presence_",group_column))) %>% 
-      distinct() %>% 
-      pull(
-        !!rlang::sym(paste0("Archetype_presence_",group_column))
-      ),
-    "<br /> ",Df_winrate_format_filter  %>%
-      pull(
-        !!rlang::sym(paste0("Archetype_CI_WR_format_",group_column))
-      ) %>% 
-      unique()
-  )
-  
-  
-  label_y <-  paste0(
-    "<span style='font-size:",17-size_multiplier,"px;'> <b>",
-    Df_winrate_format_filter  %>%
+    "<span style='font-size:", 17 - size_multiplier, "px;'> <b>",
+    Df_winrate_format_filter %>%
       pull(Archetype) %>%
       unique(),
     "</b> </span>",
-    "<br /> n : ", Df_winrate_format_filter  %>%
-      select(Archetype,all_of(paste0("Archetype_presence_",group_column))) %>% 
-      distinct() %>% 
+    "<br /> n : ", Df_winrate_format_filter %>%
+      select(Archetype, all_of(paste0("Archetype_presence_", group_column))) %>%
+      distinct() %>%
       pull(
-        !!rlang::sym(paste0("Archetype_presence_",group_column))
-      ) ,
-    "<br /> ",Df_winrate_format_filter  %>%
+        !!rlang::sym(paste0("Archetype_presence_", group_column))
+      ),
+    "<br /> ", Df_winrate_format_filter %>%
       pull(
-        !!rlang::sym(paste0("Archetype_CI_WR_format_",group_column))
+        !!rlang::sym(paste0("Archetype_CI_WR_format_", group_column))
       ) %>%
       unique()
   )
-  
 
-  
+
+  label_y <- paste0(
+    "<span style='font-size:", 17 - size_multiplier, "px;'> <b>",
+    Df_winrate_format_filter %>%
+      pull(Archetype) %>%
+      unique(),
+    "</b> </span>",
+    "<br /> n : ", Df_winrate_format_filter %>%
+      select(Archetype, all_of(paste0("Archetype_presence_", group_column))) %>%
+      distinct() %>%
+      pull(
+        !!rlang::sym(paste0("Archetype_presence_", group_column))
+      ),
+    "<br /> ", Df_winrate_format_filter %>%
+      pull(
+        !!rlang::sym(paste0("Archetype_CI_WR_format_", group_column))
+      ) %>%
+      unique()
+  )
+
+
+
   plot_en_cours <- (
-    ggplot(Df_winrate_format_filter,
-           aes(
-             Matchups_OpponentArchetype,
-             Archetype,
-             fill = !!rlang::sym(paste0("WR_",group_column)),
-             text = paste(
-               "Win rate of ", Archetype," vs ",Matchups_OpponentArchetype,"<br>", # Archetype name
-               !!rlang::sym(paste0("number_format_",group_column)), "<br>",
-               "(",
-               !!rlang::sym(paste0("CI_WR_sign_",group_column)),") ",
-               !!rlang::sym(paste0("CI_WR_format_",group_column)), "<br>",
-               sep = ""
-             ) 
-           )
+    ggplot(
+      Df_winrate_format_filter,
+      aes(
+        Matchups_OpponentArchetype,
+        Archetype,
+        fill = !!rlang::sym(paste0("WR_", group_column)),
+        text = paste(
+          "Win rate of ", Archetype, " vs ", Matchups_OpponentArchetype, "<br>", # Archetype name
+          !!rlang::sym(paste0("number_format_", group_column)), "<br>",
+          "(",
+          !!rlang::sym(paste0("CI_WR_sign_", group_column)), ") ",
+          !!rlang::sym(paste0("CI_WR_format_", group_column)), "<br>",
+          sep = ""
+        )
+      )
     ) +
       geom_tile(
-        color= "white", 
-        stat="identity",
-        height=tiles_size, 
-        width=tiles_size
+        color = "white",
+        stat = "identity",
+        height = tiles_size,
+        width = tiles_size
       ) +
-      scale_fill_gradient2(midpoint = 0.5, low = "red", mid = "white",
-                           high = "green", space = "Lab" ) +
+      scale_fill_gradient2(
+        midpoint = 0.5, low = "red", mid = "white",
+        high = "green", space = "Lab"
+      ) +
       geom_text(
         aes(
-          Matchups_OpponentArchetype, 
+          Matchups_OpponentArchetype,
           Archetype,
           label = ifelse(
-            !!rlang::sym(paste0("CI_WR_sign_diff_0_",group_column)), 
-            paste0("<b>",
-                   round(
-                     !!rlang::sym(paste0("WR_",group_column))*100,
-                     1), 
-                   "</b>"), 
-            round(!!rlang::sym(paste0("WR_",group_column))*100,1)
+            !!rlang::sym(paste0("CI_WR_sign_diff_0_", group_column)),
+            paste0(
+              "<b>",
+              round(
+                !!rlang::sym(paste0("WR_", group_column)) * 100,
+                1
+              ),
+              "</b>"
+            ),
+            round(!!rlang::sym(paste0("WR_", group_column)) * 100, 1)
           )
         ),
       ) +
@@ -415,40 +413,39 @@ plot_win_rate_mat <- function(
         # sec.axis = dup_axis()
         # guide = guide_axis(n.dodge = 2)
       ) +
-      
-      
-      
-      geom_tile(data = 
-                  Df_winrate_format_filter %>% 
-                  filter(
-                    !!rlang::sym(paste0("CI_WR_sign_diff_0_",group_column))
-                  ), 
-                aes(
-                  Matchups_OpponentArchetype,
-                  Archetype), 
-                fill="transparent",
-                colour="black", 
-                size=1)  +
-      
+      geom_tile(
+        data =
+          Df_winrate_format_filter %>%
+            filter(
+              !!rlang::sym(paste0("CI_WR_sign_diff_0_", group_column))
+            ),
+        aes(
+          Matchups_OpponentArchetype,
+          Archetype
+        ),
+        fill = "transparent",
+        colour = "black",
+        size = 1
+      ) +
       theme(
-        axis.title=element_blank(),
-        legend.position='none',
+        axis.title = element_blank(),
+        legend.position = "none",
         panel.border = element_blank(),
         panel.grid.major = element_blank(),
         axis.text.x = element_text(angle = 315)
-      ) 
-    
-  )  %>%
-    ggplotly(tooltip = c("text"),
-             height = (480*size_multiplier),width = (640*size_multiplier)
-    ) %>% 
+      )
+
+  ) %>%
+    ggplotly(
+      tooltip = c("text"),
+      height = (480 * size_multiplier), width = (640 * size_multiplier)
+    ) %>%
     plotly::layout(margin = marges)
-  
-  
-  
+
+
+
   return(plot_en_cours)
 }
-
 ```
 
 
@@ -460,24 +457,26 @@ Par exemple un socre de 2-1 compte comme 3 manches
 ## Total matrix
 
 ```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format,"games",size_multiplier=4)
+plot_win_rate_mat(Df_win_rate_matrix_format, "games", size_multiplier = 4)
 ```
 
 ## Only significative CI
 
 ```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format,"games",
-                  # simplify_tab_ratio = 0.1,
-                  only_signif = TRUE,size_multiplier=4)
+plot_win_rate_mat(Df_win_rate_matrix_format, "games",
+  # simplify_tab_ratio = 0.1,
+  only_signif = TRUE, size_multiplier = 4
+)
 ```
 
 ## Only more than 20 matches
 
 ```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format,"games",
-                  Cut_of_number_of_data = 20,
-                  simplify_tab_ratio = 0.5,
-                  size_multiplier = 3)
+plot_win_rate_mat(Df_win_rate_matrix_format, "games",
+  Cut_of_number_of_data = 20,
+  simplify_tab_ratio = 0.5,
+  size_multiplier = 3
+)
 ```
 
 
@@ -493,26 +492,28 @@ Par exemple un socre de 2-1 compte comme 1 partie gagné.
 ## Total matrix  
 
 ```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format,"matches",size_multiplier=4)
+plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 4)
 ```
 
 
 ## Only significative CI
 
 ```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format,"matches",
-                  # simplify_tab_ratio = 0.5,
-                  only_signif = TRUE,size_multiplier=4)
+plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
+  # simplify_tab_ratio = 0.5,
+  only_signif = TRUE, size_multiplier = 4
+)
 ```
 
 
 ## Only more than 20 matches
 
 ```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format,"matches",
-                  Cut_of_number_of_data = 20,
-                  simplify_tab_ratio = 0.5,
-                  size_multiplier=3)
+plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
+  Cut_of_number_of_data = 20,
+  simplify_tab_ratio = 0.5,
+  size_multiplier = 3
+)
 ```
 
 
@@ -528,69 +529,73 @@ Tentative de multiplier la matrice de win rate (WR ou borne inférieure du CI) p
 Ne sont considéré que les decks avec un CI
 ```{r}
 Df_Expected_number_of_win_by_week <- df_base_all_data %>%
-  group_by(Archetype,Week) %>% 
-  summarise(n = n(),.groups = "drop") %>%
-  rename(Matchups_OpponentArchetype = Archetype) %>% 
-  full_join(Df_win_rate_matrix_summarise %>% 
-              filter(CI_WR_matches != 0,
-                     !is.na(CI_WR_matches)) %>% 
-              mutate(lower_ci_bound = WR_matches + CI_WR_matches) %>% 
-              select(
-                Archetype,WR_matches,
-                lower_ci_bound ,
-                     Matchups_OpponentArchetype), 
-            by = c("Matchups_OpponentArchetype")) %>% 
+  group_by(Archetype, Week) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  rename(Matchups_OpponentArchetype = Archetype) %>%
+  full_join(
+    Df_win_rate_matrix_summarise %>%
+      filter(
+        CI_WR_matches != 0,
+        !is.na(CI_WR_matches)
+      ) %>%
+      mutate(lower_ci_bound = WR_matches + CI_WR_matches) %>%
+      select(
+        Archetype, WR_matches,
+        lower_ci_bound,
+        Matchups_OpponentArchetype
+      ),
+    by = c("Matchups_OpponentArchetype")
+  ) %>%
   mutate(
     lower_ci_bounda = replace(
       replace(lower_ci_bound, lower_ci_bound < 0, 0),
-      lower_ci_bound > 1, 1),
+      lower_ci_bound > 1, 1
+    ),
     lower_ci_bound = ifelse(Matchups_OpponentArchetype == Archetype,
-                            0.5,lower_ci_bound),
+      0.5, lower_ci_bound
+    ),
     expected_win_WR = WR_matches * n,
     expected_win_lower_ci = lower_ci_bound * n
-    ) %>% 
-   drop_na() %>%
+  ) %>%
+  drop_na() %>%
   ungroup()
 
 
 
 Df_expected_of_week_sum <- rbind(
-  Df_Expected_number_of_win_by_week %>% 
-    mutate(Week = as.character(Week)) %>% 
-    group_by(Archetype,Week) %>% 
+  Df_Expected_number_of_win_by_week %>%
+    mutate(Week = as.character(Week)) %>%
+    group_by(Archetype, Week) %>%
     summarise(
-      S_wr = sum(expected_win_WR)/sum(n),
-      S_ci = sum(expected_win_lower_ci)/sum(n),
+      S_wr = sum(expected_win_WR) / sum(n),
+      S_ci = sum(expected_win_lower_ci) / sum(n),
       .groups = "drop"
-      ) %>% 
+    ) %>%
     distinct(),
-  Df_Expected_number_of_win_by_week %>% 
-    group_by(Archetype) %>% 
+  Df_Expected_number_of_win_by_week %>%
+    group_by(Archetype) %>%
     summarise(
-      
-      S_wr = sum(expected_win_WR)/sum(n),
-      S_ci = sum(expected_win_lower_ci)/sum(n),
+      S_wr = sum(expected_win_WR) / sum(n),
+      S_ci = sum(expected_win_lower_ci) / sum(n),
       Week = "All",
       .groups = "drop"
-      ) %>% 
+    ) %>%
     distinct()
-) %>% 
+) %>%
   mutate(
     Week = factor(
       Week,
-      levels = c(1:max(df_base_all_data$Week),"All")
-                       )
-         )
+      levels = c(1:max(df_base_all_data$Week), "All")
+    )
+  )
 
 
-Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>% 
-  arrange(Week) %>% 
-  pivot_wider(names_from = Week,
-              values_from = c(S_wr,S_ci)) 
-
-
-
-
+Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>%
+  arrange(Week) %>%
+  pivot_wider(
+    names_from = Week,
+    values_from = c(S_wr, S_ci)
+  )
 ```
 
 
@@ -598,70 +603,65 @@ Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>%
 ```{r}
 Presence_for_best_deck_plot <- rbind(
   Df_Expected_number_of_win_by_week %>%
-  distinct(Matchups_OpponentArchetype, Week, n),
+    distinct(Matchups_OpponentArchetype, Week, n),
   Df_Expected_number_of_win_by_week %>%
-  distinct(Matchups_OpponentArchetype, Week, n) %>%
-    group_by(Matchups_OpponentArchetype) %>%  summarise(
-    n = sum(n),
-    Week = "All",
-    .groups = "drop"
-      )
-  ) %>%
+    distinct(Matchups_OpponentArchetype, Week, n) %>%
+    group_by(Matchups_OpponentArchetype) %>% summarise(
+      n = sum(n),
+      Week = "All",
+      .groups = "drop"
+    )
+) %>%
   mutate(
     Week = factor(
       Week,
-      levels = c(1:max(Df_Expected_number_of_win_by_week$Week),"All"
-                 )
-                       )
-         ) %>% 
-  group_by(Week) %>% 
-  mutate(
-    presence_percent = n/sum(n)
+      levels = c(1:max(Df_Expected_number_of_win_by_week$Week), "All")
     )
+  ) %>%
+  group_by(Week) %>%
+  mutate(
+    presence_percent = n / sum(n)
+  )
 
 scheme <- iwanthue(seed = 42, force_init = TRUE)
 # Plot color scales
 colors_scales_presence <- scheme$hex(
-    length(levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype))
+  length(levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype))
 )
 
 
 plot_archetype_spaghetti <- (ggplot(
   Presence_for_best_deck_plot,
-       aes(x = Week,
-           y = presence_percent,
-           color = Matchups_OpponentArchetype,
-           text = paste(
-            "Archetype: ", Matchups_OpponentArchetype,"<br>", # Archetype name
-            "n : ", n," (",round(presence_percent*100,2)," %)" , "<br>",
-            sep = ""
-          ),
-          group=1
-           )
-       ) +
-  geom_line(
-           ) +
-  geom_point()+ 
+  aes(
+    x = Week,
+    y = presence_percent,
+    color = Matchups_OpponentArchetype,
+    text = paste(
+      "Archetype: ", Matchups_OpponentArchetype, "<br>", # Archetype name
+      "n : ", n, " (", round(presence_percent * 100, 2), " %)", "<br>",
+      sep = ""
+    ),
+    group = 1
+  )
+) +
+  geom_line() +
+  geom_point() +
   scale_color_manual(
-          values = colors_scales_presence
-        ) +
-    ylab("Archetype presence") +
-    scale_y_continuous(labels = function(x) scales::percent(x)) +
-    theme(
-        axis.title=element_blank(),
-        panel.border = element_blank()
-        )
-  ) %>% 
-   ggplotly(tooltip = c("text"),height = (480*2.25),width = (640*4) 
-            )  %>%
+    values = colors_scales_presence
+  ) +
+  ylab("Archetype presence") +
+  scale_y_continuous(labels = function(x) scales::percent(x)) +
+  theme(
+    axis.title = element_blank(),
+    panel.border = element_blank()
+  )
+) %>%
+  ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 4)) %>%
   plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
     title = list(text = "")
-    )
-    )
-
-
+  ))
 ```
 
 
@@ -674,34 +674,35 @@ plot_archetype_spaghetti
 
 
 ```{r}
-DT::datatable(Df_wide_expected_of_week_sum %>% 
-                select(Archetype,starts_with("S_ci_")) %>% 
-                rename_with(~str_replace(.,"S_ci_","Week "))
-              ,
+DT::datatable(
+  Df_wide_expected_of_week_sum %>%
+    select(Archetype, starts_with("S_ci_")) %>%
+    rename_with(~ str_replace(., "S_ci_", "Week ")),
   filter = "top", rownames = FALSE,
-        callback = DT::JS(
-#         paste0(
-#         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
-#     header = table.columns().header();
-# for (var i = 0; i < tips.length; i++) {
-#   $(header[i]).attr('title', tips[i]);
-# }
-# ",
-onfly_filter_js
-# )
-),
-options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Best deck using Confidence intervalle lower bound'
+  callback = DT::JS(
+    #         paste0(
+    #         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+    #     header = table.columns().header();
+    # for (var i = 0; i < tips.length; i++) {
+    #   $(header[i]).attr('title', tips[i]);
+    # }
+    # ",
+    onfly_filter_js
+    # )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Best deck using Confidence intervalle lower bound"
   )
 ) %>%
-   DT::formatRound(
-     columns=2:ncol(
-       Df_wide_expected_of_week_sum %>% 
-         select(Archetype,starts_with("S_ci_"))
-     ), 
-     digits=2)
+  DT::formatRound(
+    columns = 2:ncol(
+      Df_wide_expected_of_week_sum %>%
+        select(Archetype, starts_with("S_ci_"))
+    ),
+    digits = 2
+  )
 ```
 
 
@@ -717,53 +718,55 @@ plot_archetype_spaghetti
 
 
 ```{r}
-DT::datatable(Df_wide_expected_of_week_sum %>% 
-                select(Archetype,starts_with("S_wr_")) %>% 
-                rename_with(~str_replace(.,"S_wr_","Week ")),
+DT::datatable(
+  Df_wide_expected_of_week_sum %>%
+    select(Archetype, starts_with("S_wr_")) %>%
+    rename_with(~ str_replace(., "S_wr_", "Week ")),
   filter = "top", rownames = FALSE,
-        callback = DT::JS(
-#         paste0(
-#         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
-#     header = table.columns().header();
-# for (var i = 0; i < tips.length; i++) {
-#   $(header[i]).attr('title', tips[i]);
-# }
-# ",
-onfly_filter_js
-# )
-),
-options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Best deck using Win rate'
+  callback = DT::JS(
+    #         paste0(
+    #         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+    #     header = table.columns().header();
+    # for (var i = 0; i < tips.length; i++) {
+    #   $(header[i]).attr('title', tips[i]);
+    # }
+    # ",
+    onfly_filter_js
+    # )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Best deck using Win rate"
   )
 ) %>%
-   DT::formatRound(
-     columns=2:ncol(
-       Df_wide_expected_of_week_sum %>% 
-         select(Archetype,starts_with("S_wr_"))
-     ), 
-     digits=2)
-
+  DT::formatRound(
+    columns = 2:ncol(
+      Df_wide_expected_of_week_sum %>%
+        select(Archetype, starts_with("S_wr_"))
+    ),
+    digits = 2
+  )
 ```
 
 
 ## Best deck if some deck are remove
 ```{r}
-Custom_presence_base_df <- xlsx::read.xlsx("data/best_deck_presence_customizable.xlsx",sheetIndex = 1)
+Custom_presence_base_df <- xlsx::read.xlsx("data/best_deck_presence_customizable.xlsx", sheetIndex = 1)
 
 update_presence_from_data <- df_base_all_data %>%
-  group_by(Archetype) %>% 
-  summarise(n = n(),.groups = "drop") %>%
-  rename(Matchups_OpponentArchetype = Archetype) %>% 
+  group_by(Archetype) %>%
+  summarise(n = n(), .groups = "drop") %>%
+  rename(Matchups_OpponentArchetype = Archetype) %>%
   arrange(desc(n))
 
 
 Updated_presence_rewrite <- full_join(update_presence_from_data,
-                              Custom_presence_base_df %>%
-                                select(-n),
-                              by = "Matchups_OpponentArchetype",keep = TRUE) %>% 
-  select(-Matchups_OpponentArchetype.y) %>% 
+  Custom_presence_base_df %>%
+    select(-n),
+  by = "Matchups_OpponentArchetype", keep = TRUE
+) %>%
+  select(-Matchups_OpponentArchetype.y) %>%
   rename(Matchups_OpponentArchetype = Matchups_OpponentArchetype.x)
 
 
@@ -772,7 +775,7 @@ xlsx::write.xlsx(
   file = "data/best_deck_presence_customizable.xlsx",
   showNA = FALSE,
   row.names = FALSE
-                 )
+)
 ```
 
 
@@ -782,59 +785,61 @@ Deck remove from the metagame : `r Updated_presence_rewrite %>% filter(Custom_me
 ```{r}
 Updated_presence <- Updated_presence_rewrite %>%
   mutate(
-    Custom_meta_less = if_else(is.na(Custom_meta_less),n,Custom_meta_less ),
-    Custom_meta_less = Custom_meta_less/(sum(Custom_meta_less)/sum(n))
-    ) %>%
+    Custom_meta_less = if_else(is.na(Custom_meta_less), n, Custom_meta_less),
+    Custom_meta_less = Custom_meta_less / (sum(Custom_meta_less) / sum(n))
+  ) %>%
   filter(Custom_meta_less > 0)
 
 
 Df_Expected_number_of_win_custom_less <- Updated_presence %>%
-  select(Matchups_OpponentArchetype,Custom_meta_less ) %>% 
-  full_join(Df_win_rate_matrix_summarise %>% 
-              mutate(no_data_arch = Archetype %in% (
-                Updated_presence_rewrite %>% 
-                  filter(Custom_meta_less == 0) %>%
-                  pull(Matchups_OpponentArchetype)
-              ) 
-              ) %>% 
-              filter(!no_data_arch) %>% 
-              select(-no_data_arch) %>% 
-              
-              filter(CI_WR_matches != 0,
-                     !is.na(CI_WR_matches)) %>% 
-              
-              
-              mutate(lower_ci_bound = WR_matches + CI_WR_matches) %>% 
-              select(
-                Archetype,WR_matches,
-                lower_ci_bound ,
-                Matchups_OpponentArchetype), 
-            by = c("Matchups_OpponentArchetype"),relationship = "many-to-many") %>% 
+  select(Matchups_OpponentArchetype, Custom_meta_less) %>%
+  full_join(
+    Df_win_rate_matrix_summarise %>%
+      mutate(no_data_arch = Archetype %in% (
+        Updated_presence_rewrite %>%
+          filter(Custom_meta_less == 0) %>%
+          pull(Matchups_OpponentArchetype)
+      )) %>%
+      filter(!no_data_arch) %>%
+      select(-no_data_arch) %>%
+      filter(
+        CI_WR_matches != 0,
+        !is.na(CI_WR_matches)
+      ) %>%
+      mutate(lower_ci_bound = WR_matches + CI_WR_matches) %>%
+      select(
+        Archetype, WR_matches,
+        lower_ci_bound,
+        Matchups_OpponentArchetype
+      ),
+    by = c("Matchups_OpponentArchetype"), relationship = "many-to-many"
+  ) %>%
   mutate(
     lower_ci_bounda = replace(
       replace(lower_ci_bound, lower_ci_bound < 0, 0),
-      lower_ci_bound > 1, 1),
+      lower_ci_bound > 1, 1
+    ),
     lower_ci_bound = ifelse(Matchups_OpponentArchetype == Archetype,
-                            0.5,lower_ci_bound),
+      0.5, lower_ci_bound
+    ),
     expected_win_WR = WR_matches * Custom_meta_less,
     expected_win_lower_ci = lower_ci_bound * Custom_meta_less
-  ) %>% 
+  ) %>%
   drop_na() %>%
   ungroup()
 
 
 
-Df_expected_of_custom_less_sum <- 
-  Df_Expected_number_of_win_custom_less %>% 
-    group_by(Archetype) %>% 
-    summarise(
-      S_wr = sum(expected_win_WR)/sum(Custom_meta_less ),
-      S_ci = sum(expected_win_lower_ci)/sum(Custom_meta_less ),
-      number_of_matchup = n(),
-      .groups = "drop"
-    ) %>% 
-    distinct() 
-
+Df_expected_of_custom_less_sum <-
+  Df_Expected_number_of_win_custom_less %>%
+  group_by(Archetype) %>%
+  summarise(
+    S_wr = sum(expected_win_WR) / sum(Custom_meta_less),
+    S_ci = sum(expected_win_lower_ci) / sum(Custom_meta_less),
+    number_of_matchup = n(),
+    .groups = "drop"
+  ) %>%
+  distinct()
 ```
 
 
@@ -842,29 +847,25 @@ Df_expected_of_custom_less_sum <-
 ```{r}
 DT::datatable(Df_expected_of_custom_less_sum,
   filter = "top", rownames = FALSE,
-        callback = DT::JS(
-#         paste0(
-#         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
-#     header = table.columns().header();
-# for (var i = 0; i < tips.length; i++) {
-#   $(header[i]).attr('title', tips[i]);
-# }
-# ",
-onfly_filter_js
-# )
-),
-options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = nrow(Df_expected_of_custom_less_sum)),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Best deck using Win rate'
+  callback = DT::JS(
+    #         paste0(
+    #         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+    #     header = table.columns().header();
+    # for (var i = 0; i < tips.length; i++) {
+    #   $(header[i]).attr('title', tips[i]);
+    # }
+    # ",
+    onfly_filter_js
+    # )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_expected_of_custom_less_sum)),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Best deck using Win rate"
   )
 ) %>%
-   DT::formatRound(
-     columns=2:3, 
-     digits=2)
+  DT::formatRound(
+    columns = 2:3,
+    digits = 2
+  )
 ```
-
-
-
-
-

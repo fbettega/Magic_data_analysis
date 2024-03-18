@@ -25,7 +25,7 @@ library(htmltools)
 source("S2_Source_mtg_new_card.R")
 
 conflicted::conflicts_prefer(dplyr::filter)
-# All table include tooltip column description  
+# All table include tooltip column description
 # Reflechir a carte de side vs maccro archetype
 ```
 
@@ -36,9 +36,9 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 
 ```{r data_reading }
-filter_archetype_count <-  50
+filter_archetype_count <- 50
 
-df_export <- readRDS("data/data_meta_en_cours.rds") %>% 
+df_export <- readRDS("data/data_meta_en_cours.rds") %>%
   mutate(
     Deck_winrate = Wins / (Losses + Wins)
   ) %>%
@@ -48,216 +48,212 @@ df_export <- readRDS("data/data_meta_en_cours.rds") %>%
 
 
 
-df_Archetype <-  df_export %>% 
-  filter(!is.na(Wins)) %>% 
-  rowwise() %>% 
-  filter(!is.null(Mainboard)) %>% 
-  filter(!is.null(Sideboard)) %>% 
-  ungroup() %>% 
+df_Archetype <- df_export %>%
+  filter(!is.na(Wins)) %>%
+  rowwise() %>%
+  filter(!is.null(Mainboard)) %>%
+  filter(!is.null(Sideboard)) %>%
+  ungroup() %>%
   group_by(Archetype) %>%
   mutate(
     Archetype_count = n()
-  ) %>% 
-  filter(Archetype_count > filter_archetype_count) %>% 
+  ) %>%
+  filter(Archetype_count > filter_archetype_count) %>%
   arrange(desc(Archetype_count))
 
-  
-df_base_Archetype <-  df_export %>% 
-  ungroup() %>% 
-  filter(!is.na(Wins)) %>% 
-  rowwise() %>% 
-  filter(!is.null(Mainboard)) %>% 
-  filter(!is.null(Sideboard)) %>% 
-  ungroup() %>% 
+
+df_base_Archetype <- df_export %>%
+  ungroup() %>%
+  filter(!is.na(Wins)) %>%
+  rowwise() %>%
+  filter(!is.null(Mainboard)) %>%
+  filter(!is.null(Sideboard)) %>%
+  ungroup() %>%
   group_by(Base_Archetype) %>%
   mutate(
     Archetype_count = n()
-  ) %>% 
-  filter(Archetype_count > filter_archetype_count) %>% 
+  ) %>%
+  filter(Archetype_count > filter_archetype_count) %>%
   arrange(desc(Archetype_count))
 
 # modern_DB_card <- read_csv("data/DBcarte_modern.csv")
-
-
-
 ```
 
 
 
 
 ```{r}
-Count_and_winrates_cards_in_decklist_total <- function(df,group_var,colname_deck_list){
-  if(group_var == "Base_Archetype"){
-    select_group_var <- c(group_var,"Archetype")
-  }else{select_group_var <- group_var }
-  
-  
-    if(colname_deck_list == "Mainboard"){
-    expected_min_size <- 60 
-    } else {
-    expected_min_size <- 0 
-    }
-  
+Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_deck_list) {
+  if (group_var == "Base_Archetype") {
+    select_group_var <- c(group_var, "Archetype")
+  } else {
+    select_group_var <- group_var
+  }
+
+
+  if (colname_deck_list == "Mainboard") {
+    expected_min_size <- 60
+  } else {
+    expected_min_size <- 0
+  }
+
   winrate_by_archetype <- df %>%
-    group_by(across(all_of(select_group_var))) %>% 
-    summarise(Wins_total = sum(Wins),
-              Losses_total = sum(Losses),
-              Draws_total = sum(Draws),
-              .groups = "drop"
+    group_by(across(all_of(select_group_var))) %>%
+    summarise(
+      Wins_total = sum(Wins),
+      Losses_total = sum(Losses),
+      Draws_total = sum(Draws),
+      .groups = "drop"
     )
-  
-  
-  
-  
-  
+
+
+
+
+
   df_new_card_base <- df %>%
     unnest_longer(!!colname_deck_list) %>%
-    unnest_wider(!!colname_deck_list,names_sep = "_") %>%
+    unnest_wider(!!colname_deck_list, names_sep = "_") %>%
     group_by(id) %>%
     # a filtrer mes uniquement pour le main deck
-    mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list,"_Count")))) %>%
+    mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))) %>%
     filter(Number_of_cards >= expected_min_size) %>%
-    mutate(!!rlang::sym(paste0(colname_deck_list,"_CardName")) := Card_agregueur(
-      !!rlang::sym(paste0(colname_deck_list,"_CardName")),
+    mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       fetch = TRUE,
       Tron = TRUE,
       snow = TRUE,
       surveil = TRUE,
-      shock = TRUE,    
+      shock = TRUE,
       triome = TRUE,
       filter_land = TRUE,
       fast_land = TRUE,
       bounce_land = TRUE,
-      horizon_land= TRUE,
+      horizon_land = TRUE,
       basic_land = TRUE
     )) %>%
-    group_by(id, !!rlang::sym(paste0(colname_deck_list,"_CardName"))) %>% 
+    group_by(id, !!rlang::sym(paste0(colname_deck_list, "_CardName"))) %>%
     mutate(
-      !!rlang::sym(paste0(colname_deck_list,"_Count")) := 
-        sum(!!rlang::sym(paste0(colname_deck_list,"_Count"))) ) %>% 
-    distinct()  %>%
-    inner_join(winrate_by_archetype,by = select_group_var) %>% 
+      !!rlang::sym(paste0(colname_deck_list, "_Count")) :=
+        sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))
+    ) %>%
+    distinct() %>%
+    inner_join(winrate_by_archetype, by = select_group_var) %>%
     ungroup()
-  
-  
-  
-  
-  df_new_card_before_filter <- df_new_card_base %>% 
+
+
+
+
+  df_new_card_before_filter <- df_new_card_base %>%
     group_by(
       across(all_of(select_group_var)),
       Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list,"_CardName")),
-      !!rlang::sym(paste0(colname_deck_list,"_Count")),
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
+      !!rlang::sym(paste0(colname_deck_list, "_Count")),
       Wins_total,
       Losses_total,
       Draws_total
-    ) %>% 
+    ) %>%
     summarise(
       count = n(),
       Wins_card = sum(Wins),
       Losses_card = sum(Losses),
       Draws_card = sum(Draws),
       .groups = "drop"
-    ) %>% 
-    mutate(!!rlang::sym(paste0(colname_deck_list,"_Count")) := 
-             as.character(!!rlang::sym(paste0(colname_deck_list,"_Count")))
-    )
-  
-  
-  
-  
-  
-  Card_always_in_deck <- df_new_card_before_filter %>% 
+    ) %>%
+    mutate(!!rlang::sym(paste0(colname_deck_list, "_Count")) :=
+      as.character(!!rlang::sym(paste0(colname_deck_list, "_Count"))))
+
+
+
+
+
+  Card_always_in_deck <- df_new_card_before_filter %>%
     group_by(
       across(all_of(select_group_var)),
       Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list,"_CardName")),
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       # !!rlang::sym(paste0(colname_deck_list,"_Count"))
-    ) %>% 
+    ) %>%
     mutate(
       temp_filter_count = Archetype_count - max(count),
-      percent_card = (1-(count/Archetype_count))*100
-      
-    ) %>% 
+      percent_card = (1 - (count / Archetype_count)) * 100
+    ) %>%
     filter(temp_filter_count <= 10 |
-             percent_card <= 2
-    )  %>% 
-    select(-temp_filter_count,-percent_card) %>% 
+      percent_card <= 2) %>%
+    select(-temp_filter_count, -percent_card) %>%
     ungroup()
-  
-  
-  
-  
-  df_new_card <- df_new_card_before_filter %>% 
+
+
+
+
+  df_new_card <- df_new_card_before_filter %>%
     group_by(
       across(all_of(select_group_var)),
       Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list,"_CardName")),
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       # !!rlang::sym(paste0(colname_deck_list,"_Count"))
-    ) %>% 
+    ) %>%
     mutate(
       temp_filter_count = Archetype_count - max(count)
-    ) %>% 
+    ) %>%
     mutate(
       temp_filter_count = Archetype_count - max(count),
-      percent_card = (1-(count/Archetype_count))*100
-      
-    ) %>% 
+      percent_card = (1 - (count / Archetype_count)) * 100
+    ) %>%
     filter(temp_filter_count > 10 &
-             percent_card > 2
-    )  %>% 
-    select(-temp_filter_count,-percent_card) %>% 
+      percent_card > 2) %>%
+    select(-temp_filter_count, -percent_card) %>%
     ungroup()
-  
-  
-  
-  df_new_card_total <- df_new_card %>%   
+
+
+
+  df_new_card_total <- df_new_card %>%
     # group_by(
     #   !!group_var,
-    #   !!rlang::sym(paste0(colname_deck_list,"_CardName"))) %>% 
+    #   !!rlang::sym(paste0(colname_deck_list,"_CardName"))) %>%
     # je laisse le doublon dans le cas d'une seul carte pour faciliter les filters
-    # filter(n() > 1) %>% 
+    # filter(n() > 1) %>%
     group_by(
       across(all_of(select_group_var)),
-      Archetype_count, 
-      !!rlang::sym(paste0(colname_deck_list,"_CardName")),
+      Archetype_count,
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       Wins_total,
       Losses_total,
       Draws_total
-    ) %>% 
+    ) %>%
     summarise(
-      !!rlang::sym(paste0(colname_deck_list,"_Count")) := "Any",  
+      !!rlang::sym(paste0(colname_deck_list, "_Count")) := "Any",
       count = sum(count),
       Wins_card = sum(Wins_card),
       Losses_card = sum(Losses_card),
       Draws_card = sum(Draws_card),
       .groups = "drop"
-    ) %>% 
+    ) %>%
     rbind(df_new_card) %>%
-    filter((Wins_card + Losses_card) > 10) %>% 
-    arrange(desc(Archetype_count),!!rlang::sym(group_var),
-            !!rlang::sym(paste0(colname_deck_list,"_CardName")),
-            !!rlang::sym(paste0(colname_deck_list,"_Count"))
-    ) 
-  
-  
-  Win_rate_df <- df_new_card_total %>%  
+    filter((Wins_card + Losses_card) > 10) %>%
+    arrange(
+      desc(Archetype_count), !!rlang::sym(group_var),
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
+      !!rlang::sym(paste0(colname_deck_list, "_Count"))
+    )
+
+
+  Win_rate_df <- df_new_card_total %>%
     group_by(
       across(all_of(select_group_var)),
-      Archetype_count, 
-      !!rlang::sym(paste0(colname_deck_list,"_CardName")),
-      !!rlang::sym(paste0(colname_deck_list,"_Count")),
+      Archetype_count,
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
+      !!rlang::sym(paste0(colname_deck_list, "_Count")),
       count
-    ) %>% 
+    ) %>%
     summarise(
-      card_WR = winrate_1_data(Wins_card,Losses_card),
-      CI_card_WR = CI_prop(card_WR,(Wins_card + Losses_card)) ,
+      card_WR = winrate_1_data(Wins_card, Losses_card),
+      CI_card_WR = CI_prop(card_WR, (Wins_card + Losses_card)),
       not_card_WR = winrate_2_data(
-        Wins_total,Losses_total,
-        Wins_card,Losses_card
+        Wins_total, Losses_total,
+        Wins_card, Losses_card
       ),
-      Total_WR =  winrate_1_data(Wins_total,Losses_total),
-      
+      Total_WR = winrate_1_data(Wins_total, Losses_total),
       delta_WR_card = card_WR - not_card_WR,
       CI_delta_WR_card = CI_2_prop(
         card_WR,
@@ -268,82 +264,77 @@ Count_and_winrates_cards_in_decklist_total <- function(df,group_var,colname_deck
         )
       ),
       card_draw_diff = Draw_diff_2_data(
-        Wins_card,Draws_card,Losses_card,
-        Wins_total,Draws_total,Losses_total
+        Wins_card, Draws_card, Losses_card,
+        Wins_total, Draws_total, Losses_total
       ),
       .groups = "drop"
     )
-  
-  
-  Win_rate_df_final <- Win_rate_df %>% 
+
+
+  Win_rate_df_final <- Win_rate_df %>%
     mutate(
-      CI_signe_vs_Total =  factor(ifelse(
+      CI_signe_vs_Total = factor(ifelse(
         ((card_WR - Total_WR) + (CI_card_WR)) > 0,
         "+",
         ifelse(
           ((card_WR - Total_WR) - (CI_card_WR)) < 0,
-          "-","0"
-        )),levels = c("+","0","-") ),
-      
-      card_WR_vs_Total = round((card_WR - Total_WR) *100,2 ),
-      CI_card_WR_vs_Total = formating_CI((card_WR - Total_WR),CI_card_WR),
-      
-      CI_card_WR = formating_CI(card_WR,CI_card_WR),
-      card_WR = round(card_WR *100,2 ),
-      
-      
+          "-", "0"
+        )
+      ), levels = c("+", "0", "-")),
+      card_WR_vs_Total = round((card_WR - Total_WR) * 100, 2),
+      CI_card_WR_vs_Total = formating_CI((card_WR - Total_WR), CI_card_WR),
+      CI_card_WR = formating_CI(card_WR, CI_card_WR),
+      card_WR = round(card_WR * 100, 2),
       CI_signe_vs_other = factor(ifelse(
         (delta_WR_card + CI_delta_WR_card) > 0,
         "+",
         ifelse(
           (delta_WR_card - CI_delta_WR_card) < 0,
-          "-","0"
-        )),levels = c("+","0","-") ),
-      CI_delta_WR_card = formating_CI(delta_WR_card,CI_delta_WR_card),
-      delta_WR_card = round(delta_WR_card *100,2 ),
-      
-      
-      card_draw_diff = round(card_draw_diff *100,2 ),
+          "-", "0"
+        )
+      ), levels = c("+", "0", "-")),
+      CI_delta_WR_card = formating_CI(delta_WR_card, CI_delta_WR_card),
+      delta_WR_card = round(delta_WR_card * 100, 2),
+      card_draw_diff = round(card_draw_diff * 100, 2),
       count_WR = count,
-      Count_WR_percent = paste0(round((count/Archetype_count)*100,2),"%")
-      
-    ) %>% 
-    select(all_of(select_group_var),
-           count_WR,Count_WR_percent,
-           !!rlang::sym(paste0(colname_deck_list,"_CardName")),
-           !!rlang::sym(paste0(colname_deck_list,"_Count")),
-           card_WR,CI_card_WR,
-           delta_WR_card,CI_delta_WR_card,CI_signe_vs_other,
-           card_WR_vs_Total,CI_card_WR_vs_Total,CI_signe_vs_Total#,card_draw_diff
-    ) 
-  
-  
-  
-  
-  
-  
-  
-  
-  Card_always_in_deck_final <- Card_always_in_deck %>% 
+      Count_WR_percent = paste0(round((count / Archetype_count) * 100, 2), "%")
+    ) %>%
+    select(
+      all_of(select_group_var),
+      count_WR, Count_WR_percent,
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
+      !!rlang::sym(paste0(colname_deck_list, "_Count")),
+      card_WR, CI_card_WR,
+      delta_WR_card, CI_delta_WR_card, CI_signe_vs_other,
+      card_WR_vs_Total, CI_card_WR_vs_Total, CI_signe_vs_Total # ,card_draw_diff
+    )
+
+
+
+
+
+
+
+
+  Card_always_in_deck_final <- Card_always_in_deck %>%
     group_by(
       across(all_of(select_group_var)),
       Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list,"_CardName")),
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       # !!rlang::sym(paste0(colname_deck_list,"_Count"))
-    ) %>% 
+    ) %>%
     summarise(
-      !!rlang::sym(paste0("Most_present_",colname_deck_list,"_Count")) := last( !!rlang::sym(paste0(colname_deck_list,"_Count")),count),
+      !!rlang::sym(paste0("Most_present_", colname_deck_list, "_Count")) := last(!!rlang::sym(paste0(colname_deck_list, "_Count")), count),
       N_most_prez = max(count),
-      most_prez_perc = N_most_prez/unique(Archetype_count),
-      !!rlang::sym(paste0(colname_deck_list,"_Count")) := paste0( !!rlang::sym(paste0(colname_deck_list,"_Count")), collapse = "/")
-    ) %>% 
+      most_prez_perc = N_most_prez / unique(Archetype_count),
+      !!rlang::sym(paste0(colname_deck_list, "_Count")) := paste0(!!rlang::sym(paste0(colname_deck_list, "_Count")), collapse = "/")
+    ) %>%
     mutate(
-      !!rlang::sym(paste0("Not_most_present_",colname_deck_list,"_percent")) := 
-        paste0("n = ",Archetype_count - N_most_prez," (",round(most_prez_perc*100,2)," %)"
-        )
-    ) %>% 
-    select(-N_most_prez,-most_prez_perc) 
-  
+      !!rlang::sym(paste0("Not_most_present_", colname_deck_list, "_percent")) :=
+        paste0("n = ", Archetype_count - N_most_prez, " (", round(most_prez_perc * 100, 2), " %)")
+    ) %>%
+    select(-N_most_prez, -most_prez_perc)
+
   return(
     list(
       Win_rate_df_final = Win_rate_df_final,
@@ -351,7 +342,6 @@ Count_and_winrates_cards_in_decklist_total <- function(df,group_var,colname_deck
     )
   )
 }
-
 ```
 
 
@@ -363,7 +353,7 @@ tooltips_deck_base <- c(
   "Number of copies of the most represented card",
   "Possible number of copies",
   'Number of times and percentage where the card is not present in the most representative number of copies. For example, if "Most present count" = 4, this column counts the number of decks where the card is present 0, 1, 2 or 3 times.'
-              )
+)
 
 
 
@@ -378,19 +368,15 @@ tooltips_deck_variable_arch <- c(
   'Win rate of the card vs deck with different count for the card.For example, if "Count" = 4, the win rate of 4 copies minus the win rate of 0, 1, 2 or 3 copies.',
   "95 % Confidence intervale of card win rate vs other",
   "The confidence interval is different from 0. + means a strictly positive confidence interval - means a strictly negative confidence interval,  0 means a confidence interval covering 0.",
-    'Win rate of the card vs deck gobal win rate.',
-    "95 % Confidence intervale of card win rate vs vs deck gobal win rate.",
+  "Win rate of the card vs deck gobal win rate.",
+  "95 % Confidence intervale of card win rate vs vs deck gobal win rate.",
   "The confidence interval is different from 0. + means a strictly positive confidence interval - means a strictly negative confidence interval,  0 means a confidence interval covering 0."
-              )
-
-
-
+)
 ```
 
 
 ```{r js_function}
-
-onfly_filter_js <- c( r"{
+onfly_filter_js <- c(r"{
 function onlyUnique(value, index, self) {
 return self.indexOf(value) === index;
 };
@@ -433,7 +419,6 @@ selection_content[0].innerHTML = content_str;
 }, 50);
 })
 }")
-
 ```
 
 
@@ -443,7 +428,7 @@ win_rate_main_board <- Count_and_winrates_cards_in_decklist_total(
   df_Archetype,
   "Archetype",
   "Mainboard"
-  )
+)
 ```
 
 
@@ -469,31 +454,30 @@ The cards making up the base of the deck are those who a specif number of copies
 
 ```{r}
 # Create the datatable with hover-over tooltips
-DT::datatable(format_df_result_card_table(
-  win_rate_main_board$Card_always_in_deck_final,
-  "Mainboard",
-  df_Archetype
+DT::datatable(
+  format_df_result_card_table(
+    win_rate_main_board$Card_always_in_deck_final,
+    "Mainboard",
+    df_Archetype
   ),
   filter = "top", rownames = FALSE,
-        callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js
-)
-),
-options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Base cards in Mainboard'
+      onfly_filter_js
+    )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Base cards in Mainboard"
   )
 )
-
-
 ```
 
 
@@ -509,31 +493,29 @@ caption = htmltools::tags$caption(
 
 ```{r}
 DT::datatable(
-    format_df_result_card_table(
-  win_rate_main_board$Win_rate_df_final,
-  "Mainboard",
-  df_Archetype
-  ), 
+  format_df_result_card_table(
+    win_rate_main_board$Win_rate_df_final,
+    "Mainboard",
+    df_Archetype
+  ),
   callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(tooltips_deck_variable_arch,collapse = "','"),"'],
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js)
-),
+      onfly_filter_js
+    )
+  ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Mainboard cards'
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Mainboard cards"
   )
 )
-
-
-
 ```
 
 
@@ -548,32 +530,30 @@ The cards making up the base of the deck are those who a specif number of copies
 
 
 ```{r}
-
 DT::datatable(
-   format_df_result_card_table(
-  win_rate_side_board$Card_always_in_deck_final,
-  "Sideboard",
-  df_Archetype,
-),  callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
+  format_df_result_card_table(
+    win_rate_side_board$Card_always_in_deck_final,
+    "Sideboard",
+    df_Archetype,
+  ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js)
-),
+      onfly_filter_js
+    )
+  ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Sideboard base cards'
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Sideboard base cards"
   )
 )
-
-
-
 ```
 
 
@@ -583,27 +563,28 @@ caption = htmltools::tags$caption(
 ```{r}
 DT::datatable(
   format_df_result_card_table(
-  win_rate_side_board$Win_rate_df_final,
-  "Sideboard",
-  df_Archetype,
-),  callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(tooltips_deck_variable_arch,collapse = "','"),"'],
+    win_rate_side_board$Win_rate_df_final,
+    "Sideboard",
+    df_Archetype,
+  ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js)
-),
+      onfly_filter_js
+    )
+  ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Sideboard cards'
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Sideboard cards"
   )
 )
-
 ```
 
 
@@ -614,7 +595,7 @@ win_rate_main_board_based_arch <- Count_and_winrates_cards_in_decklist_total(
   df_base_Archetype,
   "Base_Archetype",
   "Mainboard"
-  )
+)
 ```
 
 
@@ -639,29 +620,32 @@ The cards making up the base of the deck are those who a specif number of copies
 ```{r}
 DT::datatable(
   format_df_result_card_table(
-  win_rate_main_board_based_arch$Card_always_in_deck_final,
-  colname_deck_list = "Mainboard",
-  df_Archetyp_fun = df_base_Archetype,
-  TRUE
-),callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(c("Deck Archetype not agregated",
-        tooltips_deck_base),collapse = "','"),"'],
+    win_rate_main_board_based_arch$Card_always_in_deck_final,
+    colname_deck_list = "Mainboard",
+    df_Archetyp_fun = df_base_Archetype,
+    TRUE
+  ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(c(
+        "Deck Archetype not agregated",
+        tooltips_deck_base
+      ), collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js)
-),
+      onfly_filter_js
+    )
+  ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Mainboards base cards'
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Mainboards base cards"
   )
 )
-
 ```
 
 ### Variable Cards 
@@ -670,28 +654,32 @@ caption = htmltools::tags$caption(
 ```{r}
 DT::datatable(
   format_df_result_card_table(
-  win_rate_main_board_based_arch$Win_rate_df_final,
-  colname_deck_list = "Mainboard",
-  df_Archetyp_fun = df_base_Archetype,
-  TRUE
-),callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(c("Deck Archetype not agregated",
-        tooltips_deck_variable_arch),collapse = "','"),"'],
+    win_rate_main_board_based_arch$Win_rate_df_final,
+    colname_deck_list = "Mainboard",
+    df_Archetyp_fun = df_base_Archetype,
+    TRUE
+  ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(c(
+        "Deck Archetype not agregated",
+        tooltips_deck_variable_arch
+      ), collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js)) ,
+      onfly_filter_js
+    )
+  ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Mainboard cards'
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Mainboard cards"
   )
 )
-
 ```
 
 
@@ -706,31 +694,32 @@ The cards making up the base of the deck are those who a specif number of copies
 ```{r}
 DT::datatable(
   format_df_result_card_table(
-  win_rate_side_board_based_arch$Card_always_in_deck_final,
-  colname_deck_list = "Sideboard",
-  df_Archetyp_fun = df_base_Archetype,
-  TRUE
-),callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(c("Deck Archetype not agregated",
-        tooltips_deck_base),collapse = "','"),"'],
+    win_rate_side_board_based_arch$Card_always_in_deck_final,
+    colname_deck_list = "Sideboard",
+    df_Archetyp_fun = df_base_Archetype,
+    TRUE
+  ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(c(
+        "Deck Archetype not agregated",
+        tooltips_deck_base
+      ), collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js)),
+      onfly_filter_js
+    )
+  ),
   filter = "top", rownames = FALSE,
-    options = list(dom = 'ltipr',autoWidth = TRUE, pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Sideboard base cards'
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Sideboard base cards"
   )
 )
-
-
-
-
 ```
 
 ### Variable Cards 
@@ -741,29 +730,34 @@ caption = htmltools::tags$caption(
 ```{r}
 DT::datatable(
   format_df_result_card_table(
-  win_rate_side_board_based_arch$Win_rate_df_final,
-  colname_deck_list = "Sideboard",
-  df_Archetyp_fun = df_base_Archetype,
-  TRUE
-),callback = DT::JS(
-        paste0(
-        "var tips = ['",paste0(c("Deck Archetype not agregated",
-        tooltips_deck_variable_arch),collapse = "','"),"'],
+    win_rate_side_board_based_arch$Win_rate_df_final,
+    colname_deck_list = "Sideboard",
+    df_Archetyp_fun = df_base_Archetype,
+    TRUE
+  ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(c(
+        "Deck Archetype not agregated",
+        tooltips_deck_variable_arch
+      ), collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-onfly_filter_js)),
+      onfly_filter_js
+    )
+  ),
   filter = "top", rownames = FALSE,
-  options = list(dom = 'ltipr',
-                # autoWidth = TRUE,
-                 pageLength = 25),
-caption = htmltools::tags$caption(
-  style = 'caption-side: top; text-align: center; color:black;  font-size:200% ;',
-  'Table : Sideboard cards'
+  options = list(
+    dom = "ltipr",
+    # autoWidth = TRUE,
+    pageLength = 25
+  ),
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Sideboard cards"
   )
 )
-
 ```
-

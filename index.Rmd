@@ -34,3 +34,6 @@ Cards win rates Analysis by deck using regression
 ## [Matrix WR](/result/4_matrix_WR.html)
 Matrix of win rates for different modern archetypes.
 
+
+## [Best deck analysis](/result/6_best_deck.html)
+Using regression model select best performing 

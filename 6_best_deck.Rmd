@@ -1,0 +1,1177 @@
+---
+title: "Best deck"
+output: 
+  html_document:
+    css: other_file/TOC.css
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    toc_float: true
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango
+date: "`r Sys.Date()`"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE #,
+   # cache = TRUE
+)
+library(pander)
+library("rjson")
+library(tidyverse)
+conflicted::conflicts_prefer(dplyr::filter)
+conflicted::conflicts_prefer(dplyr::lag)
+source("S2_Source_mtg_new_card.R")
+
+# loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
+
+modern_DB_card <- read_csv("data/DBcarte_modern.csv")
+
+# sample size minimum pour etre un groupe
+min_sample_size <- 50
+
+Land_modern <- modern_DB_card %>%
+  filter(str_detect(type_line, "Land|land")) %>%
+  # Remove dfc land exept dfc land // land
+  filter(
+    !str_detect(
+      type_line,
+      "(?<!Land )// Land"
+    )
+  ) %>%
+  {
+    . ->> tmp
+  } %>%
+  filter(str_detect(name, ".+ //")) %>%
+  mutate(name = str_remove(name, " // .+")) %>%
+  rbind(tmp)
+
+rm(tmp)
+
+
+filter_archetype_count <- 150
+
+
+df_export <- readRDS("data/data_meta_en_cours.rds") %>%
+  mutate(
+    Deck_winrate = winrate_1_data(Wins, Losses)
+  ) %>%
+  mutate(
+    Archetype_count = n()
+  ) %>%
+  filter(Archetype != "Unknown")
+```
+
+
+```{r}
+# Manque visual représentation of deck
+
+# Projet detection automatiques des cartes nested par exemple : felidar et sahelli  dans l'idéal devrait détecter zulaport et bloodartist
+
+# check with codetools::checkUsage(f) and all fun
+```
+
+
+
+```{r function}
+findIntRuns <- function(run) {
+  run <- sort(run)
+  rundiff <- c(1, diff(run))
+  difflist <- split(run, cumsum(rundiff != 1))
+  unlist(lapply(difflist, function(x) {
+    if (length(x) %in% 1:2) as.character(x) else paste0(x[1], "-", x[length(x)])
+  }), use.names = FALSE)
+}
+
+name_list_of_df_with_arch <- function(list) {
+  names(list) <- lapply(list, function(x) {
+    as.character(x$Archetype[1])
+  }) %>% unlist()
+
+  return(list)
+}
+
+name_list_of_model_with_string <- function(list, string) {
+  names(list) <- string
+  return(list)
+}
+
+
+
+
+
+
+Agreg_count_by_cards <- function(df,
+                                 cols_choice,
+                                 min_sample_size_fun = min_sample_size) {
+  # !!rlang::sym(paste0(cols_choice,"_CardName"))
+
+
+  df_result <- df %>%
+    mutate(
+      grouping_sens = if_else((min_count_group - most_common_quantity) < 0,
+        "up", "botom"
+      )
+    ) %>%
+    group_by(Archetype, !!rlang::sym(paste0(cols_choice, "_CardName"))) %>%
+    mutate(
+      need_group = count_iteration_cards < min_sample_size_fun,
+      no_group_needed = any(need_group),
+      grouping_this_iter =
+        (min_count_group == suppressWarnings(min(min_count_group[need_group])) |
+          min_count_group == suppressWarnings(max(min_count_group[need_group]))
+
+        ),
+
+
+      # Gestion compliqué des cas ou les les 2 groupes sont contigu se qui conduisait a des doubles groupement
+      grouping_this_iter = ifelse(
+        grouping_this_iter & if_else(
+          is.na(lag(grouping_this_iter)),
+          FALSE, lag(grouping_this_iter)
+        ),
+        FALSE,
+        grouping_this_iter
+      )
+    ) %>%
+    ungroup() %>%
+    mutate(
+      new_count =
+        if_else(
+          (count_iteration_cards < min_sample_size_fun & grouping_sens == "up" & grouping_this_iter),
+          count_iteration_cards + lead(count_iteration_cards),
+          if_else(
+            (count_iteration_cards < min_sample_size_fun & grouping_sens == "botom" & grouping_this_iter),
+            count_iteration_cards + lag(count_iteration_cards),
+            count_iteration_cards
+          )
+        ),
+      new_count = if_else(
+        (lag(count_iteration_cards) < min_sample_size_fun &
+          lag(grouping_sens) == "up" &
+          !is.na(lag(count_iteration_cards)) &
+          lag(grouping_this_iter)
+
+        ),
+        lag(new_count),
+        if_else(
+          (
+            lead(count_iteration_cards) < min_sample_size_fun &
+              lead(grouping_sens) == "botom" &
+              !is.na(lead(count_iteration_cards)) &
+              lead(grouping_this_iter)
+
+          ),
+          lead(new_count),
+          new_count
+        )
+      )
+    ) %>%
+    group_by(
+      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), total_number_of_copie,
+      most_common_count, most_common_quantity, new_count
+    ) %>%
+    summarise(
+      Wins = sum(Wins),
+      Losses = sum(Losses),
+      min_count_group = min(min_count_group),
+      !!rlang::sym(paste0(cols_choice, "_Count")) := paste0(!!rlang::sym(paste0(cols_choice, "_Count")), collapse = "/"),
+      .groups = "drop"
+    ) %>%
+    rename(count_iteration_cards = new_count) %>%
+    arrange(Archetype, !!rlang::sym(paste0(cols_choice, "_CardName")), min_count_group) %>%
+    select(
+      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), !!rlang::sym(paste0(cols_choice, "_Count")), Wins, Losses,
+      count_iteration_cards, total_number_of_copie, most_common_count, most_common_quantity,
+      min_count_group
+    )
+
+
+
+  df_temp_check <- df_result %>%
+    mutate(
+      need_group = count_iteration_cards < min_sample_size_fun
+    )
+
+  if (
+    all(!df_temp_check$need_group)
+  ) {
+    df_final <- df_result
+  } else {
+    df_final <- Agreg_count_by_cards(
+      df_result,
+      cols_choice,
+      min_sample_size_fun = min_sample_size_fun
+    )
+  }
+
+
+  return(df_final)
+}
+
+
+format_model_list <- function(model_list) {
+  model_clean <- lapply(model_list, function(x) {
+    Model_any_encours <- x$Model_any %>%
+      gtsummary::tbl_regression(exponentiate = TRUE) %>%
+      gtsummary::bold_labels() %>%
+      gtsummary::add_n(location = "level") %>%
+      gtsummary::modify_spanning_header(
+        c(stat_n, estimate, ci, p.value) ~
+          paste0(
+            "**", x$Model_any$Archetype, " N :",
+            sum(x$Model_any$data$Wins + x$Model_any$data$Losses),
+            "**"
+          )
+      )
+
+    Model_count_encours <- x$Model_count %>%
+      gtsummary::tbl_regression(exponentiate = TRUE) %>%
+      gtsummary::bold_labels() %>%
+      gtsummary::add_n(location = "level") %>%
+      gtsummary::modify_spanning_header(
+        c(stat_n, estimate, ci, p.value) ~
+          paste0(
+            "**", x$Model_count$Archetype, " N :",
+            sum(x$Model_count$data$Wins + x$Model_count$data$Losses),
+            "**"
+          )
+      )
+    return(list(
+      Model_any = Model_any_encours,
+      Model_count = Model_count_encours
+    ))
+  })
+
+  return(model_clean)
+}
+
+
+
+# Function that create model for unco cards
+model_total_cards_fun <- function(df_fun, cols_fun) {
+  model_unco_fun <- lapply(
+    unique(df_fun$Archetype),
+    function(x) {
+      df_model <- df_fun %>%
+        select(-Join_main_count) %>%
+        filter(Archetype == x) %>%
+        ungroup() %>%
+        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_Count")))) %>%
+        rowwise() %>%
+        mutate(!!rlang::sym(paste0(cols_fun, "_Count")) := paste0(findIntRuns(as.numeric(unlist(str_split(!!rlang::sym(paste0(cols_fun, "_Count")), "/")))), collapse = "/")) %>%
+        ungroup() %>% 
+        pivot_wider(
+          names_from = !!rlang::sym(paste0(cols_fun, "_CardName")),
+          values_from = !!rlang::sym(paste0(cols_fun, "_Count")),
+          values_fill = "0"
+        ) %>%
+        mutate(id = as.numeric(id)) %>% 
+        select(-Archetype, -Player, -Archetype_count, -Draws) %>%
+        mutate(
+          # Choose most common level as references
+          across(
+            where(is.character),
+            ~ fct_infreq(as.factor(.))
+          )
+        )  %>% 
+        column_to_rownames("id") %>% 
+        # remove fix column
+        select(where(~n_distinct(.) > 1))
+
+      model_tot_fun <- df_fun %>%
+        select(-Join_main_count) %>%
+        filter(Archetype == x) %>%
+        ungroup() %>%
+        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_Count")))) %>%
+        rowwise() %>%
+        mutate(!!rlang::sym(paste0(cols_fun, "_Count")) := paste0(findIntRuns(as.numeric(unlist(str_split(!!rlang::sym(paste0(cols_fun, "_Count")), "/")))), collapse = "/")) %>%
+        ungroup() %>%
+        pivot_wider(
+          names_from = !!rlang::sym(paste0(cols_fun, "_CardName")),
+          values_from = !!rlang::sym(paste0(cols_fun, "_Count")),
+          values_fill = "0"
+        ) %>%
+        mutate(id = as.numeric(id)) %>% 
+        select(-Archetype, -Player, -Archetype_count, -Draws) %>%
+        mutate(
+          # Choose most common level as references
+          across(
+            where(is.character),
+            ~ factor(
+              if_else("0" == ., "0", "1+"),
+              levels = c("0", "1+")
+            )
+          )
+        ) %>% 
+        column_to_rownames("id") %>% 
+        # remove fix column
+        select(where(~n_distinct(.) > 1))
+
+      if (nrow(df_model) == 0) {
+        model_res <- NULL
+        model_res_any <- NULL
+      } else {
+        
+        model_res_any <- glm(cbind(Wins, Losses) ~ .,
+          data = model_tot_fun ,
+          family = quasibinomial # binomial
+        )
+
+        model_res <- glm(cbind(Wins, Losses) ~ .,
+          data = df_model,
+          family = quasibinomial # binomial
+        )
+        
+        model_res_any$Archetype <- x
+        model_res$Archetype <- x
+      }
+      return(
+        list(
+          Model_any = model_res_any,
+          Model_count = model_res
+        )
+      )
+    }
+  ) %>%
+    discard(is.null)
+
+  return(model_unco_fun)
+}
+
+
+
+
+
+
+
+lapply_around_table_list <- function(df1,df2,Number_of_deck,observ_duration){
+  Archetype_fun <- unique(c(df1$Archetype,df2$Archetype))
+  
+  
+  res_lapply <- lapply(Archetype_fun, function(x){
+  
+  res_count_sep <- Best_deck_get_table_function(
+    res_fun_init_main = df1,
+    res_fun_init_side = df2,
+    Archetype_fun = x,
+    Model = "cout",
+    top_x_rank = Number_of_deck,
+    Week_fun = observ_duration)
+ 
+  res_any <- Best_deck_get_table_function(
+    res_fun_init_main = df1,
+    res_fun_init_side = df2,
+    Archetype_fun = x,
+    Model = "Any",
+    top_x_rank = Number_of_deck,
+    Week_fun = observ_duration)
+ 
+  
+  list(count = res_count_sep,
+       any = res_any)
+})
+  
+  
+  names(res_lapply) <- Archetype_fun
+  
+  return(res_lapply)
+}
+```
+
+
+
+```{r agreg_land_name}
+df_Archetype_long <- df_export %>%
+  filter(!is.na(Wins)) %>%
+  rowwise() %>%
+  filter(!is.null(Mainboard)) %>%
+  filter(!is.null(Sideboard)) %>%
+  ungroup() %>%
+  group_by(Archetype) %>%
+  mutate(
+    Archetype_count = n()
+  ) %>%
+  filter(Archetype_count > filter_archetype_count) %>%
+  arrange(desc(Archetype_count)) %>%
+  unnest_longer(Mainboard) %>%
+  unnest_wider(Mainboard, names_sep = "_") %>%
+  # mutate(Mainboard_CardName = Card_agregueur(Mainboard_CardName)) %>%
+  select(id, Player, Wins, Losses, Draws, Archetype, Mainboard_Count, Mainboard_CardName) %>%
+  group_by(id) %>%
+  mutate(Number_of_cards = sum(Mainboard_Count)) %>%
+  filter(Number_of_cards >= 60) %>%
+  ungroup() %>%
+  mutate(
+    Archetype =
+      factor(Archetype,
+        level = unique(.$Archetype)
+      )
+  )
+
+
+Df_archetype_cards_land_name_agreg <- rbind(
+  df_Archetype_long %>%
+    group_by(Archetype) %>%
+    mutate(Archetype_count = n_distinct(id)) %>%
+    mutate(
+      Mainboard_CardName =
+        Card_agregueur(
+          Mainboard_CardName,
+          fetch = TRUE,
+          Tron = TRUE,
+          snow = TRUE,
+          surveil = TRUE,
+          shock = TRUE,
+          triome = TRUE,
+          filter_land = TRUE,
+          fast_land = TRUE,
+          bounce_land = TRUE,
+          horizon_land = TRUE,
+          basic_land = TRUE
+        )
+    ) %>%
+    ungroup() %>%
+    group_by(id, Mainboard_CardName) %>%
+    mutate(
+      Mainboard_Count = sum(Mainboard_Count)
+    ) %>%
+    distinct(id, Mainboard_CardName, .keep_all = TRUE),
+  df_Archetype_long %>%
+    mutate(
+      Mainboard_Count = if_else(
+        Mainboard_CardName %in% Land_modern$name,
+        Mainboard_Count, 0
+      ),
+      Mainboard_CardName = "Land_tot"
+    ) %>%
+    group_by(id) %>%
+    mutate(
+      Mainboard_Count = sum(Mainboard_Count)
+    ) %>%
+    ungroup() %>%
+    group_by(Archetype) %>%
+    mutate(Archetype_count = n_distinct(id)) %>%
+    ungroup() %>%
+    distinct()
+) %>%
+  arrange(desc(Archetype_count), id)
+
+
+
+Df_archetype_cards_agreg <- Df_archetype_cards_land_name_agreg %>%
+  group_by(Archetype, Archetype_count, Mainboard_CardName, Mainboard_Count) %>%
+  summarise(
+    Wins = sum(Wins),
+    Losses = sum(Losses),
+    count_iteration_cards = n(),
+    .groups = "drop"
+  ) %>%
+  group_by(Archetype, Mainboard_CardName) %>%
+  mutate(
+    Wins = sum(Wins),
+    Losses = sum(Losses),
+    total_number_of_copie = sum(count_iteration_cards),
+    most_common_count = max(count_iteration_cards)
+  )
+```
+
+
+```{r agreg_sideboard}
+df_side_Archetype_long <- df_export %>%
+  # remove deck with less than 60 cards or no side / no main or with not enought data in arch
+  filter(id %in% unique(df_Archetype_long$id)) %>%
+  group_by(Archetype) %>%
+  mutate(
+    Archetype_count = n()
+  ) %>%
+  arrange(desc(Archetype_count)) %>%
+  unnest_longer(Sideboard) %>%
+  unnest_wider(Sideboard, names_sep = "_") %>%
+  select(id, Player, Wins, Losses, Draws, Archetype, Sideboard_CardName, Sideboard_Count) %>%
+  mutate(
+    Archetype =
+      factor(Archetype,
+        level = unique(.$Archetype)
+      )
+  ) %>%
+  group_by(Archetype) %>%
+  mutate(Archetype_count = n_distinct(id)) %>%
+  ungroup()
+
+
+
+Df_side_archetype_cards_agreg <- df_side_Archetype_long %>%
+  group_by(Archetype, Archetype_count, Sideboard_CardName, Sideboard_Count) %>%
+  summarise(
+    Wins = sum(Wins),
+    Losses = sum(Losses),
+    count_iteration_cards = n(),
+    .groups = "drop"
+  ) %>%
+  group_by(Archetype, Sideboard_CardName) %>%
+  mutate(
+    Wins = sum(Wins),
+    Losses = sum(Losses),
+    total_number_of_copie = sum(count_iteration_cards),
+    most_common_count = max(count_iteration_cards)
+  )
+```
+
+
+
+```{r base_card_and_variable_count}
+# First because of cards with 1 level after agreg
+Base_cards_and_variable_count_pre_process <- Df_archetype_cards_agreg %>%
+  # filter(count_iteration_cards == most_common_count) %>%
+  filter(
+    (Archetype_count - most_common_count) >= min_sample_size,
+    # most_common_count >= min_sample_size
+    (Archetype_count - total_number_of_copie) < min_sample_size
+  ) %>%
+  group_by(Archetype, Mainboard_CardName) %>%
+  mutate(
+    # Choix de prendre la plus faible quantité en cas d'éaglité pour le plus commun
+    most_common_quantity = Mainboard_Count[count_iteration_cards == max(count_iteration_cards)][1],
+    min_count_group = Mainboard_Count
+  )
+
+Base_cards_and_variable_count_agreg_out <- Agreg_count_by_cards(
+  Base_cards_and_variable_count_pre_process,
+  "Mainboard"
+)
+
+Base_cards_and_variable_count <- Base_cards_and_variable_count_agreg_out %>%
+  group_by(Archetype, Mainboard_CardName) %>%
+  filter(n() > 1)
+```
+
+
+```{r side_base_card_and_variable_count}
+# First because of cards with 1 level after agreg
+Side_Base_cards_and_variable_count_pre_process <- Df_side_archetype_cards_agreg %>%
+  # filter(count_iteration_cards == most_common_count) %>%
+  filter(
+    (Archetype_count - most_common_count) >= min_sample_size,
+    # most_common_count >= min_sample_size
+    (Archetype_count - total_number_of_copie) < min_sample_size
+  ) %>%
+  group_by(Archetype, Sideboard_CardName) %>%
+  mutate(
+    # Choix de prendre la plus faible quantité en cas d'éaglité pour le plus commun
+    most_common_quantity = Sideboard_Count[count_iteration_cards == max(count_iteration_cards)][1],
+    min_count_group = Sideboard_Count
+  )
+
+Side_Base_cards_and_variable_count_agreg_out <- Agreg_count_by_cards(
+  Side_Base_cards_and_variable_count_pre_process,
+  "Sideboard"
+)
+
+
+Side_Base_cards_and_variable_count <- Side_Base_cards_and_variable_count_agreg_out %>%
+  group_by(Archetype, Sideboard_CardName) %>%
+  filter(n() > 1)
+```
+
+
+
+
+```{r uncommon_cards}
+Uncommon_cards_pre_process <- Df_archetype_cards_agreg %>%
+  # filter(count_iteration_cards == most_common_count) %>%
+  filter(
+    (Archetype_count - most_common_count) >= min_sample_size,
+    # most_common_count >= min_sample_size
+    (Archetype_count - total_number_of_copie) >= min_sample_size,
+    total_number_of_copie >= min_sample_size
+  ) %>%
+  group_by(Archetype, Mainboard_CardName) %>%
+  mutate(
+    # Choix de prendre la plus faible quantité en cas d'éaglité pour le plus commun
+    most_common_quantity = Mainboard_Count[count_iteration_cards == max(count_iteration_cards)][1],
+    min_count_group = Mainboard_Count
+  )
+
+
+
+
+Uncommon_cards_agreg_out <- Agreg_count_by_cards(
+  Uncommon_cards_pre_process,
+  "Mainboard"
+)
+
+Uncommon_cards <- Uncommon_cards_agreg_out %>%
+  group_by(Archetype, Mainboard_CardName)
+```
+
+
+```{r Side_uncommon_cards}
+Side_Uncommon_cards_pre_process <- Df_side_archetype_cards_agreg %>%
+  # filter(count_iteration_cards == most_common_count) %>%
+  filter(
+    (Archetype_count - most_common_count) >= min_sample_size,
+    # most_common_count >= min_sample_size
+    (Archetype_count - total_number_of_copie) >= min_sample_size,
+    total_number_of_copie >= min_sample_size
+  ) %>%
+  group_by(Archetype, Sideboard_CardName) %>%
+  mutate(
+    # Choix de prendre la plus faible quantité en cas d'éaglité pour le plus commun
+    most_common_quantity = Sideboard_Count[count_iteration_cards == max(count_iteration_cards)][1],
+    min_count_group = Sideboard_Count
+  )
+
+
+
+
+Side_Uncommon_cards_agreg_out <- Agreg_count_by_cards(
+  Side_Uncommon_cards_pre_process,
+  "Sideboard"
+)
+
+Side_Uncommon_cards <- Side_Uncommon_cards_agreg_out %>%
+  group_by(Archetype, Sideboard_CardName)
+```
+
+
+
+```{r mdoel_based_cards}
+Model_data_base_cards <- Base_cards_and_variable_count %>%
+  rowwise() %>%
+  mutate(Join_main_count = list(
+    as.numeric(unlist(strsplit(Mainboard_Count, "/")))
+  )) %>%
+  ungroup() %>%
+  unnest_longer(Join_main_count) %>%
+  select(
+    Archetype, Archetype_count, Mainboard_CardName,
+    Mainboard_Count, Join_main_count # ,most_common_quantity
+  ) %>%
+  right_join(
+    Df_archetype_cards_land_name_agreg,
+    by = c("Archetype", "Archetype_count", "Mainboard_CardName", "Join_main_count" = "Mainboard_Count")
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(Mainboard_Count))
+
+```
+
+```{r Side_mdoel_based_cards}
+Side_Model_data_base_cards <- Side_Base_cards_and_variable_count %>%
+  rowwise() %>%
+  mutate(Join_main_count = list(
+    as.numeric(unlist(strsplit(Sideboard_Count, "/")))
+  )) %>%
+  ungroup() %>%
+  unnest_longer(Join_main_count) %>%
+  select(
+    Archetype, Archetype_count, Sideboard_CardName,
+    Sideboard_Count, Join_main_count # ,most_common_quantity
+  ) %>%
+  right_join(
+    df_side_Archetype_long,
+    by = c("Archetype", "Archetype_count", "Sideboard_CardName", "Join_main_count" = "Sideboard_Count")
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(Sideboard_Count))
+
+```
+
+```{r model_unco_cards}
+Model_data_Uncommon_cards <- Uncommon_cards %>%
+  rowwise() %>%
+  mutate(Join_main_count = list(
+    as.numeric(unlist(strsplit(Mainboard_Count, "/")))
+  )) %>%
+  ungroup() %>%
+  unnest_longer(Join_main_count) %>%
+  select(
+    Archetype, Archetype_count, Mainboard_CardName,
+    Mainboard_Count, Join_main_count # ,most_common_quantity
+  ) %>%
+  right_join(
+    Df_archetype_cards_land_name_agreg,
+    by = c("Archetype", "Archetype_count", "Mainboard_CardName", "Join_main_count" = "Mainboard_Count")
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(Mainboard_Count))
+
+```
+
+```{r side_model_unco_cards}
+Side_Model_data_Uncommon_cards <- Side_Uncommon_cards %>%
+  rowwise() %>%
+  mutate(Join_main_count = list(
+    as.numeric(unlist(strsplit(Sideboard_Count, "/")))
+  )) %>%
+  ungroup() %>%
+  unnest_longer(Join_main_count) %>%
+  select(
+    Archetype, Archetype_count, Sideboard_CardName,
+    Sideboard_Count, Join_main_count # ,most_common_quantity
+  ) %>%
+  right_join(
+    df_side_Archetype_long,
+    by = c("Archetype", "Archetype_count", "Sideboard_CardName", "Join_main_count" = "Sideboard_Count")
+  ) %>%
+  ungroup() %>%
+  filter(!is.na(Sideboard_Count))
+```
+
+```{r}
+Main_deck_Total_df_model <- rbind(
+  Model_data_base_cards,
+  Model_data_Uncommon_cards
+  ) 
+
+Side_Total_df_model <- rbind(
+Side_Model_data_base_cards,
+Side_Model_data_Uncommon_cards
+) 
+
+Total_df_model <- rbind(
+Main_deck_Total_df_model %>%
+  mutate(Mainboard_CardName = paste0(Mainboard_CardName,"_main")),
+Side_Total_df_model %>% left_join(Main_deck_Total_df_model %>% select(id,Number_of_cards) %>% distinct()) %>% 
+  mutate(Sideboard_CardName = paste0(Sideboard_CardName,"_side")) %>%
+  rename(Mainboard_CardName = Sideboard_CardName,Mainboard_Count = Sideboard_Count)
+)
+
+```
+
+
+
+```{r}
+Get_best_deck_from_model <- function(
+    model_list,
+    base_df,
+    number
+){
+result_best_deck <- lapply(model_list, function(x){
+    best_any <- get_best_deck_sub_fun(
+      x$Model_any,
+      base_df,
+      number) %>% mutate(type_of_model = "Any",.before = 4)
+
+    best_count <- get_best_deck_sub_fun(
+      x$Model_count,
+      base_df,
+      number) %>% mutate(type_of_model = "cout",.before = 4)
+    
+    
+    
+    return(rbind(best_any,best_count))
+  }
+    ) %>%
+  bind_rows()
+
+}
+
+get_best_deck_sub_fun <-  function(model_list_spe,base_df,number){
+  
+  if (number == Inf){number <- nrow(model_list_spe$data)}
+      proba <- (
+      data.frame(
+        id = rownames(model_list_spe$data),
+        proba = model_list_spe$fitted.values 
+        ) %>% 
+  arrange(desc(proba))
+  )[1:number,]
+    
+  res <- proba %>% 
+  left_join(base_df,by = "id") %>% 
+  mutate(
+    rank = 1:nrow(.),
+    .before =2
+    )
+    
+  }
+```
+
+
+
+```{r}
+# Function that create model for unco cards
+Best_deck_res_model_complet <- model_total_cards_fun(Total_df_model, "Mainboard")
+
+Best_maindeck_res_model <- model_total_cards_fun(Main_deck_Total_df_model, "Mainboard")
+Best_sideboard_res_model <- model_total_cards_fun(Side_Total_df_model, "Sideboard")
+ 
+```
+
+```{r}
+res_global <- Get_best_deck_from_model(
+    model_list = Best_deck_res_model_complet,
+    base_df = df_export,
+    number = Inf#5 
+) 
+
+res_main <- Get_best_deck_from_model(
+    model_list = Best_maindeck_res_model,
+    base_df = df_export,
+    number = Inf#5 
+) 
+
+res_side <-  Get_best_deck_from_model(
+    model_list = Best_sideboard_res_model,
+    base_df = df_export,
+    number = Inf#5 
+) 
+```
+
+
+
+```{r}
+unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_fun){
+  not_colfuns <- ifelse(cols_fun == "Sideboard","Mainboard","Sideboard")
+  
+  Unnest_filter_table <- df %>%  
+    select(-id,-proba,-Tournament,
+  -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
+  -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
+  -ReferenceArchetype_Companion,- matches,-Base_Archetype,-Archetype_count,-Matchups
+  ) %>% 
+  mutate(Date = lubridate::date(Date))%>% 
+    select(-not_colfuns) %>% 
+  filter(Week >= (max(Week) - Week_fun)) %>% 
+  filter(Archetype == Archetype_fun) %>%
+  filter(type_of_model == Model) %>% 
+    filter(rank <= max(sort(rank)[1:top_x_rank])) %>% 
+    arrange(rank) %>% 
+  mutate(rank = 1:nrow(.)) %>% 
+     mutate(Player = paste0('[',rank,' Main and side](',AnchorUri,')'))%>% 
+    select(-AnchorUri#,-rank
+           ) %>%
+    unnest_longer(!!rlang::sym(cols_fun)) %>%
+    unnest_wider(!!rlang::sym(cols_fun), names_sep = "_") %>% 
+    mutate(Main_or_side = cols_fun) %>% 
+    rename(Count = paste0(cols_fun, "_Count") ,CardName = paste0(cols_fun, "_CardName"))
+  
+  
+  return(Unnest_filter_table)
+}
+```
+
+
+```{r}
+Week_fun <- Inf
+top_x_rank <- 7
+Archetype_fun <- "Scam"
+Model <- "Any"#"cout"#
+res_fun_init_main <- res_main# res_global
+res_fun_init_side <- res_side #res_global
+
+
+
+Best_deck_get_table_function <- function(res_fun_init_main,res_fun_init_side,Archetype_fun,Model,top_x_rank,Week_fun){
+
+
+Table_main_side <- 
+
+rbind(
+  unlist_side_or_main(res_fun_init_main,Archetype_fun,Model,top_x_rank,Week_fun,"Mainboard"),
+  unlist_side_or_main(res_fun_init_side,Archetype_fun,Model,top_x_rank,Week_fun,"Sideboard") 
+  )  %>%  
+  group_by(rank) %>% 
+  mutate(
+    Player = ifelse(n_distinct(Player) == 1,Player,
+                       paste0("[",rank," : ","Main from",str_remove(unique(Player[Main_or_side=="Mainboard"]),"\\[\\d Main and side") ,"<br>",
+                              "[","Side from",str_remove(unique(Player[Main_or_side=="Sideboard"]),"\\[\\d Main and side"))
+                       )
+         
+) %>% ungroup() %>% 
+  select(-rank,
+         -Week,-type_of_model,-Date,-Archetype,-Deck_winrate) %>%
+  pivot_wider(
+    names_from = Player,
+    values_from = c(Count),
+    values_fill = 0
+  ) %>%  rowwise() %>% 
+  mutate(mean_number = round(mean(c_across(starts_with("["#"<a href=https://"
+                                                       ))),1) ,
+         min_number = min(c_across(starts_with("["#"<a href=https://"
+                                                       ))) ,
+         max_number = max(c_across(starts_with("["#"<a href=https://"
+                                                       ))) ,
+         .before = 3) %>% 
+  ungroup() %>%
+  mutate(CardName = paste0(CardName,"<br>",mean_number,"[",min_number,";",max_number,"]" )) %>% 
+  select(-c(mean_number,min_number,max_number))
+
+
+title_table <- paste0("Top ",top_x_rank ,
+                      " best performing list in ",
+                      ifelse(Week_fun == Inf,"all data ",
+                             paste0("last ",Week_fun," weeks ")),
+                      "**Archetype : ",Archetype_fun,"**"
+                      )
+
+Subtitle <- paste0("`Using quasibinomial regression models ",
+                   ifelse(Model == "cout","with each possible number of cards",
+                          "with absence vs presence for each cards"
+                          ),"`")
+
+Table_result <- Table_main_side %>% 
+ group_by(Main_or_side) %>% 
+gt::gt(rowname_col = "CardName") %>% 
+  gt::cols_label(
+    .fn = gt::md,
+    .process_units = TRUE
+  ) %>% 
+  gt::fmt_markdown(columns = everything()
+                   ) %>%
+  gt::tab_style(
+    style = gt::cell_text(weight = "bold"),
+    locations = gt::cells_row_groups()
+  )%>% 
+   gt::opt_stylize(style = 5, color = "cyan", add_row_striping = TRUE) %>% 
+   gt::cols_align(
+  align = c("center"),
+  columns = everything()
+  ) %>% 
+  gt::tab_header(
+    title = gt::md(title_table),
+    subtitle = gt::md(Subtitle)
+  )
+  return(Table_result)
+}   
+```
+
+
+```{r}
+Number_of_deck <- 7
+observ_duration <- Inf
+
+
+res_global_gt_table <- lapply(unique(res_global$Archetype), function(x){
+  
+  res_count_sep <- Best_deck_get_table_function(
+    res_fun_init_main = res_global,
+    res_fun_init_side = res_global,
+    Archetype_fun = x,
+    Model = "cout",
+    top_x_rank = Number_of_deck,
+    Week_fun = observ_duration)
+ 
+  res_any <- Best_deck_get_table_function(
+    res_fun_init_main = res_global,
+    res_fun_init_side = res_global,
+    Archetype_fun = x,
+    Model = "Any",
+    top_x_rank = Number_of_deck,
+    Week_fun = observ_duration)
+ 
+  
+  list(count = res_count_sep,
+       any = res_any)
+})
+
+
+
+res_main_and_side_gt_table <- lapply(unique(res_fun_init_main$Archetype), function(x){
+  
+  res_count_sep <- Best_deck_get_table_function(
+    res_fun_init_main = res_main,
+    res_fun_init_side = res_side,
+    Archetype_fun = x,
+    Model = "cout",
+    top_x_rank = Number_of_deck,
+    Week_fun = observ_duration)
+ 
+  res_any <- Best_deck_get_table_function(
+    res_fun_init_main = res_main,
+    res_fun_init_side = res_side,
+    Archetype_fun = x,
+    Model = "Any",
+    top_x_rank = Number_of_deck,
+    Week_fun = observ_duration)
+ 
+  
+  list(count = res_count_sep,
+       any = res_any)
+})
+
+```
+
+
+
+
+```{r}
+Number_of_deck <- 7
+
+res_global_gt_table <- lapply_around_table_list(
+  df1 = res_global,
+  df2 = res_global,
+  Number_of_deck = Number_of_deck,
+  observ_duration = Inf
+)
+  
+
+
+res_main_and_side_gt_table <- lapply_around_table_list(
+  df1 = res_main,
+  df2 = res_side,
+  Number_of_deck = Number_of_deck,
+  observ_duration = Inf
+)
+  
+```
+
+
+```{r}
+
+res_global_gt_table_2weeks <- lapply_around_table_list(
+  df1 = res_global,
+  df2 = res_global,
+  Number_of_deck = Number_of_deck,
+  observ_duration = 2
+)
+  
+
+
+res_main_and_side_gt_table_2weeks <- lapply_around_table_list(
+  df1 = res_main,
+  df2 = res_side,
+  Number_of_deck = Number_of_deck,
+  observ_duration = 2
+)
+  
+```
+
+
+# All Data  
+
+```{r print_result_all_data, results='asis', out.width="100%"}
+for (i in sort(unique(res_global$Archetype))) {
+  # Inserts Month titles
+  # Section contents
+  pander::pandoc.header(i, level = 2)
+  pander::pandoc.p("")
+  
+  pander::pandoc.header("Global deck models", level = 3)
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+
+  if (i %in% names(res_global_gt_table)) {
+    pander::pandoc.p(':::::::::::::: {.columns}
+::: {.column width="50%"}')
+
+    print(htmltools::tagList(res_global_gt_table[[i]]$any))
+    
+    pander::pandoc.p("")
+    pander::pandoc.p(":::")
+
+    pander::pandoc.p('::: {.column width="50%"}')
+    pander::pandoc.p("")
+
+    print(htmltools::tagList(res_global_gt_table[[i]]$count))
+    
+    pander::pandoc.p(":::
+::::::::::::::")
+  }
+
+  pander::pandoc.header("Separate model for main and side", level = 3)
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+
+  if (i %in% names(res_main_and_side_gt_table)) {
+    pander::pandoc.p(':::::::::::::: {.columns}
+::: {.column width="50%"}')
+
+
+    print(htmltools::tagList(res_main_and_side_gt_table[[i]]$any))
+    
+    pander::pandoc.p("")
+    pander::pandoc.p(":::")
+
+    pander::pandoc.p('::: {.column width="50%"}')
+    pander::pandoc.p("")
+
+    print(htmltools::tagList(res_main_and_side_gt_table[[i]]$count))
+    
+
+    pander::pandoc.p(":::
+::::::::::::::")
+  }
+  # adding also empty lines, to be sure that this is valid Markdown
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+
+}
+```
+
+
+
+
+
+
+
+
+# 2 weeks  
+
+```{r print_result_2weeks, results='asis', out.width="100%"}
+for (i in sort(unique(res_global$Archetype))) {
+  # Inserts Month titles
+  # Section contents
+  pander::pandoc.header(i, level = 2)
+  pander::pandoc.p("")
+  
+  pander::pandoc.header("Global deck models", level = 3)
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+
+  if (i %in% names(res_global_gt_table_2weeks)) {
+    pander::pandoc.p(':::::::::::::: {.columns}
+::: {.column width="50%"}')
+
+    print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$any))
+    
+    pander::pandoc.p("")
+    pander::pandoc.p(":::")
+
+    pander::pandoc.p('::: {.column width="50%"}')
+    pander::pandoc.p("")
+
+    print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$count))
+    
+    pander::pandoc.p(":::
+::::::::::::::")
+  }
+
+  pander::pandoc.header("Separate model for main and side", level = 3)
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+
+  if (i %in% names(res_main_and_side_gt_table_2weeks)) {
+    pander::pandoc.p(':::::::::::::: {.columns}
+::: {.column width="50%"}')
+
+
+    print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$any))
+    
+    pander::pandoc.p("")
+    pander::pandoc.p(":::")
+
+    pander::pandoc.p('::: {.column width="50%"}')
+    pander::pandoc.p("")
+
+    print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$count))
+    
+
+    pander::pandoc.p(":::
+::::::::::::::")
+  }
+  # adding also empty lines, to be sure that this is valid Markdown
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+
+}
+```
+
+
