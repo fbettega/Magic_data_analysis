@@ -870,3 +870,287 @@ formating_CI <- function(value,
   )
 }
 ################################################################################
+
+
+
+
+################################################################################
+##################  Function that prepare df in 5 and 6  #######################
+
+
+
+
+
+prepare_df_for_model <- function(df_fun,base_df,cols_fun){
+  card_present <- df_fun %>%
+    rowwise() %>%
+    mutate(Join_main_count = list(
+      as.numeric(unlist(strsplit(!!rlang::sym(paste0(cols_fun, "_Count")), "/")))
+    )) %>%
+    ungroup() %>%
+    unnest_longer(Join_main_count) %>%
+    select(
+      Archetype, Archetype_count, all_of(
+        c(paste0(cols_fun, "_CardName"),
+          paste0(cols_fun, "_Count")
+        )
+      ), Join_main_count # ,most_common_quantity
+    ) %>%
+    right_join(
+      base_df,
+      by = c("Archetype", "Archetype_count", paste0(cols_fun, "_CardName"), "Join_main_count" = paste0(cols_fun, "_Count"))
+    ) %>%
+    ungroup() %>%
+    filter(!is.na(!!rlang::sym(paste0(cols_fun, "_Count")))) 
+  
+  
+  
+  
+  Deck_without_select_cards <- base_df %>% 
+    ungroup() %>%
+    anti_join(card_present , by = c("id","Archetype")) %>% 
+    distinct(id,.keep_all = TRUE) %>% 
+    select(
+      -all_of(
+        c(paste0(cols_fun, "_CardName"),
+          paste0(cols_fun, "_Count")
+        )
+      )
+    ) %>% full_join(card_present %>% 
+                      distinct(Archetype,!!rlang::sym(paste0(cols_fun, "_CardName"))),
+                    relationship = "many-to-many",by = "Archetype") %>% 
+    filter(!is.na(id)) %>% 
+    mutate(
+      !!rlang::sym(paste0(cols_fun, "_Count")) := 0,
+      Join_main_count = 0) 
+  
+  
+  res <- rbind(
+    card_present,
+    Deck_without_select_cards
+  )
+  
+  return(res)
+}
+
+
+
+################################################################################
+######  Function that agreg cards with not enought count df in 5 and 6  ########
+
+
+
+Agreg_count_by_cards <- function(df,
+                                 cols_choice,
+                                 min_sample_size_fun ) {
+  # !!rlang::sym(paste0(cols_choice,"_CardName"))
+  
+  df_result <- df %>%
+    
+    # Sens du groupe afin de grouper 0 avec 1 et 4 avec 3 
+    
+    ungroup() %>% 
+    mutate(
+      grouping_sens = if_else(
+        (min_count_group - most_common_quantity) < 0,
+        "up",
+        # if_else((min_count_group - most_common_quantity) > 0,
+        "botom"
+        # ,"most_common")
+      )
+    ) %>%
+    
+    group_by(Archetype, !!rlang::sym(paste0(cols_choice, "_CardName"))) %>%
+    mutate(
+      grouping_sens = if_else(
+        grouping_sens == "up" & min_count_group == max(min_count_group),
+        "botom",if_else(
+          grouping_sens == "botom" & min_count_group == min(min_count_group),
+          "up",grouping_sens)
+      ),
+      
+      
+      
+      # Regarde le nombres de d'itération de chaque groupe
+      need_group = count_iteration_cards < min_sample_size_fun,
+      no_group_needed = any(need_group),
+      grouping_this_iter =
+        (min_count_group == suppressWarnings(min(min_count_group[need_group])) |
+           min_count_group == suppressWarnings(max(min_count_group[need_group]))
+         
+        ),
+      
+      
+      # Gestion compliqué des cas ou les les 2 groupes sont contigu ce qui conduisait a des doubles groupement
+      grouping_this_iter = ifelse(
+        grouping_this_iter & if_else(
+          is.na(lag(grouping_this_iter)),
+          FALSE, lag(grouping_this_iter)
+        ),
+        FALSE,
+        grouping_this_iter
+      ),
+      # Gestion compliqué des cas ou les les 2 groupes sont séparé par un groupe ce qui conduisait a des doubles groupement
+      grouping_this_iter = ifelse(
+        grouping_this_iter & if_else(
+          is.na(lag(grouping_this_iter,2)),
+          FALSE, lag(grouping_this_iter,2)
+        ),
+        FALSE,
+        grouping_this_iter
+      ),
+      
+    ) %>%
+    group_by(
+      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), total_number_of_copie,
+      most_common_count, most_common_quantity
+    ) %>% 
+    mutate(
+      
+      # new variable to handle case when grouping as same count as not grouping var
+      as_been_group = 
+        ifelse(
+          (
+            count_iteration_cards < min_sample_size_fun & 
+              grouping_sens == "up" & grouping_this_iter &
+              !is.na(lead(count_iteration_cards))
+            
+          ) | (lag(count_iteration_cards) < min_sample_size_fun &
+                 lag(grouping_sens) == "up" &
+                 !is.na(lag(count_iteration_cards)) &
+                 lag(grouping_this_iter)
+               
+          ),"up",ifelse(
+            (count_iteration_cards < min_sample_size_fun & grouping_sens == "botom" & grouping_this_iter&
+               !is.na(lag(count_iteration_cards))
+            )  | (
+              lead(count_iteration_cards) < min_sample_size_fun &
+                lead(grouping_sens) == "botom" &
+                !is.na(lead(count_iteration_cards)) &
+                lead(grouping_this_iter)
+            ),"botom","no group"
+          )
+        ),
+      # create incremental name for no groups to prevent grouping
+      as_been_group = str_replace(as_been_group,"no group",paste0("no group",cumsum(as_been_group == "no group"))),
+      
+      # reflechir a gérer most common pour le moment non fonctionnel
+      new_count =
+        if_else(
+          (
+            count_iteration_cards < min_sample_size_fun & 
+              grouping_sens == "up" & grouping_this_iter &
+              !is.na(lead(count_iteration_cards))
+            
+          ),
+          count_iteration_cards + lead(count_iteration_cards),
+          if_else(
+            (count_iteration_cards < min_sample_size_fun & grouping_sens == "botom" & grouping_this_iter&
+               !is.na(lag(count_iteration_cards))
+            ),
+            count_iteration_cards + lag(count_iteration_cards),
+            count_iteration_cards
+          )
+        ),
+      new_count = if_else(
+        (lag(count_iteration_cards) < min_sample_size_fun &
+           lag(grouping_sens) == "up" &
+           !is.na(lag(count_iteration_cards)) &
+           lag(grouping_this_iter)
+         
+        ),
+        lag(new_count),
+        if_else(
+          (
+            lead(count_iteration_cards) < min_sample_size_fun &
+              lead(grouping_sens) == "botom" &
+              !is.na(lead(count_iteration_cards)) &
+              lead(grouping_this_iter)
+            
+          ),
+          lead(new_count),
+          new_count
+        )
+      )
+      
+      
+    ) %>%
+    group_by(
+      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), total_number_of_copie,
+      most_common_count, most_common_quantity, new_count,as_been_group
+    ) %>%
+    summarise(
+      Wins = sum(Wins),
+      Losses = sum(Losses),
+      min_count_group = min(min_count_group),
+      !!rlang::sym(paste0(cols_choice, "_Count")) := paste0(!!rlang::sym(paste0(cols_choice, "_Count")), collapse = "/"),
+      .groups = "drop"
+    ) %>%
+    group_by(
+      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), total_number_of_copie,
+      most_common_quantity
+    ) %>% 
+    mutate(
+      most_common_count = max(new_count) 
+    ) %>% 
+    ungroup() %>% 
+    rename(count_iteration_cards = new_count) %>%
+    arrange(Archetype, !!rlang::sym(paste0(cols_choice, "_CardName")), min_count_group) %>%
+    select(
+      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), !!rlang::sym(paste0(cols_choice, "_Count")), Wins, Losses,
+      count_iteration_cards, total_number_of_copie, most_common_count, most_common_quantity,
+      min_count_group
+    )
+  
+  
+  df_temp_check <- df_result %>%
+    mutate(
+      need_group = count_iteration_cards < min_sample_size_fun,
+    ) 
+  
+  
+  # Testing 
+  df_check_tot <-
+    df_temp_check %>%
+    group_by(
+      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), total_number_of_copie,
+      most_common_quantity
+    ) %>%
+    summarise(a = sum(count_iteration_cards),.groups = "drop") %>%
+    mutate(
+      check_tot = total_number_of_copie == a
+      
+    )
+  
+  if(any(is.na(df_temp_check$need_group))){stop("any na")}
+  if(any(df_temp_check$count_iteration_cards > df_temp_check$most_common_count)){stop("max count not max")}
+  if(!all(df_check_tot$check_tot)){stop("quantité total")}
+  
+  
+  
+  if (
+    all(!df_temp_check$need_group)
+  ) {
+    
+    df_final <- df_result
+  } else {
+    df_final <- 
+      # df <- 
+      Agreg_count_by_cards(
+        df_result,
+        cols_choice,
+        min_sample_size_fun = min_sample_size_fun
+      )
+  }
+  
+  
+  return(df_final)
+}
+
+
+
+
+
+
+
+

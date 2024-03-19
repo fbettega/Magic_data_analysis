@@ -13,6 +13,7 @@ date: "`r Sys.Date()`"
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
 ---
+problème certaine cartes ne sont pas groupes typiquement uwx ashioke et verdict side et main board (ubx control et fast lands) le problème semble cantonner au count
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 knitr::opts_chunk$set(
@@ -105,118 +106,12 @@ name_list_of_model_with_string <- function(list, string) {
 
 
 
-
-Agreg_count_by_cards <- function(df,
-                                 cols_choice,
-                                 min_sample_size_fun = min_sample_size) {
-  # !!rlang::sym(paste0(cols_choice,"_CardName"))
-
-
-  df_result <- df %>%
-    mutate(
-      grouping_sens = if_else((min_count_group - most_common_quantity) < 0,
-        "up", "botom"
-      )
-    ) %>%
-    group_by(Archetype, !!rlang::sym(paste0(cols_choice, "_CardName"))) %>%
-    mutate(
-      need_group = count_iteration_cards < min_sample_size_fun,
-      no_group_needed = any(need_group),
-      grouping_this_iter =
-        (min_count_group == suppressWarnings(min(min_count_group[need_group])) |
-          min_count_group == suppressWarnings(max(min_count_group[need_group]))
-
-        ),
-
-
-      # Gestion compliqué des cas ou les les 2 groupes sont contigu se qui conduisait a des doubles groupement
-      grouping_this_iter = ifelse(
-        grouping_this_iter & if_else(
-          is.na(lag(grouping_this_iter)),
-          FALSE, lag(grouping_this_iter)
-        ),
-        FALSE,
-        grouping_this_iter
-      )
-    ) %>%
-    ungroup() %>%
-    mutate(
-      new_count =
-        if_else(
-          (count_iteration_cards < min_sample_size_fun & grouping_sens == "up" & grouping_this_iter),
-          count_iteration_cards + lead(count_iteration_cards),
-          if_else(
-            (count_iteration_cards < min_sample_size_fun & grouping_sens == "botom" & grouping_this_iter),
-            count_iteration_cards + lag(count_iteration_cards),
-            count_iteration_cards
-          )
-        ),
-      new_count = if_else(
-        (lag(count_iteration_cards) < min_sample_size_fun &
-          lag(grouping_sens) == "up" &
-          !is.na(lag(count_iteration_cards)) &
-          lag(grouping_this_iter)
-
-        ),
-        lag(new_count),
-        if_else(
-          (
-            lead(count_iteration_cards) < min_sample_size_fun &
-              lead(grouping_sens) == "botom" &
-              !is.na(lead(count_iteration_cards)) &
-              lead(grouping_this_iter)
-
-          ),
-          lead(new_count),
-          new_count
-        )
-      )
-    ) %>%
-    group_by(
-      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), total_number_of_copie,
-      most_common_count, most_common_quantity, new_count
-    ) %>%
-    summarise(
-      Wins = sum(Wins),
-      Losses = sum(Losses),
-      min_count_group = min(min_count_group),
-      !!rlang::sym(paste0(cols_choice, "_Count")) := paste0(!!rlang::sym(paste0(cols_choice, "_Count")), collapse = "/"),
-      .groups = "drop"
-    ) %>%
-    rename(count_iteration_cards = new_count) %>%
-    arrange(Archetype, !!rlang::sym(paste0(cols_choice, "_CardName")), min_count_group) %>%
-    select(
-      Archetype, Archetype_count, !!rlang::sym(paste0(cols_choice, "_CardName")), !!rlang::sym(paste0(cols_choice, "_Count")), Wins, Losses,
-      count_iteration_cards, total_number_of_copie, most_common_count, most_common_quantity,
-      min_count_group
-    )
-
-
-
-  df_temp_check <- df_result %>%
-    mutate(
-      need_group = count_iteration_cards < min_sample_size_fun
-    )
-
-  if (
-    all(!df_temp_check$need_group)
-  ) {
-    df_final <- df_result
-  } else {
-    df_final <- Agreg_count_by_cards(
-      df_result,
-      cols_choice,
-      min_sample_size_fun = min_sample_size_fun
-    )
-  }
-
-
-  return(df_final)
-}
-
-
 format_model_list <- function(model_list) {
   model_clean <- lapply(model_list, function(x) {
+    
+    if(is.null(x$Model_any)){
+      Model_any_encours <- NULL
+      }else{
     Model_any_encours <- x$Model_any %>%
       gtsummary::tbl_regression(exponentiate = TRUE) %>%
       gtsummary::bold_labels() %>%
@@ -229,7 +124,10 @@ format_model_list <- function(model_list) {
             "**"
           )
       )
-
+    }
+    if(is.null(x$Model_count)){
+      Model_count_encours <- NULL
+      }else{
     Model_count_encours <- x$Model_count %>%
       gtsummary::tbl_regression(exponentiate = TRUE) %>%
       gtsummary::bold_labels() %>%
@@ -242,7 +140,9 @@ format_model_list <- function(model_list) {
             "**"
           )
       )
-    return(list(
+      }
+    return(
+      list(
       Model_any = Model_any_encours,
       Model_count = Model_count_encours
     ))
@@ -250,6 +150,7 @@ format_model_list <- function(model_list) {
 
   return(model_clean)
 }
+
 
 
 
@@ -265,7 +166,7 @@ model_base_var_count_cards_fun <- function(df_fun, cols_fun) {
         select(-Join_main_count) %>%
         filter(Archetype == x) %>%
         ungroup() %>%
-        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_Count")))) %>%
+        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_CardName")))) %>%
         rowwise() %>%
         mutate(!!rlang::sym(paste0(cols_fun, "_Count")) := paste0(findIntRuns(as.numeric(unlist(str_split(!!rlang::sym(paste0(cols_fun, "_Count")), "/")))), collapse = "/")) %>%
         ungroup() %>%
@@ -279,10 +180,10 @@ model_base_var_count_cards_fun <- function(df_fun, cols_fun) {
           across(
             -1,
             ~ ifelse(is.na(.),
-              names(sort(table(.),
-                decreasing = TRUE
-              ))[1],
-              .
+                     names(sort(table(.),
+                                decreasing = TRUE
+                     ))[1],
+                     .
             )
           )
         ) %>%
@@ -294,12 +195,12 @@ model_base_var_count_cards_fun <- function(df_fun, cols_fun) {
             ~ fct_infreq(as.factor(.))
           )
         )
-
+      
       model_base_card_var_count_tot_fun <- df_fun %>%
         select(-Join_main_count) %>%
         filter(Archetype == x) %>%
         ungroup() %>%
-        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_Count")))) %>%
+        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_CardName")))) %>%
         rowwise() %>%
         mutate(!!rlang::sym(paste0(cols_fun, "_Count")) := paste0(findIntRuns(as.numeric(unlist(str_split(!!rlang::sym(paste0(cols_fun, "_Count")), "/")))), collapse = "/")) %>%
         ungroup() %>%
@@ -313,10 +214,10 @@ model_base_var_count_cards_fun <- function(df_fun, cols_fun) {
           across(
             -1,
             ~ ifelse(is.na(.),
-              names(sort(table(.),
-                decreasing = TRUE
-              ))[1],
-              .
+                     names(sort(table(.),
+                                decreasing = TRUE
+                     ))[1],
+                     .
             )
           )
         ) %>%
@@ -327,31 +228,31 @@ model_base_var_count_cards_fun <- function(df_fun, cols_fun) {
             where(is.character),
             ~ factor(
               if_else(. == names(sort(table(.),
-                decreasing = TRUE
+                                      decreasing = TRUE
               ))[1],
               names(sort(table(.),
-                decreasing = TRUE
+                         decreasing = TRUE
               ))[1], "Other"
               ),
               levels = c(names(sort(table(.),
-                decreasing = TRUE
+                                    decreasing = TRUE
               ))[1], "Other")
             )
           )
         )
-
+      
       if (nrow(df_model) == 0) {
         model_res <- NULL
         model_res_any <- NULL
       } else {
         model_res_any <- glm(cbind(Wins, Losses) ~ .,
-          data = model_base_card_var_count_tot_fun,
-          family = quasibinomial # binomial
+                             data = model_base_card_var_count_tot_fun,
+                             family = quasibinomial # binomial
         )
-
+        
         model_res <- glm(cbind(Wins, Losses) ~ .,
-          data = df_model,
-          family = quasibinomial # binomial
+                         data = df_model,
+                         family = quasibinomial # binomial
         )
         model_res_any$Archetype <- x
         model_res$Archetype <- x
@@ -365,7 +266,7 @@ model_base_var_count_cards_fun <- function(df_fun, cols_fun) {
     }
   ) %>%
     discard(is.null)
-
+  
   return(model_based_fun)
 }
 
@@ -376,6 +277,7 @@ model_base_var_count_cards_fun <- function(df_fun, cols_fun) {
 
 
 # Function that create model for unco cards
+# Function that create model for unco cards
 model_unco_cards_fun <- function(df_fun, cols_fun) {
   model_unco_fun <- lapply(
     unique(df_fun$Archetype),
@@ -384,7 +286,7 @@ model_unco_cards_fun <- function(df_fun, cols_fun) {
         select(-Join_main_count) %>%
         filter(Archetype == x) %>%
         ungroup() %>%
-        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_Count")))) %>%
+        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_CardName")))) %>%
         rowwise() %>%
         mutate(!!rlang::sym(paste0(cols_fun, "_Count")) := paste0(findIntRuns(as.numeric(unlist(str_split(!!rlang::sym(paste0(cols_fun, "_Count")), "/")))), collapse = "/")) %>%
         ungroup() %>%
@@ -401,12 +303,12 @@ model_unco_cards_fun <- function(df_fun, cols_fun) {
             ~ fct_infreq(as.factor(.))
           )
         )
-
+      
       model_unco_tot_fun <- df_fun %>%
         select(-Join_main_count) %>%
         filter(Archetype == x) %>%
         ungroup() %>%
-        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_Count")))) %>%
+        filter(!is.na(!!rlang::sym(paste0(cols_fun, "_CardName")))) %>%
         rowwise() %>%
         mutate(!!rlang::sym(paste0(cols_fun, "_Count")) := paste0(findIntRuns(as.numeric(unlist(str_split(!!rlang::sym(paste0(cols_fun, "_Count")), "/")))), collapse = "/")) %>%
         ungroup() %>%
@@ -426,19 +328,19 @@ model_unco_cards_fun <- function(df_fun, cols_fun) {
             )
           )
         )
-
+      
       if (nrow(df_model) == 0) {
         model_res <- NULL
         model_res_any <- NULL
       } else {
         model_res_any <- glm(cbind(Wins, Losses) ~ .,
-          data = model_unco_tot_fun,
-          family = quasibinomial # binomial
+                             data = model_unco_tot_fun,
+                             family = quasibinomial # binomial
         )
-
+        
         model_res <- glm(cbind(Wins, Losses) ~ .,
-          data = df_model,
-          family = quasibinomial # binomial
+                         data = df_model,
+                         family = quasibinomial # binomial
         )
         model_res_any$Archetype <- x
         model_res$Archetype <- x
@@ -452,9 +354,11 @@ model_unco_cards_fun <- function(df_fun, cols_fun) {
     }
   ) %>%
     discard(is.null)
-
+  
   return(model_unco_fun)
 }
+
+
 ```
 
 
@@ -616,7 +520,8 @@ Base_cards_and_variable_count_pre_process <- Df_archetype_cards_agreg %>%
 
 Base_cards_and_variable_count_agreg_out <- Agreg_count_by_cards(
   Base_cards_and_variable_count_pre_process,
-  "Mainboard"
+  "Mainboard",
+  min_sample_size
 )
 
 Base_cards_and_variable_count <- Base_cards_and_variable_count_agreg_out %>%
@@ -641,9 +546,11 @@ Side_Base_cards_and_variable_count_pre_process <- Df_side_archetype_cards_agreg 
     min_count_group = Sideboard_Count
   )
 
+
 Side_Base_cards_and_variable_count_agreg_out <- Agreg_count_by_cards(
   Side_Base_cards_and_variable_count_pre_process,
-  "Sideboard"
+  "Sideboard",
+  min_sample_size
 )
 
 
@@ -676,7 +583,8 @@ Uncommon_cards_pre_process <- Df_archetype_cards_agreg %>%
 
 Uncommon_cards_agreg_out <- Agreg_count_by_cards(
   Uncommon_cards_pre_process,
-  "Mainboard"
+  "Mainboard",
+  min_sample_size
 )
 
 Uncommon_cards <- Uncommon_cards_agreg_out %>%
@@ -705,7 +613,8 @@ Side_Uncommon_cards_pre_process <- Df_side_archetype_cards_agreg %>%
 
 Side_Uncommon_cards_agreg_out <- Agreg_count_by_cards(
   Side_Uncommon_cards_pre_process,
-  "Sideboard"
+  "Sideboard",
+  min_sample_size
 )
 
 Side_Uncommon_cards <- Side_Uncommon_cards_agreg_out %>%
@@ -766,23 +675,11 @@ Side_Base_cards_and_base_count <- rbind(
 
 
 ```{r mdoel_based_cards}
-Model_data_base_cards <- Base_cards_and_variable_count %>%
-  rowwise() %>%
-  mutate(Join_main_count = list(
-    as.numeric(unlist(strsplit(Mainboard_Count, "/")))
-  )) %>%
-  ungroup() %>%
-  unnest_longer(Join_main_count) %>%
-  select(
-    Archetype, Archetype_count, Mainboard_CardName,
-    Mainboard_Count, Join_main_count # ,most_common_quantity
-  ) %>%
-  right_join(
-    Df_archetype_cards_land_name_agreg,
-    by = c("Archetype", "Archetype_count", "Mainboard_CardName", "Join_main_count" = "Mainboard_Count")
-  ) %>%
-  ungroup() %>%
-  filter(!is.na(Mainboard_Count))
+Model_data_base_cards <- prepare_df_for_model(
+  df_fun = Base_cards_and_variable_count,
+  base_df = Df_archetype_cards_land_name_agreg,
+  cols_fun = "Mainboard"
+  )
 
 
 
@@ -797,25 +694,13 @@ result_models_variable_count_all_arch <- model_base_var_count_cards_fun(Model_da
 
 
 
-
 ```{r Side_mdoel_based_cards}
-Side_Model_data_base_cards <- Side_Base_cards_and_variable_count %>%
-  rowwise() %>%
-  mutate(Join_main_count = list(
-    as.numeric(unlist(strsplit(Sideboard_Count, "/")))
-  )) %>%
-  ungroup() %>%
-  unnest_longer(Join_main_count) %>%
-  select(
-    Archetype, Archetype_count, Sideboard_CardName,
-    Sideboard_Count, Join_main_count # ,most_common_quantity
-  ) %>%
-  right_join(
-    df_side_Archetype_long,
-    by = c("Archetype", "Archetype_count", "Sideboard_CardName", "Join_main_count" = "Sideboard_Count")
-  ) %>%
-  ungroup() %>%
-  filter(!is.na(Sideboard_Count))
+Side_Model_data_base_cards <- prepare_df_for_model(
+  df_fun = Side_Base_cards_and_variable_count,
+  base_df = df_side_Archetype_long,
+  cols_fun = "Sideboard"
+  )
+
 
 
 # Intégré base card and base count
@@ -828,25 +713,15 @@ Side_result_models_variable_count_all_arch <- model_base_var_count_cards_fun(Sid
 
 
 
-
 ```{r model_unco_cards}
-Model_data_Uncommon_cards <- Uncommon_cards %>%
-  rowwise() %>%
-  mutate(Join_main_count = list(
-    as.numeric(unlist(strsplit(Mainboard_Count, "/")))
-  )) %>%
-  ungroup() %>%
-  unnest_longer(Join_main_count) %>%
-  select(
-    Archetype, Archetype_count, Mainboard_CardName,
-    Mainboard_Count, Join_main_count # ,most_common_quantity
-  ) %>%
-  right_join(
-    Df_archetype_cards_land_name_agreg,
-    by = c("Archetype", "Archetype_count", "Mainboard_CardName", "Join_main_count" = "Mainboard_Count")
-  ) %>%
-  ungroup() %>%
-  filter(!is.na(Mainboard_Count))
+Model_data_Uncommon_cards <- prepare_df_for_model(
+  df_fun = Uncommon_cards,
+  base_df = Df_archetype_cards_land_name_agreg,
+  cols_fun = "Mainboard"
+  )
+
+
+
 
 
 # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
@@ -860,48 +735,33 @@ result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(Model_data_Uncommo
 
 
 ```{r side_model_unco_cards}
-Side_Model_data_Uncommon_cards <- Side_Uncommon_cards %>%
-  rowwise() %>%
-  mutate(Join_main_count = list(
-    as.numeric(unlist(strsplit(Sideboard_Count, "/")))
-  )) %>%
-  ungroup() %>%
-  unnest_longer(Join_main_count) %>%
-  select(
-    Archetype, Archetype_count, Sideboard_CardName,
-    Sideboard_Count, Join_main_count # ,most_common_quantity
-  ) %>%
-  right_join(
-    df_side_Archetype_long,
-    by = c("Archetype", "Archetype_count", "Sideboard_CardName", "Join_main_count" = "Sideboard_Count")
-  ) %>%
-  ungroup() %>%
-  filter(!is.na(Sideboard_Count))
-
-
+Side_Model_data_Uncommon_cards <-  prepare_df_for_model(
+  df_fun = Side_Uncommon_cards,
+  base_df = df_side_Archetype_long,
+  cols_fun = "Sideboard"
+  )
 # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
 
 Side_result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(Side_Model_data_Uncommon_cards, "Sideboard")
 ```
 
-
-```{r format_all_models}
+```{r format_main_models}
 Base_card_variable_count_format_model <- format_model_list(result_models_variable_count_all_arch) %>%
   name_list_of_model_with_string(unique(Model_data_base_cards$Archetype))
 
 uncomon_card_format_model <- format_model_list(result_models_Uncommon_cards_all_arch) %>%
   name_list_of_model_with_string(unique(Model_data_Uncommon_cards$Archetype))
+```
 
-
-
+```{r format_side_models}
 Side_Base_card_variable_count_format_model <- format_model_list(Side_result_models_variable_count_all_arch) %>%
-  name_list_of_model_with_string(unique(Side_Model_data_base_cards$Archetype))
+  name_list_of_model_with_string(unique(Side_Model_data_base_cards$Archetype)) 
 
 Side_uncomon_card_format_model <- format_model_list(Side_result_models_Uncommon_cards_all_arch) %>%
   name_list_of_model_with_string(unique(Side_Model_data_Uncommon_cards$Archetype))
 ```
 
-
+Side_result_models_variable_count_all_arch
 
 ```{r print_result, results='asis', out.width="100%"}
 for (i in sort(levels(df_Archetype_long$Archetype))) {
@@ -937,22 +797,26 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
   pander::pandoc.p("")
 
   if (i %in% names(Base_card_variable_count_format_model)) {
+    
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
-
+  if (!is.null(Base_card_variable_count_format_model[[i]]$Model_any)) {
     flextable::flextable_to_rmd(
       Base_card_variable_count_format_model[[i]]$Model_any %>%
         gtsummary::as_flex_table()
     )
+  }
     pander::pandoc.p("")
     pander::pandoc.p(":::")
 
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
+      if (!is.null(Base_card_variable_count_format_model[[i]]$Model_count)) {
     flextable::flextable_to_rmd(
       Base_card_variable_count_format_model[[i]]$Model_count %>%
         gtsummary::as_flex_table()
     )
+      }
     pander::pandoc.p(":::
 ::::::::::::::")
   }
@@ -965,21 +829,23 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
   if (i %in% names(uncomon_card_format_model)) {
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
-
+if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
     flextable::flextable_to_rmd(
       uncomon_card_format_model[[i]]$Model_any %>%
         gtsummary::as_flex_table()
     )
+}
     pander::pandoc.p("")
     pander::pandoc.p(":::")
 
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
+    if (!is.null(uncomon_card_format_model[[i]]$Model_count )) {
     flextable::flextable_to_rmd(
       uncomon_card_format_model[[i]]$Model_count %>%
         gtsummary::as_flex_table()
     )
-
+}
     pander::pandoc.p(":::
 ::::::::::::::")
   }
@@ -997,11 +863,6 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
   if (i %in% names(Side_Base_cards_and_base_count)) {
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
-
-
-
-
-
 
     flextable::flextable_to_rmd(
       flextable::flextable(
@@ -1049,20 +910,22 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
   if (i %in% names(Side_Base_card_variable_count_format_model)) {
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
+        if (!is.null(Side_Base_card_variable_count_format_model[[i]]$Model_any )) {
     flextable::flextable_to_rmd(
       Side_Base_card_variable_count_format_model[[i]]$Model_any %>%
         gtsummary::as_flex_table()
     )
-
+}
     pander::pandoc.p(":::")
 
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
-
+        if (!is.null(Side_Base_card_variable_count_format_model[[i]]$Model_count)) {
     flextable::flextable_to_rmd(
       Side_Base_card_variable_count_format_model[[i]]$Model_count %>%
         gtsummary::as_flex_table()
     )
+        }
     pander::pandoc.p(":::
 ::::::::::::::")
   }
@@ -1075,21 +938,22 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
   if (i %in% names(uncomon_card_format_model)) {
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
+    if (!is.null(Side_uncomon_card_format_model[[i]]$Model_any)) {
     flextable::flextable_to_rmd(
       Side_uncomon_card_format_model[[i]]$Model_any %>%
         gtsummary::as_flex_table()
     )
-
+}
     pander::pandoc.p(":::")
 
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
-
+if (!is.null(Side_uncomon_card_format_model[[i]]$Model_count)) {
     flextable::flextable_to_rmd(
       Side_uncomon_card_format_model[[i]]$Model_count %>%
         gtsummary::as_flex_table()
     )
-
+}
     pander::pandoc.p(":::
 ::::::::::::::")
   }
