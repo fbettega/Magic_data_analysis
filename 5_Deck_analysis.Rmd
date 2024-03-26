@@ -13,7 +13,6 @@ date: "`r Sys.Date()`"
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
 ---
-problème certaine cartes ne sont pas groupes typiquement uwx ashioke et verdict side et main board (ubx control et fast lands) le problème semble cantonner au count
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 knitr::opts_chunk$set(
@@ -34,7 +33,7 @@ source("S2_Source_mtg_new_card.R")
 modern_DB_card <- read_csv("data/DBcarte_modern.csv")
 
 # sample size minimum pour etre un groupe
-min_sample_size <- 50
+
 
 Land_modern <- modern_DB_card %>%
   filter(str_detect(type_line, "Land|land")) %>%
@@ -55,8 +54,6 @@ Land_modern <- modern_DB_card %>%
 rm(tmp)
 
 
-filter_archetype_count <- 150
-
 
 df_export <- readRDS("data/data_meta_en_cours.rds") %>%
   mutate(
@@ -66,7 +63,26 @@ df_export <- readRDS("data/data_meta_en_cours.rds") %>%
     Archetype_count = n()
   ) %>%
   filter(Archetype != "Unknown")
+
+
+
+
+# a reflechir car pour le moment bloque les regroupement
+ #  min(50, 
+ # sum(unique(df_export$Archetype_count))*2/100 )
+
 ```
+
+```{r}
+knitr::read_chunk("S2_Source_mtg_new_card.R")
+```
+
+
+
+```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
+
+```
+
 
 
 ```{r}
@@ -374,7 +390,7 @@ df_Archetype_long <- df_export %>%
   mutate(
     Archetype_count = n()
   ) %>%
-  filter(Archetype_count > filter_archetype_count) %>%
+  filter(Archetype_count > filter_archetype_count_5) %>%
   arrange(desc(Archetype_count)) %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_") %>%
@@ -455,7 +471,8 @@ Df_archetype_cards_agreg <- Df_archetype_cards_land_name_agreg %>%
     Losses = sum(Losses),
     total_number_of_copie = sum(count_iteration_cards),
     most_common_count = max(count_iteration_cards)
-  )
+  ) %>% 
+  filter(total_number_of_copie >= min_sample_size_5)
 ```
 
 
@@ -497,7 +514,8 @@ Df_side_archetype_cards_agreg <- df_side_Archetype_long %>%
     Losses = sum(Losses),
     total_number_of_copie = sum(count_iteration_cards),
     most_common_count = max(count_iteration_cards)
-  )
+  ) %>% 
+  filter(total_number_of_copie >= min_sample_size_5)
 ```
 
 
@@ -507,9 +525,10 @@ Df_side_archetype_cards_agreg <- df_side_Archetype_long %>%
 Base_cards_and_variable_count_pre_process <- Df_archetype_cards_agreg %>%
   # filter(count_iteration_cards == most_common_count) %>%
   filter(
-    (Archetype_count - most_common_count) >= min_sample_size,
-    # most_common_count >= min_sample_size
-    (Archetype_count - total_number_of_copie) < min_sample_size
+    #Not in base cards fix count
+    (Archetype_count - most_common_count) >= min_sample_size_5,
+    # most_common_count >= min_sample_size_5
+    (Archetype_count - total_number_of_copie) < min_sample_size_5
   ) %>%
   group_by(Archetype, Mainboard_CardName) %>%
   mutate(
@@ -521,7 +540,7 @@ Base_cards_and_variable_count_pre_process <- Df_archetype_cards_agreg %>%
 Base_cards_and_variable_count_agreg_out <- Agreg_count_by_cards(
   Base_cards_and_variable_count_pre_process,
   "Mainboard",
-  min_sample_size
+  min_sample_size_5
 )
 
 Base_cards_and_variable_count <- Base_cards_and_variable_count_agreg_out %>%
@@ -535,9 +554,9 @@ Base_cards_and_variable_count <- Base_cards_and_variable_count_agreg_out %>%
 Side_Base_cards_and_variable_count_pre_process <- Df_side_archetype_cards_agreg %>%
   # filter(count_iteration_cards == most_common_count) %>%
   filter(
-    (Archetype_count - most_common_count) >= min_sample_size,
-    # most_common_count >= min_sample_size
-    (Archetype_count - total_number_of_copie) < min_sample_size
+    (Archetype_count - most_common_count) >= min_sample_size_5,
+    # most_common_count >= min_sample_size_5
+    (Archetype_count - total_number_of_copie) < min_sample_size_5
   ) %>%
   group_by(Archetype, Sideboard_CardName) %>%
   mutate(
@@ -550,7 +569,7 @@ Side_Base_cards_and_variable_count_pre_process <- Df_side_archetype_cards_agreg 
 Side_Base_cards_and_variable_count_agreg_out <- Agreg_count_by_cards(
   Side_Base_cards_and_variable_count_pre_process,
   "Sideboard",
-  min_sample_size
+  min_sample_size_5
 )
 
 
@@ -566,10 +585,10 @@ Side_Base_cards_and_variable_count <- Side_Base_cards_and_variable_count_agreg_o
 Uncommon_cards_pre_process <- Df_archetype_cards_agreg %>%
   # filter(count_iteration_cards == most_common_count) %>%
   filter(
-    (Archetype_count - most_common_count) >= min_sample_size,
-    # most_common_count >= min_sample_size
-    (Archetype_count - total_number_of_copie) >= min_sample_size,
-    total_number_of_copie >= min_sample_size
+    (Archetype_count - most_common_count) >= min_sample_size_5,
+    # most_common_count >= min_sample_size_5
+    (Archetype_count - total_number_of_copie) >= min_sample_size_5,
+    total_number_of_copie >= min_sample_size_5
   ) %>%
   group_by(Archetype, Mainboard_CardName) %>%
   mutate(
@@ -584,7 +603,7 @@ Uncommon_cards_pre_process <- Df_archetype_cards_agreg %>%
 Uncommon_cards_agreg_out <- Agreg_count_by_cards(
   Uncommon_cards_pre_process,
   "Mainboard",
-  min_sample_size
+  min_sample_size_5
 )
 
 Uncommon_cards <- Uncommon_cards_agreg_out %>%
@@ -596,10 +615,10 @@ Uncommon_cards <- Uncommon_cards_agreg_out %>%
 Side_Uncommon_cards_pre_process <- Df_side_archetype_cards_agreg %>%
   # filter(count_iteration_cards == most_common_count) %>%
   filter(
-    (Archetype_count - most_common_count) >= min_sample_size,
-    # most_common_count >= min_sample_size
-    (Archetype_count - total_number_of_copie) >= min_sample_size,
-    total_number_of_copie >= min_sample_size
+    (Archetype_count - most_common_count) >= min_sample_size_5,
+    # most_common_count >= min_sample_size_5
+    (Archetype_count - total_number_of_copie) >= min_sample_size_5,
+    total_number_of_copie >= min_sample_size_5
   ) %>%
   group_by(Archetype, Sideboard_CardName) %>%
   mutate(
@@ -614,7 +633,7 @@ Side_Uncommon_cards_pre_process <- Df_side_archetype_cards_agreg %>%
 Side_Uncommon_cards_agreg_out <- Agreg_count_by_cards(
   Side_Uncommon_cards_pre_process,
   "Sideboard",
-  min_sample_size
+  min_sample_size_5
 )
 
 Side_Uncommon_cards <- Side_Uncommon_cards_agreg_out %>%
@@ -635,7 +654,7 @@ Base_cards_and_base_count <- rbind(
     mutate(Mainboard_Count = paste0(Mainboard_Count, collapse = "/")) %>%
     ungroup() %>%
     filter(count_iteration_cards == most_common_count) %>%
-    filter((Archetype_count - most_common_count) < min_sample_size),
+    filter((Archetype_count - most_common_count) < min_sample_size_5),
   Base_cards_and_variable_count_agreg_out %>%
     group_by(Archetype, Mainboard_CardName) %>%
     filter(n() == 1)
@@ -660,7 +679,7 @@ Side_Base_cards_and_base_count <- rbind(
     mutate(Sideboard_Count = paste0(Sideboard_Count, collapse = "/")) %>%
     ungroup() %>%
     filter(count_iteration_cards == most_common_count) %>%
-    filter((Archetype_count - most_common_count) < min_sample_size),
+    filter((Archetype_count - most_common_count) < min_sample_size_5),
   Side_Base_cards_and_variable_count_agreg_out %>%
     group_by(Archetype, Sideboard_CardName) %>%
     filter(n() == 1)

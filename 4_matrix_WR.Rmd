@@ -45,13 +45,22 @@ loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
 
 
+```{r}
+knitr::read_chunk("S2_Source_mtg_new_card.R")
+# Prendre en compte mieux le nombres de deck avec CI pour le best deck
+```
 
+
+
+```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
+
+```
 
 
 
 ```{r}
 # Generate different color scheme for close archetype
-Archetype_cut_of <- 50
+
 
 df_base <- loaded_base_data %>%
   filter(Tournament != "Modern League") %>%
@@ -65,7 +74,7 @@ df_base <- loaded_base_data %>%
 
 
 Other_Archetype <- df_base %>%
-  filter(Archetype_count < Archetype_cut_of | Archetype == "Unknown") %>%
+  filter(Archetype_count < Archetype_cut_of_4 | Archetype == "Unknown") %>%
   pull(Archetype) %>%
   unique()
 

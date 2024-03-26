@@ -30,7 +30,15 @@ conflicted::conflicts_prefer(dplyr::filter)
 ```
 
 
+```{r}
+knitr::read_chunk("S2_Source_mtg_new_card.R")
+```
 
+
+
+```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
+
+```
 
 
 
@@ -623,7 +631,7 @@ DT::datatable(
     win_rate_main_board_based_arch$Card_always_in_deck_final,
     colname_deck_list = "Mainboard",
     df_Archetyp_fun = df_base_Archetype,
-    TRUE
+    Based_Archetyp_fun  = TRUE
   ),
   callback = DT::JS(
     paste0(
@@ -657,7 +665,7 @@ DT::datatable(
     win_rate_main_board_based_arch$Win_rate_df_final,
     colname_deck_list = "Mainboard",
     df_Archetyp_fun = df_base_Archetype,
-    TRUE
+    Based_Archetyp_fun  = TRUE
   ),
   callback = DT::JS(
     paste0(
@@ -697,7 +705,7 @@ DT::datatable(
     win_rate_side_board_based_arch$Card_always_in_deck_final,
     colname_deck_list = "Sideboard",
     df_Archetyp_fun = df_base_Archetype,
-    TRUE
+    Based_Archetyp_fun  = TRUE
   ),
   callback = DT::JS(
     paste0(
@@ -733,7 +741,7 @@ DT::datatable(
     win_rate_side_board_based_arch$Win_rate_df_final,
     colname_deck_list = "Sideboard",
     df_Archetyp_fun = df_base_Archetype,
-    TRUE
+    Based_Archetyp_fun  = TRUE
   ),
   callback = DT::JS(
     paste0(

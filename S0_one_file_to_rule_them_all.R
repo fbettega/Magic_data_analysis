@@ -21,7 +21,7 @@ run_command_from_dir <- function(cmd, dir_cmd) {
 #
 # a <- git2r::pull(repo = "MTGOArchetypeParser_20231227/MTGOFormatData/")
 
-
+tictoc::tic("total")
 run_command_from_dir("./MTGOArchetypeParser.App.exe json detect", "MTGOArchetypeParser_20231227/")
 
 # run_command_from_dir("git pull","MTGOArchetypeParser_20231227/MTGODecklistCache/")
@@ -44,9 +44,12 @@ rmarkdown::render(
 
 
 for (fichier in fichiers_rmd) {
+  tictoc::tic(paste0(fichier))
   rmarkdown::render(
     input = fichier,
     envir = new.env(),
     output_dir = "outpout/result"
   )
+  tictoc::toc()
 }
+tictoc::toc()

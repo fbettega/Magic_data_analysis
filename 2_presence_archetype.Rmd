@@ -24,11 +24,9 @@ library("rwantshue")
 library(htmltools)
 
 # css: TOC.css
-
 source("S2_Source_mtg_new_card.R")
 
 loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
-
 
 # Manque ajouter du texte après les % pour la variation
 conflicted::conflicts_prefer(dplyr::filter)
@@ -40,18 +38,35 @@ Réfléchir pour les couleurs et meilleurs distances
 
 
 ```{r}
+knitr::read_chunk("S2_Source_mtg_new_card.R")
+```
+
+
+
+```{r, Introduction_chunk_2_Deck_analysis, results='asis'}
+
+```
+
+```{r}
 # Generate different color scheme for close archetype
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
 
-Presence_df_base <- loaded_base_data %>%
+Presence_df_base_no_filter <- loaded_base_data %>%
   filter(Tournament != "Modern League") %>%
   group_by(Archetype) %>%
   mutate(
     Archetype_count = n()
   ) %>%
-  arrange(Archetype_count) %>%
-  filter(Archetype_count > 50) %>%
+  arrange(Archetype_count)
+
+
+filter_archetype_count <- min(50, 
+ sum(unique(Presence_df_base_no_filter$Archetype_count))/100 )
+
+Presence_df_base <- Presence_df_base_no_filter %>%
+  filter(Archetype_count > filter_archetype_count) %>%
   ungroup()
+
 
 
 Presence_df_base_all_data <- Presence_df_base %>%

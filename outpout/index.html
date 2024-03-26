@@ -10,8 +10,9 @@
 
 
 
+<meta name="date" content="2024-03-26" />
 
-<title>index.knit</title>
+<title>Présentation des différents résultats</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -348,24 +349,66 @@ display: none;
 
 
 
+<h1 class="title toc-ignore">Présentation des différents résultats</h1>
+<h4 class="date">2024-03-26</h4>
 
 </div>
 
 
 <p>Code available at <a href="https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result">https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result</a></p>
-<p>Reste a détailler le groupement et la méthodo</p>
+<div id="methode" class="section level1">
+<h1>Methode</h1>
+<div id="archetype-definition" class="section level2">
+<h2>Archetype definition</h2>
+<p><a href="https://github.com/fbettega/Modern_FB_archetype">Modify
+version of archetype definition</a> initial definition <a href="https://github.com/Badaro/MTGOFormatData">from Badaro</a></p>
+<!---
+Reste a détailler le groupement probablement tableau
+-->
+<!---
+CI computation
+-->
+<!---
+Type of tournament 
+<!---
+Tournament with matchup
+-->
+</div>
+</div>
 <div id="outpout" class="section level1">
 <h1>Outpout</h1>
 <div id="new-card" class="section level2">
 <h2><a href="/result/1_new_card.html">New card</a></h2>
 <p>Contains an analysis of the cards limited to certain recent sets to
-assess the impact of the new cards on the archetypes.</p>
+assess the impact of the new cards on each archetypes.</p>
 </div>
 <div id="presence-archetype" class="section level2">
 <h2><a href="/result/2_presence_archetype.html">Presence
 archetype</a></h2>
-<p>Gives a graphical representation of the distribution in terms of
-presence of the different modern archetypes over time.</p>
+<!---
+Add winner deck of last 2 weeks perhaps in another script
+-->
+<p>File in 2 parts :</p>
+<p>The first shows the presence curves over time for each archetype or
+archetype base. Archetypes with too low a presence are deactivated by
+default but can be reactivated by clicking on the desired decks.</p>
+<p>The second part shows the presence barchart of the different
+archetypes and base archetypes for different time intervals:</p>
+<ul>
+<li><p>all data</p></li>
+<li><p>one moth</p></li>
+<li><p>two weeks</p></li>
+<li><p>one week</p></li>
+</ul>
+<p>Additional information is available in tooltip (for Archetype and
+base archetype):</p>
+<ul>
+<li><p>Number of copies of the deck</p></li>
+<li><p>The delta in percent compared to the upper time interval</p></li>
+<li><p>Deck rank and its evolution compared to the previous time
+interval</p></li>
+<li><p>Win rates and confidence interval</p></li>
+</ul>
 </div>
 <div id="card-win-rate-analysis" class="section level2">
 <h2>Card win rate analysis</h2>
@@ -374,19 +417,141 @@ presence of the different modern archetypes over time.</p>
 table</a></h3>
 <p>Presents the win rate of each card in each archetype in the form of
 multiple tables.</p>
+<p>The definition of each column is given in a tooltip accessible by
+passing the cursor over the column names.</p>
+<p>This file is split into 2 parts : the first concentrates on the
+aggregated maccro archetypes and the second presents the
+sub-archetypes.</p>
+<p>Each part is organised in the same way, repeated 2 times, one for the
+maindeck and one for the sideboard.</p>
+<ul>
+<li><p><strong>Base cards</strong>: These are the cards present in decks
+almost exclusively in a given number of copies (deck numbers without the
+most common count less than 10).</p></li>
+<li><p><strong>Side/Mainboard cards</strong>: Cards present in variable
+numbers in the decks</p></li>
+</ul>
 </div>
 <div id="cards-wr-models" class="section level3">
 <h3><a href="/result/5_Deck_analysis.html">Cards WR models</a></h3>
-<p>Cards win rates Analysis by deck using regression</p>
+<p>This analysis attempts to use regression to determine the cards with
+the best performance.</p>
+<p>A binomial regression is initially trained on a set of decks. In
+order to be included in this analysis the archetype must be present at
+least 50 times in the dataset.</p>
+<p>In order to be considered a card must be included at least 50 times
+in either the main deck or the sideboards, one or the other being
+considered separately. In models comparing the number of copies of each
+card, when a number of copies is less than 50 it is grouped with an
+adjacent number of copies. For example, a card that is present 32 times
+in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4
+copies would lead to the following result 1/2 : 232 and 3/4 : 62. The
+formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have
+been grouped together.</p>
+<p><strong>Templates are created separately for the maindeck and the
+sideboard according to the following scheme :</strong></p>
+<ul>
+<li><p><strong>Base Cards</strong> cards systematically present in decks
+with an almost fixed number of copies less than 50 decks that do not
+have the most common number of copies.</p></li>
+<li><p><strong>Base Cards Variable count</strong>, these are the cards
+that are systematically or almost systematically (number of deck with 0
+copie &lt;50 decks with zero copies are grouped with the majority class)
+contained in the decks, for which the number of copies varies,
+quasibinomial regression models are created using the wins and losses of
+each deck :</p>
+<ul>
+<li><p>Comparing for each card presence <em>Most common count</em> vs
+absence <em>Other</em></p></li>
+<li><p>Comparing each card count with a sufficient sample size <em>Most
+common count</em> vs <em>1</em> vs <em>3-4</em> for example</p></li>
+</ul></li>
+<li><p><strong>Uncommon Cards</strong>, These cards are not always
+included in decks, quasibinomial regression models are created using the
+wins and losses of each deck :</p>
+<ul>
+<li><p>Comparing for each card presence <em>+1</em> vs absence
+<em>0</em></p></li>
+<li><p>Comparing each card count with a sufficient sample size
+<em>0</em> vs <em>1</em> vs <em>3-4</em> for example.</p></li>
+</ul></li>
+</ul>
 </div>
 </div>
 <div id="matrix-wr" class="section level2">
 <h2><a href="/result/4_matrix_WR.html">Matrix WR</a></h2>
-<p>Matrix of win rates for different modern archetypes.</p>
+<p>In order to be included, an archetype must be represented more than
+50 times in the dataset.</p>
+<p>The file is split into 3 parts, the first 2 being :</p>
+<ul>
+<li><p>The first, to increase the sample size, considers each round
+separately (for example, a 2-1 score counts as 3 rounds).</p></li>
+<li><p>The second considers the matches as a whole (for example, a 2-1
+score counts as 1 game won).</p></li>
+</ul>
+<p>They are built on the following model (additionnal information in
+matrix tooltip):</p>
+<ul>
+<li><p>A complete matrix with all the information.</p></li>
+<li><p>A matrix presenting only the matchups with a confidence interval
+of less than 50%.</p></li>
+<li><p>A matrix presenting only matchups with a sample size greater than
+20.</p></li>
+</ul>
+<p>The third part explores the notion of the best deck according to a
+given metagame using the winrates obtained using the complete games
+obtained on the data set and the presence of each archetype over
+time.</p>
+<p>In order to determine an expected number of victories 2 criteria are
+used the average winrate and the lower bounds of the confidence
+interval.<strong>Please note that this part is still under construction
+as some decks with too few matchups are included</strong>.</p>
 </div>
 <div id="best-deck-analysis" class="section level2">
 <h2><a href="/result/6_best_deck.html">Best deck analysis</a></h2>
-<p>Using regression model select best performing</p>
+<!---
+Inclure les variables en les extrayant des rmd concerné 
+-->
+<p>This analysis attempts to use regression to determine the decks with
+the best performance.</p>
+<p>A binomial regression is initially trained on a set of decks. In
+order to be included in this analysis the archetype must be present at
+least 150 times in the dataset.</p>
+<p>In order to be considered a card must be included at least 50 times
+in either the main deck or the sideboards, one or the other being
+considered separately. In models comparing the number of copies of each
+card, when a number of copies is less than 50 it is grouped with an
+adjacent number of copies. For example, a card that is present 32 times
+in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4
+copies would lead to the following result 1/2 : 232 and 3/4 : 62. The
+formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have
+been grouped together.</p>
+<p><strong>A total of 6 quasibinomial regression models are created
+using the wins and losses of each deck:</strong>.</p>
+<ul>
+<li><p>Two models using the deck as a whole (maindeck and sideboard)</p>
+<ul>
+<li><p>Comparing for each card presence <em>+1</em> vs absence
+<em>0</em>.</p></li>
+<li><p>Comparing each card count with a sufficient sample size
+<em>0</em> vs <em>1</em> vs <em>3-4</em> for example</p></li>
+</ul></li>
+<li><p>Four separate models 2 for maindeck and 2 for sideboard</p>
+<ul>
+<li><p>Comparing for each card presence <em>+1</em> vs absence
+<em>0</em></p></li>
+<li><p>Comparing each card count with a sufficient sample size
+<em>0</em> vs <em>1</em> vs <em>3-4</em> for example</p></li>
+</ul></li>
+</ul>
+<p>These different models are then used to determine the 7 complete
+decks (maindeck and sideboard) with the highest probability of victory
+for each archetype.</p>
+<p>As well as the 7 maindecks and 7 sideboards with the highest
+probability of victory are presented for each archetype.<strong>Warning:
+this second part can lead to inconsistent combinations.</strong> It
+seemed useful if you want explore the maindecks and sides
+separately.</p>
 </div>
 </div>
 

@@ -2,6 +2,10 @@ library("rjson")
 library(tidyverse)
 
 
+# prévoir un regroupement automatique au dela de ce que j'ai fait
+
+
+
 source("S2_Source_mtg_new_card.R")
 
 
@@ -27,13 +31,15 @@ df_export <- json_parsing %>%
   ungroup() %>%
   mutate(
     Date = as_datetime(Date),
-    Week = as.integer(ceiling(
-      difftime(
-        Date,
-        (min(Date) - as.difftime(1, unit = "days")),
-        units = "weeks"
+    Week = as.integer(
+      ceiling(
+        difftime(
+          Date,
+          (min(Date) - as.difftime(1, unit = "days")),
+          units = "weeks"
       )
-    ))
+    )
+    )
   )
 
 
@@ -47,18 +53,151 @@ write_rds(df_export_remove_bann, "data/data_meta_en_cours.rds")
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
+# 
+# 
+# df_export <- json_parsing %>%
+#   as_tibble() %>%
+#   unnest_wider(Data) %>%
+#   unnest_wider(Archetype) %>%
+#   unnest_wider(ReferenceArchetype,
+#                names_sep = "_"
+#   ) %>%
+#   mutate(across(c(Wins, Losses, Draws), ~ as.numeric(.))) %>%
+#   mutate(matches = Wins + Losses + Draws) %>%
+#   mutate(Base_Archetype = Archetype) %>%
+#   mutate(Archetype = Archetype_agreger2(Base_Archetype, Color)) %>%
+#   rownames_to_column(var = "id") %>%
+#   group_by(Archetype) %>%
+#   mutate(
+#     Archetype_count = n()
+#   ) %>%
+#   ungroup() %>%
+#   mutate(
+#     Date = as_datetime(Date),
+#     Week = as.integer(
+#       ceiling(
+#         difftime(
+#           Date,
+#           (min(Date) - as.difftime(1, unit = "days")),
+#           units = "weeks"
+#         )
+#       )
+#     )
+#   )
+# 
+# 
+# 
+# 
+# 
+# Archetype_agreger2 <- function(Archetype_to_agreg, color_agreg = NULL) {
+# 
+#   # Regroupement du split de creativity sur persist
+#   Archetype_to_agreg <- ifelse(str_detect(
+#     Archetype_to_agreg,
+#     "Creativity"
+#   ),
+#   "Creativity", Archetype_to_agreg
+#   )
+#   
+#   # Groupe breach value and murktide
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Breach Value",
+#                                "Murktide", Archetype_to_agreg
+#   )
+#   
+#   
+#   # Pack rhinos
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Footfalls 4 C",
+#                                "Footfalls", Archetype_to_agreg
+#   )
+#   # Pack tron
+#   Archetype_to_agreg <- ifelse(str_detect(Archetype_to_agreg, "Tron$"),
+#                                "Tron", Archetype_to_agreg
+#   )
+#   
+#   # Regroupement de tout les rakdos midrange et scam
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg %in%
+#                                  c(
+#                                    # "Rakdos Midrange _fallback",
+#                                    # "Mardu Midrange _fallback",
+#                                    "Skelementals", "Scam"
+#                                  ),
+#                               "BR midrange", Archetype_to_agreg
+#   )
+#   
+#   # Merge the two combo breach potentiellement breach storm groupable avec les autres storms
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+#     "Breach Storm", "Grinding Breach"
+#   ),
+#   "Breach combo", Archetype_to_agreg
+#   )
+#   
+#   # Disctuable merge goryo et reanimator
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Goryo Reanimator",
+#                                "Reanimator", Archetype_to_agreg
+#   )
+#   
+#   # Regroupement de toutes les version tuant avec vaalakut, gros doutes sur l'inclusion de titanshift
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+#     "Guildpact Valakut", "Blue Scapeshift"
+#   ),
+#   "Scapeshift", Archetype_to_agreg
+#   )
+#   
+#   # Merge titan shift avec scapshift
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Titan Shift",
+#                                "Scapeshift", Archetype_to_agreg
+#   )
+# 
+#   # Merge tout les titan sauf titan shift
+#   Archetype_to_agreg <- ifelse(str_detect(Archetype_to_agreg, "Titan$"),
+#                                "Amulet Titan", Archetype_to_agreg
+#   )
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Timeless Lotus",
+#                                "Amulet Titan", Archetype_to_agreg
+#   )
+# 
+#   # Merge les 2 versions de gob
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Goblin Whack",
+#                                "Goblins", Archetype_to_agreg
+#   )
+#   
+#   # Groupement de tout les storms
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+#     "Grixis Storm", "Boros Storm", "Mono Red Storm",
+#     "Gifts Storm", "Twiddle Storm"
+#   ),
+#   "Storm", Archetype_to_agreg
+#   )
+# 
+#   # Regroupement de toutes les 4/5C soupe avec des betes
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+#     "Elementals", "Beans Cascade", "Saheeli Combo"
+#   ),
+#   "Omnath Control", Archetype_to_agreg
+#   )
+#   
+#   # Regroupement de toutes les soupes sans lands
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c("Oops All Spells"),
+#                                "Belcher", Archetype_to_agreg
+#   )
+#   
+#   # Groupement de tout les Burn quelquesois les couleurs
+#   Archetype_to_agreg <- ifelse(str_detect(Archetype_to_agreg, "Burn"),
+#                                "Burn", Archetype_to_agreg
+#   )
+#   
+#   # Meta groupes avec les soupes foods
+#   Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+#     "Asmo Food", "Manufactor Combo"
+#   ),
+#   "Food", Archetype_to_agreg
+#   )
+#   
+#   return(Archetype_to_agreg)
+# }
+# 
+# 
+# 
 
 
 

@@ -1,39 +1,89 @@
 ---
-title: ""
+title: "Présentation des différents résultats"
 output: 
   html_document:
-date: ""
+date: "`r Sys.Date()`"
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout") })
 ---
-
+```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
+knitr::opts_chunk$set(
+  echo = FALSE,
+  message = FALSE,
+  warning = FALSE #,
+   # cache = TRUE
+)
+source("S2_Source_mtg_new_card.R")
+knitr::read_chunk("S2_Source_mtg_new_card.R")
+```
 
 Code available at [https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result](https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result)
 
 
-Reste a détailler le groupement et la méthodo
+
+# Methode
+## Archetype definition
+[Modify version of archetype definition](https://github.com/fbettega/Modern_FB_archetype) initial definition [from Badaro](https://github.com/Badaro/MTGOFormatData)
+
+<!---
+Reste a détailler le groupement probablement tableau
+-->
+
+<!---
+CI computation
+-->
+<!---
+Type of tournament 
+<!---
+Tournament with matchup
+-->
 
 
 # Outpout
 ## [New card](/result/1_new_card.html)
-Contains an analysis of the cards limited to certain recent sets to assess the impact of the new cards on the archetypes.
+
+Contains an analysis of the cards limited to certain recent sets to assess the impact of the new cards on each archetypes.
 
 ## [Presence archetype](/result/2_presence_archetype.html)
-Gives a graphical representation of the distribution in terms of presence of the different modern archetypes over time.
+<!---
+Add winner deck of last 2 weeks perhaps in another script
+-->
+```{r, Introduction_chunk_2_Deck_analysis, results='asis'}
+
+```
 
 
 ## Card win rate analysis  
 
 
 ### [Card win rate table](/result/3_Card_win_rate_table.html)
-Presents the win rate of each card in each archetype in the form of multiple tables.
+```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
+
+```
 
 ### [Cards WR models](/result/5_Deck_analysis.html)
-Cards win rates Analysis by deck using regression
+```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
+
+```
 
 ## [Matrix WR](/result/4_matrix_WR.html)
-Matrix of win rates for different modern archetypes.
+```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
+
+```
+
+
+
+
 
 
 ## [Best deck analysis](/result/6_best_deck.html)
-Using regression model select best performing 
+<!---
+Inclure les variables en les extrayant des rmd concerné 
+-->
+```{r, Introduction_chunk_6_best_deck, results='asis'}
+
+```
+
+
+
+
