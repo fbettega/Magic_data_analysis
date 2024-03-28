@@ -341,7 +341,8 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   ################################################################################
   ############################ Réfléxion a mener #################################
   # All Blink decks (weak groups because deck can be really differents)
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in%
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in%
     c(
       "Azorius Blink", "Bant Blink", "WURG Blink",
       "Jeskai Blink", "Esper Blink", "Boros Blink"
@@ -349,7 +350,8 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   "Blink", Archetype_to_agreg
   )
   # groupe all deck blade a reflechir sur le fait de grouper avec blink
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Grief Blade",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Grief Blade",
     "Stoneblade", Archetype_to_agreg
   )
 
@@ -367,36 +369,50 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   # Delver Gestion
   # Gestion du problème de l'absence des couleurs dans les archetypes des mathcups
   if (is.null(color_agreg[1])) {
-    Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Delver",
+    Archetype_to_agreg <- ifelse(
+      Archetype_to_agreg == "Delver",
       "URedX Control", Archetype_to_agreg
     )
   } else {
     # split des 2 types de dever dans leur archetype par couleurs
-    Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Delver" & color_agreg == "UR",
+    Archetype_to_agreg <- ifelse(
+      Archetype_to_agreg == "Delver" & color_agreg == "UR",
       "Murktide", Archetype_to_agreg
     )
-    Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Delver" & color_agreg == "UBR",
+    Archetype_to_agreg <- ifelse(
+      Archetype_to_agreg == "Delver" & color_agreg == "UBR",
       "UBlackX Control", Archetype_to_agreg
     )
   }
 
   # Groupe breach value and murktide
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Breach Value",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Breach Value",
     "Murktide", Archetype_to_agreg
   )
 
 
   # Pack rhinos
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Footfalls 4 C",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Footfalls 4 C",
     "Footfalls", Archetype_to_agreg
   )
   # Pack tron
-  Archetype_to_agreg <- ifelse(str_detect(Archetype_to_agreg, "Tron$"),
+  Archetype_to_agreg <- ifelse(
+    str_detect(Archetype_to_agreg, "Tron$"),
     "Tron", Archetype_to_agreg
   )
 
   # Regroupement de tout les rakdos midrange et scam
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in%
+  
+  
+  Archetype_to_agreg <- ifelse(
+    str_detect(Archetype_to_agreg, "Scam$"),
+                               "Scam", Archetype_to_agreg
+  )
+  
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in%
     c(
       "Rakdos Midrange _fallback",
       "Mardu Midrange _fallback",
@@ -406,7 +422,8 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   )
 
   # Regroupement de mono B midrange et coffer
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Mono Black Midrange _fallback",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Mono Black Midrange _fallback",
     "Coffers Control", Archetype_to_agreg
   )
 
@@ -425,7 +442,8 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   )
 
   # Merge all rock soupes together
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c(
     "Golgari Midrange _fallback", "Jund Midrange _fallback",
     "Abzan Midrange _fallback", "Jund Aggro", "Jund Midrange"
   ),
@@ -433,44 +451,52 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   )
 
   # Merge the two combo breach potentiellement breach storm groupable avec les autres storms
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c(
     "Breach Storm", "Grinding Breach"
   ),
   "Breach combo", Archetype_to_agreg
   )
 
   # Disctuable merge goryo et reanimator
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Reanimator",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Reanimator",
     "Goryo Reanimator", Archetype_to_agreg
   )
 
   # Regroupement de toutes les version tuant avec vaalakut, gros doutes sur l'inclusion de titanshift
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c(
     "Guildpact Valakut", "Blue Scapeshift"
   ),
   "Scapeshift", Archetype_to_agreg
   )
   # Merge titan shift avec scapshift
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Titan Shift",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Titan Shift",
     "Scapeshift", Archetype_to_agreg
   )
 
   # Merge tout les titan sauf titan shift
-  Archetype_to_agreg <- ifelse(str_detect(Archetype_to_agreg, "Titan$"),
+  Archetype_to_agreg <- ifelse(
+    str_detect(Archetype_to_agreg, "Titan$"),
     "Amulet Titan", Archetype_to_agreg
   )
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Timeless Lotus",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Timeless Lotus",
     "Amulet Titan", Archetype_to_agreg
   )
 
 
   # Merge les 2 versions de gob
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg == "Goblin Whack",
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg == "Goblin Whack",
     "Goblins", Archetype_to_agreg
   )
 
   # Groupement de tout les storms
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c(
     "Grixis Storm", "Boros Storm", "Mono Red Storm",
     "Gifts Storm", "Twiddle Storm"
   ),
@@ -481,34 +507,45 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
 
 
   # Regroupement de toutes les 4/5C soupe avec des betes
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c(
     "Elementals", "Beans Cascade", "Saheeli Combo"
   ),
   "Omnath Control", Archetype_to_agreg
   )
 
   # Regroupement de toutes les soupes sans lands
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c("Oops All Spells"),
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c("Oops All Spells"),
     "Belcher", Archetype_to_agreg
   )
 
   # Groupement de tout les Burn quelquesois les couleurs
-  Archetype_to_agreg <- ifelse(str_detect(Archetype_to_agreg, "Burn"),
+  Archetype_to_agreg <- ifelse(
+    str_detect(Archetype_to_agreg, "Burn"),
     "Burn", Archetype_to_agreg
   )
 
   # Meta groupes avec les soupes foods
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% c(
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c(
     "Asmo Food", "Manufactor Combo"
   ),
   "Food", Archetype_to_agreg
   )
-
+  Archetype_to_agreg <- ifelse(
+    Archetype_to_agreg %in% c(
+    "Blue Zoo", "Black Zoo","Bushwhacker Zoo"
+  ),
+  "Domain Zoo", Archetype_to_agreg
+  )
+  
+  
   return(Archetype_to_agreg)
 }
 
 
-
+# a check "Jund Artefact"/ Scam Tron
 
 
 
@@ -947,6 +984,275 @@ prepare_df_for_model <- function(df_fun,base_df,cols_fun){
   return(res)
 }
 
+################################################################################
+###  Function that compute presence of archetype for plot used in 2 and 7  #####
+# plot_presence_fun
+#   color_scheme,
+DF_presence_fun <- function(
+    df_base,
+    time_limit = Inf,
+    compare_time_limit = NULL) {
+  Presence_df_base <- df_base %>%
+    ungroup() %>%
+    filter(
+      Week > (max(Week) - time_limit)
+    ) %>%
+    group_by(Archetype) %>%
+    mutate(
+      Archetype_count = n(),
+      Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
+      CI_Arch_winrate = CI_prop(Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
+    ) %>%
+    arrange(Archetype_count) %>%
+    mutate(
+      Archetype =
+        factor(Archetype,
+               level = unique(.$Archetype)
+        ),
+      Rank = as.numeric(
+        factor(Archetype,
+               level = rev(unique(.$Archetype))
+        )
+      ),
+      Base_Archetype = as.factor(Base_Archetype),
+      # A reflechir ou tu mets ça selon les filters
+      Archetype_percent = Archetype_count / nrow(.)
+    ) %>%
+    group_by(Base_Archetype) %>%
+    mutate(
+      Based_Archetype_count = n(),
+      Based_Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
+      CI_Based_Arch_winrate = CI_prop(Based_Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
+      Based_Archetype_percent = round((Based_Archetype_count / nrow(.)) * 100, 2),
+      Based_Archetype_inside_main_percent = round(
+        (Based_Archetype_count / Archetype_count) * 100, 2
+      ),
+      Arch_winrate_format = paste0(
+        round(Arch_winrate * 100, 2),
+        formating_CI(Arch_winrate, CI_Arch_winrate)
+      ),
+      Based_Arch_winrate_format = paste0(
+        round(Based_Arch_winrate * 100, 2),
+        formating_CI(Based_Arch_winrate, CI_Based_Arch_winrate)
+      )
+    )
+  
+  if (!is.null(compare_time_limit)) {
+    df_comparisson <- DF_presence_fun(df_base, time_limit = compare_time_limit)
+    
+    
+    df_presence_res <- Presence_df_base %>%
+      inner_join(
+        df_comparisson %>%
+          select(
+            id, Rank, Archetype_count,
+            Archetype_percent, Based_Archetype_count,
+            Based_Archetype_inside_main_percent,
+            Arch_winrate, CI_Arch_winrate,
+            Based_Arch_winrate, CI_Based_Arch_winrate
+          ),
+        by = "id",
+        suffix = c("", paste0("_", compare_time_limit - 1))
+      ) %>%
+      mutate(
+        Delta_rank = if_else(
+          Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)) == 0,
+          "",
+          ifelse(Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)) < 0,
+                 paste0("+ ", abs(Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)))),
+                 paste0("- ", Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)))
+          )
+        ),
+        Num_delta_perc_arch = Archetype_percent - !!rlang::sym(paste0("Archetype_percent_", compare_time_limit - 1)),
+        Num_Delta_Arch_win_rate = Arch_winrate - !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1)),
+        Num_Delta_based_Arch_win_rate = Based_Arch_winrate - !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1)),
+        Delta_percent_arch = ifelse(Num_delta_perc_arch > 0,
+                                    paste0("+ ", round(Num_delta_perc_arch * 100, 2)),
+                                    paste0(round(Num_delta_perc_arch * 100, 2))
+        ),
+        Delta_Arch_count = Archetype_count - !!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1)),
+        CI_Delta_Arch_win_rate = CI_2_prop(
+          Arch_winrate,
+          !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1)),
+          Archetype_count,
+          !!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1))
+        ),
+        CI_Delta_based_Arch_win_rate = CI_2_prop(
+          Based_Arch_winrate,
+          !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1)),
+          Based_Archetype_count,
+          !!rlang::sym(paste0("Based_Archetype_count_", compare_time_limit - 1))
+        ),
+        Delta_Arch_win_rate = ifelse(
+          Num_Delta_Arch_win_rate > 0,
+          paste0(
+            "+ ", round(Num_Delta_Arch_win_rate * 100, 2),
+            formating_CI(Num_Delta_Arch_win_rate, CI_Delta_Arch_win_rate)
+          ),
+          paste0(
+            round(Num_Delta_Arch_win_rate * 100, 2),
+            formating_CI(Num_Delta_Arch_win_rate, CI_Delta_Arch_win_rate)
+          )
+        ),
+        Delta_based_Arch_win_rate = ifelse(Num_Delta_based_Arch_win_rate > 0,
+                                           paste0(
+                                             "+ ", round(Num_Delta_based_Arch_win_rate * 100, 2),
+                                             formating_CI(Num_Delta_based_Arch_win_rate, CI_Delta_based_Arch_win_rate)
+                                           ),
+                                           paste0(
+                                             round(Num_Delta_based_Arch_win_rate * 100, 2),
+                                             formating_CI(Num_Delta_based_Arch_win_rate, CI_Delta_based_Arch_win_rate)
+                                           )
+        )
+      )
+  } else {
+    df_presence_res <- Presence_df_base
+  }
+  return(df_presence_res)
+}
+
+
+
+
+
+################################################################################
+
+
+################################################################################
+######  Function that plot presence of archetype used in 2 and 7  ##############
+
+plot_presence_fun <- function(
+    df_base,
+    color_scheme,
+    time_limit = Inf,
+    compare_time_limit = NULL) {
+  # browser()
+  
+  df_plot_presence <- DF_presence_fun(
+    df_base, time_limit, compare_time_limit
+  )
+  if (!is.null(compare_time_limit)) {
+    Plot_presence <- (
+      ggplot(
+        df_plot_presence,
+        aes(
+          x = Archetype,
+          y = prop.table(stat(count)),
+          fill = Base_Archetype,
+          label = scales::percent(prop.table(stat(count))),
+          # Delta_rank = Delta_rank,
+          # Delta_percent_arch = Delta_percent_arch,
+          text = paste(
+            "Archetype: ", Archetype, "<br>", # Archetype name
+            "Base Archetype: ", Base_Archetype, "<br>", # Base Archetype name
+            "Rank: ", Rank, if_else(Delta_rank == "", "", paste0(" (", Delta_rank, ")")), " [n = ", Archetype_count, "]", "<br>",
+            "Archetype Win rate: ", Arch_winrate_format, " ", " (", Delta_Arch_win_rate, ")", "<br>",
+            "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", " (", Delta_based_Arch_win_rate, ")", "<br>",
+            "Delta Archetype percent: ", Delta_percent_arch, " %", "<br>",
+            "Base Archetype count: ", Based_Archetype_count, " (", Based_Archetype_percent, " %", ")", "<br>",
+            sep = ""
+          )
+        )
+      ) +
+        geom_bar() +
+        geom_text(
+          aes(
+            label = paste0(
+              round(prop.table(stat(count)) * 100, 2),
+              " % "
+            ),
+            y = prop.table(stat(count)) + 0.008,
+            group = 1
+          ),
+          stat = "count",
+          position = position_dodge2(width = 0.9),
+          size = 5
+        ) +
+        # geom_text(
+        #   aes(
+        #     label = paste0(Delta_rank," ",Delta_percent_arch," %"),
+        #     y = ,
+        #     group = 1
+        #       ),
+        #   stat = "identity",
+        #   position = position_dodge2(width = 0.9),
+        #   size = 3
+        #   ) +
+        scale_y_continuous(labels = scales::percent) +
+        coord_flip() +
+        theme(
+          legend.position = "none",
+          axis.title.x = element_blank()
+        ) +
+        scale_fill_manual(
+          values = color_scheme[
+            levels(
+              as.factor(df_base$Base_Archetype)
+            ) %in%
+              levels(df_plot_presence$Base_Archetype)
+          ]
+        )
+    ) %>%
+      ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
+  } else {
+    Plot_presence <- (
+      ggplot(
+        df_plot_presence,
+        aes(
+          x = Archetype,
+          y = prop.table(stat(count)),
+          fill = Base_Archetype,
+          label = scales::percent(prop.table(stat(count))),
+          text = paste(
+            "Archetype: ", Archetype, "<br>",
+            "Base Archetype: ", Base_Archetype, "<br>",
+            "Rank: ", Rank, " [n = ", Archetype_count, "]", "<br>",
+            "Archetype Win rate: ", Arch_winrate_format, " ", "<br>",
+            "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", "<br>",
+            "Archetype: ", Based_Archetype_percent, "<br>",
+            "Base Archetype count: ", Based_Archetype_count, "<br>",
+            sep = ""
+          )
+        )
+      ) +
+        geom_bar() +
+        geom_text(
+          aes(
+            label = paste0(round(prop.table(stat(count)) * 100, 2), " %"),
+            y = prop.table(stat(count)) + 0.008,
+            group = 1
+          ),
+          stat = "count",
+          position = position_dodge2(width = 0.9),
+          size = 5
+        ) +
+        scale_y_continuous(labels = scales::percent) +
+        coord_flip() +
+        theme(
+          legend.position = "none",
+          axis.title.x = element_blank()
+        ) +
+        scale_fill_manual(
+          values = color_scheme[
+            levels(
+              as.factor(df_base$Base_Archetype)
+            ) %in%
+              levels(df_plot_presence$Base_Archetype)
+          ]
+        )
+    ) %>%
+      ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
+  }
+  
+  # Truc compliqué pour enlever l'overlay du texte
+  Plot_presence$x$data[[which(
+    sapply(Plot_presence$x$data, function(x) {
+      x$mode == "text"
+    }) == TRUE
+  )]]$hoverinfo <- "none"
+  
+  return(Plot_presence)
+}
 
 
 ################################################################################
@@ -1349,3 +1655,26 @@ pander::pandoc.p("")
 pander::pandoc.p(Introduction_char_vec_par_6_3)
 pander::pandoc.p("")
 pander::pandoc.p("")
+
+
+
+################################################################################
+#######################  Intro of script 7  #####################################
+## ---- Introduction_chunk_7_best_deck
+min_tournament_size_7 <- 64
+last_week_number_7 <- 2
+
+
+Introduction_char_vec_par_7_1 <- paste0(
+  "Presentation of the Top 8 and presence in major tournaments (number of players > ",
+  min_tournament_size_7,") over the last ",last_week_number_7," weeks.")
+
+
+pander::pandoc.p(Introduction_char_vec_par_7_1)
+pander::pandoc.p("")
+pander::pandoc.p("")
+
+
+
+
+

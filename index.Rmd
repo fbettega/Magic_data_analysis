@@ -45,13 +45,21 @@ Tournament with matchup
 Contains an analysis of the cards limited to certain recent sets to assess the impact of the new cards on each archetypes.
 
 ## [Presence archetype](/result/2_presence_archetype.html)
+
 <!---
 Add winner deck of last 2 weeks perhaps in another script
+potentiellement selecteur de deck sous contrainte en script annexe
 -->
+
 ```{r, Introduction_chunk_2_Deck_analysis, results='asis'}
 
 ```
 
+### [Top 8 deck](/result/7_last_weeks_winners.html)
+
+```{r, Introduction_chunk_7_Deck_analysis, results='asis'}
+
+```
 
 ## Card win rate analysis  
 
@@ -70,10 +78,6 @@ Add winner deck of last 2 weeks perhaps in another script
 ```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
 
 ```
-
-
-
-
 
 
 ## [Best deck analysis](/result/6_best_deck.html)

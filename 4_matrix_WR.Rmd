@@ -556,7 +556,7 @@ Df_Expected_number_of_win_by_week <- df_base_all_data %>%
     by = c("Matchups_OpponentArchetype")
   ) %>%
   mutate(
-    lower_ci_bounda = replace(
+    lower_ci_bound = replace(
       replace(lower_ci_bound, lower_ci_bound < 0, 0),
       lower_ci_bound > 1, 1
     ),
@@ -576,16 +576,16 @@ Df_expected_of_week_sum <- rbind(
     mutate(Week = as.character(Week)) %>%
     group_by(Archetype, Week) %>%
     summarise(
-      S_wr = sum(expected_win_WR) / sum(n),
-      S_ci = sum(expected_win_lower_ci) / sum(n),
+      S_wr = sum(expected_win_WR), #/sum(n),
+      S_ci = sum(expected_win_lower_ci), #/ sum(n),
       .groups = "drop"
     ) %>%
     distinct(),
   Df_Expected_number_of_win_by_week %>%
     group_by(Archetype) %>%
     summarise(
-      S_wr = sum(expected_win_WR) / sum(n),
-      S_ci = sum(expected_win_lower_ci) / sum(n),
+      S_wr = sum(expected_win_WR),# / sum(n),
+      S_ci = sum(expected_win_lower_ci),# / sum(n),
       Week = "All",
       .groups = "drop"
     ) %>%
@@ -639,7 +639,8 @@ colors_scales_presence <- scheme$hex(
 )
 
 
-plot_archetype_spaghetti <- (ggplot(
+plot_archetype_spaghetti <- (
+  ggplot(
   Presence_for_best_deck_plot,
   aes(
     x = Week,
@@ -824,7 +825,7 @@ Df_Expected_number_of_win_custom_less <- Updated_presence %>%
     by = c("Matchups_OpponentArchetype"), relationship = "many-to-many"
   ) %>%
   mutate(
-    lower_ci_bounda = replace(
+    lower_ci_bound = replace(
       replace(lower_ci_bound, lower_ci_bound < 0, 0),
       lower_ci_bound > 1, 1
     ),

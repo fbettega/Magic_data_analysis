@@ -41,7 +41,7 @@ df_export <- json_parsing %>%
     )
     )
   )
-
+sort(table(df_export$Archetype))
 
 df_export_remove_bann <- Ban_patch(
   df = df_export,
