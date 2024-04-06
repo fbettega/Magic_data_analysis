@@ -1,4 +1,47 @@
 ################################################################################
+########################### Pre TT function for archetype classif ##############
+prett_fun_classif <- function(df, colname_deck_list) {
+  start.time <- Sys.time()
+  pre_tt_dataframe <-
+    df %>%
+    select(
+      id, Archetype, Color, any_of(colname_deck_list) # ,Sideboard
+    ) %>%
+    unnest_longer(!!colname_deck_list) %>%
+    unnest_wider(!!colname_deck_list, names_sep = "_") %>%
+    mutate(
+      color_W = str_detect(Color, "W"),
+      color_B = str_detect(Color, "B"),
+      color_U = str_detect(Color, "U"),
+      color_R = str_detect(Color, "R"),
+      color_G = str_detect(Color, "G")
+    ) %>%
+    select(-Color) %>%
+    mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(!!rlang::sym(paste0(colname_deck_list, "_CardName")), ALL_mod = TRUE)) %>%
+    # Gestion des aggregation (eg fetch)
+    group_by(id, !!rlang::sym(paste0(colname_deck_list, "_CardName"))) %>%
+    mutate(!!rlang::sym(paste0(colname_deck_list, "_Count")) := sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))) %>%
+    distinct() %>%
+    # fin de la gestion
+    # cards matrix wild
+    pivot_wider(
+      names_from = !!rlang::sym(paste0(colname_deck_list, "_CardName")),
+      # names_prefix = "Mainboard_",
+      values_from = !!rlang::sym(paste0(colname_deck_list, "_Count")),
+      values_fill = 0
+    ) 
+  
+  
+  end.time <- Sys.time()
+  time.taken <- end.time - start.time
+  print(time.taken)
+  return(pre_tt_dataframe)
+}
+
+
+
+
+
 ####################### Patch foireux pour ban #################################
 
 
@@ -114,16 +157,6 @@ Ban_patch <- function(vec_of_ban_cards, df # ,exact_result = FALSE
 
 
 
-
-
-
-
-
-
-
-
-
-################################################################################
 ################# Json function to auto update filter ##########################
 
 onfly_filter_js <- c(r"{
@@ -174,8 +207,6 @@ selection_content[0].innerHTML = content_str;
 
 
 
-
-################################################################################
 ############################## Format table  ###################################
 # Format table résult removing space and shorten name make some variables factor
 # Used in 3_Card_win_rate_table
@@ -285,265 +316,207 @@ format_df_result_card_table <- function(
 # "Green Devotion"
 Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   # Group UW base control and midrange in maccro archetype also contain archetype share with dimir
-  UW_controle_group <- c(
-    "Azorius Control _fallback",
-    "Bant Control _fallback", "Jeskai Control _fallback",
-    "Taking Turns",
-    # soupe liée a dimir
-    "Esper Control _fallback", "Esper Midrange _fallback", "WUBG Control _fallback",
-    "WUBR Control _fallback", "WURG Control _fallback",
-    "5 Color Control _fallback"
-  )
-
-
-  # Group UB base control and midrange in maccro archetype deck share with UW are in the UW groups
-  UB_controle_group <- c(
-    "Dimir Control _fallback", "Dimir Midrange _fallback",
-    "Sultai Control _fallback", "Sultai Midrange _fallback",
-    "Grixis Control _fallback", "Grixis Midrange _fallback",
-    # ajout discutable
-    "Rogues"
-  )
-
-
-  # Not murktide UR control
-  UR_controle_group <- c(
-    "Izzet Control _fallback", "Temur Control _fallback",
-    "Temur Midrange _fallback", "Grixis Aggro",
-    "Faeries"
-  )
-
-
-
-
-
-
-  # Gestion des controles en classe large définis au dessus
-  Archetype_to_agreg <- ifelse(Archetype_to_agreg %in% UW_controle_group,
-    "UWhiteX Control",
-    ifelse(Archetype_to_agreg %in% UB_controle_group,
-      "UBlackX Control",
-      ifelse(Archetype_to_agreg %in% UR_controle_group,
-        "URedX Control", Archetype_to_agreg
-      )
+  
+  
+  color_group <- list(
+    Delver = list(
+      color = c("UR","UBR"),
+      groupe = c("Murktide","UBlackX Control"),
+      fallback = c("URedX Control")
     )
   )
-
-  # Regroupement du split de creativity sur persist
-  Archetype_to_agreg <- ifelse(str_detect(
-    Archetype_to_agreg,
-    "Creativity"
-  ),
-  "Creativity", Archetype_to_agreg
-  )
-
-
-  ################################################################################
-  ############################ Réfléxion a mener #################################
-  # All Blink decks (weak groups because deck can be really differents)
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in%
-    c(
+  
+  # Emeria Control  Saga Party  Spirits 
+  # Eldrazi a voir pour groupe avec Eldrazi Tron
+  # Nykthos Leyline  avec Green Devotion
+  
+  name_group <- list(
+    # here because of debug grouping with self
+    Yawgmoth = c("Yawgmoth"),
+    `Living End` = c("Living End"),
+    `Hammer Time` = c("Hammer Time"),
+    Mill = c("Mill"),
+    Shadow = c("Shadow"),
+    Merfolk = c("Merfolk"),
+    
+    # Group UW base control and midrange in maccro archetype also contain archetype share with dimir
+    
+    `UWhiteX Control` = c(
+      "Azorius Control _fallback",
+      "Bant Control _fallback", "Jeskai Control _fallback",
+      "Taking Turns",
+      # soupe liée a dimir
+      "Esper Control _fallback", "Esper Midrange _fallback", "WUBG Control _fallback",
+      "WUBR Control _fallback", "WURG Control _fallback",
+      "5 Color Control _fallback"
+    ),
+    # Group UB base control and midrange in maccro archetype deck share with UW are in the UW groups
+    
+    `UBlackX Control` = c(
+      "Dimir Control _fallback", "Dimir Midrange _fallback",
+      "Sultai Control _fallback", "Sultai Midrange _fallback",
+      "Grixis Control _fallback", "Grixis Midrange _fallback",
+      # ajout discutable
+      "Rogues"
+    ),
+    # Not murktide UR control
+    `URedX Control` = c(
+      "Izzet Control _fallback", "Temur Control _fallback",
+      "Temur Midrange _fallback", "Grixis Aggro",
+      "Faeries"
+    ),
+    ############################ Réfléxion a mener #################################
+    # All Blink decks (weak groups because deck can be really differents)
+    Blink = c(
       "Azorius Blink", "Bant Blink", "WURG Blink",
       "Jeskai Blink", "Esper Blink", "Boros Blink"
     ),
-  "Blink", Archetype_to_agreg
-  )
-  # groupe all deck blade a reflechir sur le fait de grouper avec blink
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Grief Blade",
-    "Stoneblade", Archetype_to_agreg
-  )
-
-  # A reflechir sur groupement avec blink ou taxes
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
+    # groupe all deck blade a reflechir sur le fait de grouper avec blink
+    Stoneblade =  c(
+      "Grief Blade","Stoneblade"
+    ),
+    # A reflechir sur groupement avec blink ou taxes
+    `Orzhov Midrange` = c(
       "Orzhov Midrange _fallback",
       "Orzhov Blink", "Mono White Blink",
       "Abzan Blink"
     ),
-    "Orzhov Midrange", Archetype_to_agreg
-  )
-  ##############################################################################
-
-  # Delver Gestion
-  # Gestion du problème de l'absence des couleurs dans les archetypes des mathcups
-  if (is.null(color_agreg[1])) {
-    Archetype_to_agreg <- ifelse(
-      Archetype_to_agreg == "Delver",
-      "URedX Control", Archetype_to_agreg
-    )
-  } else {
-    # split des 2 types de dever dans leur archetype par couleurs
-    Archetype_to_agreg <- ifelse(
-      Archetype_to_agreg == "Delver" & color_agreg == "UR",
-      "Murktide", Archetype_to_agreg
-    )
-    Archetype_to_agreg <- ifelse(
-      Archetype_to_agreg == "Delver" & color_agreg == "UBR",
-      "UBlackX Control", Archetype_to_agreg
-    )
-  }
-
-  # Groupe breach value and murktide
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Breach Value",
-    "Murktide", Archetype_to_agreg
-  )
-
-
-  # Pack rhinos
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Footfalls 4 C",
-    "Footfalls", Archetype_to_agreg
-  )
-  # Pack tron
-  Archetype_to_agreg <- ifelse(
-    str_detect(Archetype_to_agreg, "Tron$"),
-    "Tron", Archetype_to_agreg
-  )
-
-  # Regroupement de tout les rakdos midrange et scam
-  
-  
-  Archetype_to_agreg <- ifelse(
-    str_detect(Archetype_to_agreg, "Scam$"),
-                               "Scam", Archetype_to_agreg
-  )
-  
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in%
-    c(
-      "Rakdos Midrange _fallback",
-      "Mardu Midrange _fallback",
+    # Groupe breach value and murktide
+    Murktide = c(
+      "Murktide",
+      "Breach Value"
+    ),
+    
+    # Pack rhinos
+    Footfalls = c("Footfalls 4 C","Footfalls"),
+    # Regroupement de tout les rakdos midrange et scam
+    Scam = c(
+      "Scam","Rakdos Midrange _fallback","Mardu Midrange _fallback",
       "Skelementals"
     ),
-  "Scam", Archetype_to_agreg
-  )
-
-  # Regroupement de mono B midrange et coffer
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Mono Black Midrange _fallback",
-    "Coffers Control", Archetype_to_agreg
-  )
-
-
-
-
-  # Groupement des différentes version R midrange ou aggros en 1 maccro arc
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
+    # Regroupement de mono B midrange et coffer
+    `Coffers Control` = c("Coffers Control","Mono Black Midrange _fallback"),
+    # Groupement des différentes version R midrange ou aggros en 1 maccro arc
+    `REdx Midrange` = c(
       "Gruul Midrange _fallback", "Mono Red Midrange _fallback",
       "Mardu Midrange _fallback", "Boros Aggro", "Naya Midrange _fallback",
       "Boros Midrange _fallback",
       "Mono Red Aggro"
     ),
-    "REdx Midrange", Archetype_to_agreg
+    # Merge all rock soupes together
+    `Golgarix Midrange` = c(
+      "Golgari Midrange _fallback", "Jund Midrange _fallback",
+      "Abzan Midrange _fallback", "Jund Aggro", "Jund Midrange"
+    ),
+    # Merge the two combo breach potentiellement breach storm groupable avec les autres storms
+    `Breach combo` = c(
+      "Breach Storm", "Grinding Breach"
+    ),
+    # Disctuable merge goryo et reanimator
+    Reanimator = c(
+      "Reanimator",
+      "Goryo Reanimator"
+    ),
+    # Regroupement de toutes les version tuant avec vaalakut, gros doutes sur l'inclusion de titanshift
+    Scapeshift = c(
+      "Scapeshift","Guildpact Valakut", "Blue Scapeshift","Titan Shift"
+    ),
+    `Amulet Titan` = c(
+      "Timeless Lotus"
+    ),
+    # Merge les 2 versions de gob
+    Goblins = c("Goblin Whack",
+                "Goblins"),
+    Storm = c(
+      "Grixis Storm", "Boros Storm", "Mono Red Storm",
+      "Gifts Storm", "Twiddle Storm"
+    ),
+    # Regroupement de toutes les 4/5C soupe avec des betes
+    `Omnath Control` = c(
+      "Omnath Control","Elementals", "Beans Cascade", "Saheeli Combo"
+    ),
+    # Regroupement de toutes les soupes sans lands
+    Belcher = c("Belcher","Oops All Spells"),
+    # Meta groupes avec les soupes foods
+    Food = c(
+      "Asmo Food", "Manufactor Combo"
+    ),
+    Zoo = c(
+      "Blue Zoo", "Black Zoo","Bushwhacker Zoo","Domain Zoo"
+    )
   )
-
-  # Merge all rock soupes together
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
-    "Golgari Midrange _fallback", "Jund Midrange _fallback",
-    "Abzan Midrange _fallback", "Jund Aggro", "Jund Midrange"
-  ),
-  "Golgarix Midrange", Archetype_to_agreg
-  )
-
-  # Merge the two combo breach potentiellement breach storm groupable avec les autres storms
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
-    "Breach Storm", "Grinding Breach"
-  ),
-  "Breach combo", Archetype_to_agreg
-  )
-
-  # Disctuable merge goryo et reanimator
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Reanimator",
-    "Goryo Reanimator", Archetype_to_agreg
-  )
-
-  # Regroupement de toutes les version tuant avec vaalakut, gros doutes sur l'inclusion de titanshift
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
-    "Guildpact Valakut", "Blue Scapeshift"
-  ),
-  "Scapeshift", Archetype_to_agreg
-  )
-  # Merge titan shift avec scapshift
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Titan Shift",
-    "Scapeshift", Archetype_to_agreg
-  )
-
-  # Merge tout les titan sauf titan shift
-  Archetype_to_agreg <- ifelse(
-    str_detect(Archetype_to_agreg, "Titan$"),
-    "Amulet Titan", Archetype_to_agreg
-  )
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Timeless Lotus",
-    "Amulet Titan", Archetype_to_agreg
-  )
-
-
-  # Merge les 2 versions de gob
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg == "Goblin Whack",
-    "Goblins", Archetype_to_agreg
-  )
-
-  # Groupement de tout les storms
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
-    "Grixis Storm", "Boros Storm", "Mono Red Storm",
-    "Gifts Storm", "Twiddle Storm"
-  ),
-  "Storm", Archetype_to_agreg
-  )
-
-
-
-
-  # Regroupement de toutes les 4/5C soupe avec des betes
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
-    "Elementals", "Beans Cascade", "Saheeli Combo"
-  ),
-  "Omnath Control", Archetype_to_agreg
-  )
-
-  # Regroupement de toutes les soupes sans lands
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c("Oops All Spells"),
-    "Belcher", Archetype_to_agreg
-  )
-
-  # Groupement de tout les Burn quelquesois les couleurs
-  Archetype_to_agreg <- ifelse(
-    str_detect(Archetype_to_agreg, "Burn"),
-    "Burn", Archetype_to_agreg
-  )
-
-  # Meta groupes avec les soupes foods
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
-    "Asmo Food", "Manufactor Combo"
-  ),
-  "Food", Archetype_to_agreg
-  )
-  Archetype_to_agreg <- ifelse(
-    Archetype_to_agreg %in% c(
-    "Blue Zoo", "Black Zoo","Bushwhacker Zoo"
-  ),
-  "Domain Zoo", Archetype_to_agreg
+  
+  regex_group <- list(
+    Creativity = "Creativity",
+    # Pack tron
+    Tron = "Tron$",
+    Scam = "Scam$",
+    # Merge tout les titan sauf titan shift
+    `Amulet Titan` = "Titan$",
+    # Groupement de tout les Burn quelquesois les couleurs
+    Burn = "Burn",
+    Convoke = "Convoke$"
   )
   
   
-  return(Archetype_to_agreg)
+  
+  nested_if_else <- ""  
+  ##############################################################################
+  
+  # Delver Gestion
+  # Gestion du problème de l'absence des couleurs dans les archetypes des mathcups
+  for (i in seq_along(color_group)){
+    nested_if_else <- paste0(
+      nested_if_else,'if_else(Archetype_to_agreg == "',paste0(names(color_group[i])) ,'" & is.null(color_agreg[1]),"',
+      color_group[[i]]$fallback,'",'
+    )
+    for (u in seq_along(color_group[[i]]$color )){
+      nested_if_else <- paste0(
+        nested_if_else,"if_else(Archetype_to_agreg == ",'"',paste0(names(color_group[i])),'"',
+        " & color_agreg ==",'"', color_group[[i]]$color[[u]],'"',",",'"',
+        color_group[[i]]$groupe[[u]],'",'
+      )
+    }
+    
+  }
+  
+  for (i in seq_along(name_group)){
+    nested_if_else <- paste0(
+      nested_if_else,"if_else(Archetype_to_agreg %in% ","c(",paste0('"',name_group[[i]] ,'"',collapse = ","),"),",'"',
+      names(name_group[i]),'",'
+    )
+  }
+  
+  for (i in seq_along(regex_group)){
+    nested_if_else <- paste0(
+      nested_if_else,'if_else(str_detect(Archetype_to_agreg,"',
+      regex_group[[i]],'"',"),",'"',
+      names(regex_group[i]),'",'
+    )
+  }
+  
+  
+  
+  
+  
+  number_of_nested_ifelse <- 
+    length(color_group) +
+    lapply(color_group, function(x){
+      length(x$color)
+    }) %>% unlist() %>% sum() +
+    length(name_group) + 
+    length(regex_group)
+  
+  
+  
+  nested_if_else <- paste0(nested_if_else,"Archetype_to_agreg",paste0(rep(")",number_of_nested_ifelse),collapse = "") ) 
+  
+
+  
+  res <- eval(parse(text=nested_if_else))
+  
+  return(res)
 }
-
 
 # a check "Jund Artefact"/ Scam Tron
 
@@ -570,6 +543,8 @@ Card_agregueur <- function(
     fast_land = FALSE,
     bounce_land = FALSE,
     horizon_land = FALSE,
+    slow_land = FALSE,
+    check_land = FALSE,
     basic_land = FALSE) {
   # A ajouté pain utilitaire cycle land
 
@@ -585,9 +560,9 @@ Card_agregueur <- function(
     fast_land = TRUE
     bounce_land = TRUE
     horizon_land = TRUE
+    slow_land = TRUE
+    check_land = TRUE
     basic_land = TRUE
-    
-    
   }
   
   fetech_list <- c(
@@ -691,7 +666,34 @@ Card_agregueur <- function(
     "Waterlogged Grove",
     "Horizon Canopy"
   )
-
+  slow_land_list <- c(
+    "Deserted Beach", 
+    "Shipwreck Marsh", 
+    "Haunted Ridge" ,
+    "Rockfall Vale" ,
+    "Overgrown Farmland" ,
+    "Shattered Sanctum" ,
+    "Stormcarved Coast" ,
+    "Deathcap Glade",
+    "Sundown Pass",
+    "Dreamroot Cascade" 
+  )
+  check_land_list <- c(
+  "Glacial Fortress" ,
+  "Drowned Catacomb",
+  "Dragonskull Summit" ,
+  "Rootbound Crag" ,
+  "Sunpetal Grove" ,
+  "Isolated Chapel" ,
+  "Sulfur Falls" ,
+  "Woodland Cemetery" ,
+  "Clifftop Retreat" ,
+  "Hinterland Harbor"
+  )
+  
+  
+  
+  
   basic_land_list <- c(
     "Island",
     "Plains",
@@ -758,8 +760,19 @@ Card_agregueur <- function(
       "Horizon land", base_string
     )
   }
-
-
+  
+  if (slow_land) {
+    base_string <- ifelse(base_string %in% slow_land_list,
+                          "Slow land", base_string
+    )
+  }
+  
+  if (check_land) {
+    base_string <- ifelse(base_string %in% check_land_list,
+                          "Check land", base_string
+    )
+  }
+  
   # A laisser après snow qui permet de regrouper les snow land avec les basic au besoin
   if (basic_land) {
     base_string <- ifelse(base_string %in% basic_land_list,
@@ -1660,9 +1673,9 @@ pander::pandoc.p("")
 
 ################################################################################
 #######################  Intro of script 7  #####################################
-## ---- Introduction_chunk_7_best_deck
+## ---- Introduction_chunk_7_top8
 min_tournament_size_7 <- 64
-last_week_number_7 <- 2
+last_week_number_7 <- 3
 
 
 Introduction_char_vec_par_7_1 <- paste0(

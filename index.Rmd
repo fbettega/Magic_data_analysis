@@ -13,6 +13,8 @@ knitr::opts_chunk$set(
   warning = FALSE #,
    # cache = TRUE
 )
+library(tidyverse)
+library(gt)
 source("S2_Source_mtg_new_card.R")
 knitr::read_chunk("S2_Source_mtg_new_card.R")
 ```
@@ -21,9 +23,68 @@ Code available at [https://github.com/fbettega/Modern_data_analysis/tree/main/ou
 
 
 
+**Please note that the data shown is a modified version of the data where all the pre-ban decks containing the Violent Outburst card have been ignored.**
+
+
 # Methode
 ## Archetype definition
 [Modify version of archetype definition](https://github.com/fbettega/Modern_FB_archetype) initial definition [from Badaro](https://github.com/Badaro/MTGOFormatData)
+
+```{r}
+proportion_format_fun <- function(nb,tot){
+  percent = round(nb*100/tot,1)
+  res <- paste0(nb,"/",tot,"(",percent,"%)")
+  return(res)
+}
+
+
+df_export <- readRDS("data/intermediate_result/base_classif_data.rds")
+
+Table_with_arch_count_and_sub_count <- df_export %>%
+  select(
+    # id,Week,Color,
+    Archetype,Base_Archetype,ReferenceArchetype_Archetype) %>% 
+  mutate(across(Archetype:ReferenceArchetype_Archetype, ~ as.numeric(table(.x)[as.character(.x)]), .names = "count_{.col}")) %>% 
+  group_by(Archetype) %>% 
+  mutate(across(Base_Archetype:ReferenceArchetype_Archetype, ~ as.numeric(table(.x)[as.character(.x)]), .names = "count_in_arch_{.col}")) %>% 
+  distinct() %>% 
+  arrange(desc(count_Archetype)) %>% 
+  mutate(Archetype = paste0("**",Archetype,"**"," (n :",count_Archetype, ")"),
+         proportion_Base_Arch_in_Arch = 
+           proportion_format_fun(
+             count_in_arch_Base_Archetype,
+             count_Archetype
+             ),
+         proportion_Arch_in_Base_Arch = 
+           proportion_format_fun(
+             count_in_arch_Base_Archetype,
+             count_Base_Archetype
+             ),
+          proportion_Ref_Arch_in_Arch = 
+           proportion_format_fun(
+             count_in_arch_ReferenceArchetype_Archetype,
+             count_Archetype
+             ),
+         proportion_Arch_in_Ref_Arch = 
+           proportion_format_fun(
+             count_in_arch_ReferenceArchetype_Archetype,
+             count_ReferenceArchetype_Archetype
+             )
+         ) %>% 
+  select(Archetype,
+         Base_Archetype,
+         ReferenceArchetype_Archetype,
+         starts_with("proportion_")
+         ) %>% 
+  rename(Custom = Base_Archetype,
+         Reference = ReferenceArchetype_Archetype
+         )
+
+```
+
+
+
+
 
 <!---
 Reste a détailler le groupement probablement tableau
@@ -47,7 +108,6 @@ Contains an analysis of the cards limited to certain recent sets to assess the i
 ## [Presence archetype](/result/2_presence_archetype.html)
 
 <!---
-Add winner deck of last 2 weeks perhaps in another script
 potentiellement selecteur de deck sous contrainte en script annexe
 -->
 
@@ -57,7 +117,7 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 ### [Top 8 deck](/result/7_last_weeks_winners.html)
 
-```{r, Introduction_chunk_7_Deck_analysis, results='asis'}
+```{r, Introduction_chunk_7_top8, results='asis'}
 
 ```
 
@@ -81,13 +141,66 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 
 ## [Best deck analysis](/result/6_best_deck.html)
-<!---
-Inclure les variables en les extrayant des rmd concerné 
--->
+
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
 ```
 
+# Archetype aggregation  
 
+```{r results='asis'}
+title_table <- paste0("**Tabler summarise how the archetypes are aggregated**")
+
+Subtitle <- paste0(
+  "[Custom](https://github.com/fbettega/Modern_FB_archetype) corresponds to my definition of archetypes, also shown as *Base_archetype* in the data \n
+[Reference](https://github.com/Badaro/MTGOFormatData) corresponds to Badaro definition of archetypes, also shown as *Reference_archetype* in the data 
+  "
+)
+
+Table_with_arch_count_and_sub_count  %>%
+
+  gt::gt(groupname_col = "Archetype") %>%  
+  gt::text_transform(
+    locations = cells_row_groups(),
+    fn = function(x) {
+      lapply(x, function(x) {
+        gt::md(x)
+      })
+     }
+  ) %>% 
+  tab_options(row_group.as_column = TRUE) %>% 
+  tab_spanner(
+    label = md("**Parser**"),
+    columns = c(Custom, Reference)
+  )  %>% 
+  tab_spanner(
+    label = md("**Custom**"),
+    columns = c(proportion_Base_Arch_in_Arch,proportion_Arch_in_Base_Arch)
+  ) %>% 
+  tab_spanner(
+    label = md("**Reference**"),
+    columns = c(proportion_Ref_Arch_in_Arch,proportion_Arch_in_Ref_Arch)
+  ) %>% 
+   cols_label(
+    proportion_Base_Arch_in_Arch = md("Percent Archetype"),
+    proportion_Arch_in_Base_Arch = md("Percent Sub Archetype"),
+    proportion_Ref_Arch_in_Arch = md("Percent Archetype"),
+    proportion_Arch_in_Ref_Arch = md("Percent Sub Archetype")
+  ) %>%
+  gt::cols_align(
+    align = c("center"),
+    columns = everything()
+  ) %>% 
+  gt::tab_header(
+    title = gt::md(title_table),
+    subtitle = gt::md(Subtitle)
+  ) %>% tab_options(., container.width = 800, container.height = 1000)
+```
+
+
+# Acknowledgements
+
+Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.
+Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.
 
 

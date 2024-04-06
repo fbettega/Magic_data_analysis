@@ -48,7 +48,8 @@ df_export <- readRDS("data/data_meta_en_cours.rds") %>%
   ) 
 ```
 
-```{r}
+
+```{r initial_data_loading}
 pre_rename_Tournament_of_interest_df <- df_export %>%
   filter(Tournament != "Modern League",
          Week	> max(Week)-last_week_number_7	) %>% 
@@ -64,7 +65,7 @@ pre_rename_Tournament_of_interest_df <- df_export %>%
 rename_tournament <- pre_rename_Tournament_of_interest_df %>%  
   distinct(TournamentFile,.keep_all = TRUE) %>%
     group_by(Tournament,Week) %>% 
-  arrange(Date) %>% 
+  arrange(desc(Date)) %>% 
   mutate(
     Number_of_same_name_tournament = n_distinct(TournamentFile) == 1,
     Multiple_tournament = paste0(Tournament, " number : ",row_number() ),
@@ -92,20 +93,20 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 
 
 
-```{r}
+```{r sources_introduction}
 knitr::read_chunk("S2_Source_mtg_new_card.R")
 ```
 
 
 
-```{r, Introduction_chunk_7_best_deck, results='asis'}
+```{r, Introduction_chunk_7_top8, results='asis'}
 
 ```
 
 
 
 
-```{r}
+```{r function}
 top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
   Tournament_of_interest_en_cours <-
     df_fun  %>%
@@ -197,10 +198,6 @@ top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
         style = gt::cell_text(weight = "bold"),
         locations = gt::cells_row_groups()
       ) %>%
-      # gt::tab_header(
-      #     title = gt::md(title_table)#,
-      #     # subtitle = gt::md(Subtitle)
-      # ) #%>%
       gt::tab_options(column_labels.hidden = TRUE,
                       table.layout = "Auto") %>%
       gt::as_raw_html()
@@ -223,7 +220,6 @@ top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
     gt::fmt_markdown(columns = everything()) %>% #render cell contents as html
     gt::cols_label(
       .list = title_table
-      # {{names(title_table)}} := title_table
     ) %>% 
     gt::opt_stylize(style = 5, color = "cyan", add_row_striping = TRUE) %>%
     gt::cols_align(
@@ -287,25 +283,25 @@ plot_ly()
 
 
 ```{r,  results='asis'}
-
+# this week
+# last week
+# two weeks ago
 for (i in seq_along(TournamentFile_by_week)){
   pander::pandoc.header(paste0("Week : ",names(TournamentFile_by_week)[i]), level = 1)
   pander::pandoc.p("")
   
   for (u in seq_along(total_result)){
-    if(names(total_result)[u] %in% TournamentFile_by_week[[i]])
+    if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
       pander::pandoc.header(total_result[[u]]$Title, level = 2)
       pander::pandoc.p("")
       pander::pandoc.header("Presence plot", level = 3)
       print(htmltools::tagList(total_result[[u]]$plot$plot_prez))
-      # print(htmltools::tagList(as.widget(total_result[[u]]$plot$plot_prez)))
-      # cat(knitr::knit_print(total_result[[u]]$plot$plot_prez, width = 672, height = 480))
       pander::pandoc.p("")
       pander::pandoc.p("")
       pander::pandoc.header("Top 8 list", level = 3)
       print(htmltools::tagList(total_result[[u]]$plot$top8_table))
       pander::pandoc.p("")
-      pander::pandoc.p("")
+      pander::pandoc.p("")}
   }
   
   }
