@@ -206,20 +206,20 @@ write_rds(df_export_remove_bann, "data/data_meta_en_cours.rds")
 
 
 
-# # explore model 
-grid_debug <- read_rds(
-    paste0(
-      "data/ml_model/grid/Grid_search_",
-      "knn_tidy",#"regression_tidy" ,# modif "decision_tree_tidy" RF_tidy "xgboost_tidy" knn_tidy
-      "_predict_archetype_",
-      "raw_data", # modif
-      ".rds"
-    )
-  )
-# 
-# 
-a <- grid_debug %>%
-  collect_metrics()
+# # # explore model 
+# grid_debug <- read_rds(
+#     paste0(
+#       "data/ml_model/grid/Grid_search_",
+#       "knn_tidy",#"regression_tidy" ,# modif "decision_tree_tidy" RF_tidy "xgboost_tidy" knn_tidy
+#       "_predict_archetype_",
+#       "raw_data", # modif
+#       ".rds"
+#     )
+#   )
+# # 
+# # 
+# a <- grid_debug %>%
+#   collect_metrics()
 
 # regression_tidy 0.9995339
 # RF_tidy 0.9997542

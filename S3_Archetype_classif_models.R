@@ -23,7 +23,6 @@ model_generic_grid_fun <- function(data, model, rerun_ml_fun,rerun_grid,grid = N
   print(model_name)
   print(Sys.time())
   if (rerun_ml_fun) {
-    
     start.time <- Sys.time()
     
     if(model_name == "xgboost_tidy"){
@@ -252,8 +251,7 @@ Result_raw_regression <- model_generic_grid_fun(
   data_name = "raw_data"
 )
 # # xgboost
-# The tree method `gpu_hist` is deprecated since 2.0.0. To use GPU training, set the `device` parameter to CUDA instead.
-# Change   E.g. tree_method = "hist", device = "cuda"
+# Grid search time 16.3h
 # pred Time difference of 3.528562 mins
 model_xgboost_base <- boost_tree(
   trees = 1000,
@@ -271,7 +269,7 @@ model_xgboost_base <- boost_tree(
     ) %>%
   set_mode("classification")
 
-#Grid search time 16.3h
+
 grid_xgboost_base <- grid_latin_hypercube(
   tree_depth(),
   min_n(),
