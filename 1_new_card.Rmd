@@ -17,11 +17,6 @@ knit: (function(inputFile, encoding) {
 #
 # ajouter une colonne nombre de deck
 
-
-
-
-
-
 knitr::opts_chunk$set(
   echo = FALSE,
   message = FALSE,

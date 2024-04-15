@@ -2,6 +2,7 @@
 title: "Présentation des différents résultats"
 output: 
   html_document:
+    css: other_file/TOC.css
 date: "`r Sys.Date()`"
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout") })
@@ -38,7 +39,7 @@ proportion_format_fun <- function(nb,tot){
 }
 
 
-df_export <- readRDS("data/intermediate_result/base_classif_data.rds")
+df_export <- readRDS("data/data_meta_en_cours.rds")
 
 Table_with_arch_count_and_sub_count <- df_export %>%
   select(
@@ -194,7 +195,11 @@ Table_with_arch_count_and_sub_count  %>%
   gt::tab_header(
     title = gt::md(title_table),
     subtitle = gt::md(Subtitle)
-  ) %>% tab_options(., container.width = 800, container.height = 1000)
+  ) %>% 
+  gt::tab_options(
+    # column_labels.hidden = TRUE,
+    table.layout = "Auto"
+    )
 ```
 
 

@@ -26,6 +26,7 @@ library("rjson")
 library(tidyverse)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
+conflicted::conflicts_prefer(purrr::discard)
 source("S2_Source_mtg_new_card.R")
 
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")

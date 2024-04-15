@@ -11,9 +11,9 @@ library(future)
 
 source("S2_Source_mtg_new_card.R")
 
-scale_this <- function(x){
-  (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
-}
+# scale_this <- function(x){
+#   (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
+# }
 
 ################################################################################
 my_table_from_model <- function(pred_class,pred_proba,data,string){
@@ -123,8 +123,6 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
 }
 
 
-
-
 # Otion one rf on raw data
 df_export <- read_rds("data/intermediate_result/base_classif_data.rds")
 
@@ -172,8 +170,8 @@ list_of_model_for_prediction <- list(
   regression = c("regression_tidy", "raw_data"),
   rando_forest = c("RF_tidy","raw_data"),
   knn = c("knn_tidy", "raw_data"),
-  # decision_tree = c("decision_tree_tidy","raw_data"),
-  xgboost = c("xgboost_tidy", "xgboost_data")
+  decision_tree = c("decision_tree_tidy","raw_data"),
+  xgboost = c("xgboost_tidy", "raw_data")
 )
 
 model_res_table <- bind_proba_with_list_of_model(model_list = list_of_model_for_prediction,
@@ -189,32 +187,49 @@ pred_table_df <- model_res_table$table_each_model_pred
 Voting_df_upper_treshold <- Voting_df %>% filter(value > 0.3) 
 
 
-write_rds(Voting_df_upper_treshold,"data/intermediate_result/pred_fallback.rds")
+DF_post_archetype_pred <- df_export %>% 
+  left_join(Voting_df_upper_treshold %>% select(id,name), by = "id") %>% 
+  mutate(Archetype = str_replace(if_else(is.na(name),Archetype,name),"\\."," ") ) %>% 
+  select(-name)
 
 
 
+
+df_export_remove_bann <- Ban_patch(
+  df = DF_post_archetype_pred,
+  vec_of_ban_cards = c("Violent Outburst")
+)
+
+
+write_rds(df_export_remove_bann, "data/data_meta_en_cours.rds")
 
 
 
 
 # # explore model 
-# grid_debug <- read_rds(
-#     paste0(
-#       "data/ml_model/grid/Grid_search_",
-#       "knn_tidy",#"regression_tidy" ,# modif "decision_tree_tidy" RF_tidy
-#       "_predict_archetype_",
-#       "raw_data", # modif
-#       ".rds"
-#     )
-#   )
+grid_debug <- read_rds(
+    paste0(
+      "data/ml_model/grid/Grid_search_",
+      "knn_tidy",#"regression_tidy" ,# modif "decision_tree_tidy" RF_tidy "xgboost_tidy" knn_tidy
+      "_predict_archetype_",
+      "raw_data", # modif
+      ".rds"
+    )
+  )
 # 
 # 
-# a <- grid_debug %>%
-#   collect_metrics()
-# 
-# 
-# 
-# 
+a <- grid_debug %>%
+  collect_metrics()
+
+# regression_tidy 0.9995339
+# RF_tidy 0.9997542
+# knn_tidy 0.99405553
+# decision_tree_tidy  0.95501741
+# xgboost 0.999818309
+
+
+
+
 # model_debug <- readRDS(
 #   paste0(
 #     "data/ml_model/",

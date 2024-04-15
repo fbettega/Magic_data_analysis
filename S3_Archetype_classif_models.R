@@ -13,246 +13,6 @@ source("S2_Source_mtg_new_card.R")
 
 
 
-################################################################################
-
-# A reflechir grouping conditionnel basé sur la quantité des arch cumulé
-Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
-
-  # color_group <- list(
-  #   Delver = list(
-  #     color = c("UR","UBR"),
-  #     groupe = c("Murktide","UBlackX Control"),
-  #     fallback = c("URedX Control")
-  #     )
-  #   )
-
-  name_group <- list(
-    # here because of debug grouping with self
-    Yawgmoth = c("Yawgmoth"),
-    `Hardened Scales` = c("Hardened Scales"),
-    Prowess = c("Prowess"),
-    Dredge = c("Dredge"),
-    `Heliod Combo` = c("Heliod Combo","Soul Sisters"),
-    `Glimpse Combo` = c("Glimpse Combo"),
-    `Land Destruction` = c("Ensoul","Land Destruction"),
-    `Living End` = c("Living End"),
-    `Hammer Time` = c("Hammer Time"),
-    Mill = c("Mill"),
-    Shadow = c("Shadow"),
-    Merfolk = c("Merfolk"),
-    
-
-    Devotion = c("Nykthos Leyline", "Green Devotion"),
-    # ajouter point d'accroche pour red aggro
-    `UWhiteX Control` = c(
-      "Azorius Control _fallback",
-       "Taking Turns"#,
-    ),
-    # Group UB base control and midrange in maccro archetype deck share with UW are in the UW groups
-    
-    `UBlackX Control` = c(
-      "Dimir Control _fallback", 
-      "Rogues"
-    ),
-    # Not murktide UR control
-    `URedX Control` = c(
-      "Izzet Control _fallback",
-      "Reclamation",
-      "Delver",
-       "Faeries"
-    ),
-    
-    `The Rock Midrange` = c("Saga Party"),
-    
-    `RWx aggro` = c(
-      "Mono Red Aggro _fallback",
-      "Mono Red Midrange _fallback",
-      "Boros Aggro _fallback",
-      "Boros Midrange _fallback",
-      "Mono White Midrange _fallback",
-      "Obosh Red"
-      ),
-    
-    
-    # groupe eldra avec eldra tron
-    Tron = c("Eldrazi"),
-    ############################ Réfléxion a mener #################################
-    # groupe all deck blade a reflechir sur le fait de grouper avec blink
-    Stoneblade = c(
-      "Grief Blade",
-      "Stoneblade",
-      "Emeria Control"
-    ),
-    # Groupe breach value and murktide
-    Murktide = c(
-      "Murktide",
-      "Breach Value"
-    ),
-    
-    # Pack rhinos
-    Footfalls = c("Footfalls 4 C", "Footfalls"),
-    # Regroupement de tout les rakdos midrange et scam
-    Scam = c(
-      "Scam", "Rakdos Midrange _fallback",
-      # "Mardu Midrange _fallback",
-      "Skelementals"
-    ),
-    # Regroupement de mono B midrange et coffer
-    `Coffers Control` = c(
-      "Mono Black Midrange",
-      "Mono Black Scam",
-      "The Rack",
-      "Coffers Control" # ,"Mono Black Midrange _fallback"
-    ),
-    
-    
-    
-    # Merge all rock soupes together
-    # `Golgarix Midrange` = c(
-    #   "Golgari Midrange _fallback", "Jund Midrange _fallback",
-    #   "Abzan Midrange _fallback", "Jund Aggro", "Jund Midrange"
-    # ),
-    # Merge the two combo breach potentiellement breach storm groupable avec les autres storms
-    
-    # `Breach combo` = c(
-    #   "Breach Storm", "Grinding Breach"
-    # ),
-    # Disctuable merge goryo et reanimator
-    Reanimator = c(
-      "Reanimator",
-      "Goryo Reanimator"
-    ),
-    # Regroupement de toutes les version tuant avec vaalakut, gros doutes sur l'inclusion de titanshift
-    Scapeshift = c(
-      "Scapeshift", "Guildpact Valakut", "Blue Scapeshift", "Titan Shift",
-      "Niv To Light"
-    ),
-    `Amulet Titan` = c(
-      "Timeless Lotus"
-    ),
-    # Merge les 2 versions de gob
-    Goblins = c(
-      "Goblin Whack",
-      "Goblins"
-    ),
-    # Merge the two combo breach potentiellement breach with storm groupable
-    # Ascendancy Combo et adnauseam groupe avec le reste même si pas vraiment storm
-    Storm = c(
-      "Breach Storm", "Grinding Breach",
-      "Ad Nauseam", "Ascendancy Combo",
-      "Grixis Storm", "Boros Storm", "Mono Red Storm",
-      "Gifts Storm", "Twiddle Storm"
-    ),
-    # Regroupement de toutes les 4/5C soupe avec des betes
-    `Omnath Control` = c(
-      "Omnath Control", "Elementals", "Beans Cascade", "Saheeli Combo","Tameshi Bloom"
-    ),
-    # Regroupement de toutes les soupes sans lands
-    Belcher = c("Belcher", "Oops All Spells"),
-    # Meta groupes avec les soupes foods
-    Food = c(
-      "Asmo Food", "Manufactor Combo",
-      "Crabvine","Hollow One"
-    ),
-    Zoo = c(
-      "Blue Zoo", "Black Zoo", "Bushwhacker Zoo", "Domain Zoo"
-    ),
-    
-    Convoke = c("Kuldotha Aggro"),
-    `Free Spells` = c("Electro End","Free Spells"),
-    `Combo Artifact` = c("Lantern","Combo Artifact","Affinity"),
-    
-    Creativity = c("Izzet Through Breach"),
-    ############################################################################
-    # not  enougth data 
-    Enchantress = c("Enchantress","Enduring Ideal"),
-    # `Kiki Jiki` = c("Kiki Jiki", "Kiki Chord"),
-    Creature_combo = c(
-      "Neobrand",
-      "Vivien Combo",
-      "Sacrifice",
-      "Kiki Jiki", "Kiki Chord",
-      "Neobrand",
-      "Devoted Combo",
-      "Kethis Combo",
-      "Discover Combo"
-    )
-  )
-  
-  
-  regex_group <- list(
-    Creativity = "Creativity",
-    # Pack tron
-    Tron = "Tron$",
-    Scam = "Scam$",
-    # Merge tout les titan sauf titan shift
-    `Amulet Titan` = "Titan$",
-    # Groupement de tout les Burn quelquesois les couleurs
-    Burn = "Burn",
-    Blink = "Blink$",
-    Convoke = "Convoke$",
-    `Combo Artifact` = "Combo Artifact$",
-    `Black Or Red Midrange` = "The Rock Midrange$"
-  )
-  
-  nested_if_else <- ""
-  ##############################################################################
-  
-  # Delver Gestion
-  # Gestion du problème de l'absence des couleurs dans les archetypes des mathcups
-  # for (i in seq_along(color_group)){
-  #   nested_if_else <- paste0(
-  #     nested_if_else,'if_else(Archetype_to_agreg == "',paste0(names(color_group[i])) ,'" & is.null(color_agreg[1]),"',
-  #     color_group[[i]]$fallback,'",'
-  #   )
-  #   for (u in seq_along(color_group[[i]]$color )){
-  #     nested_if_else <- paste0(
-  #       nested_if_else,"if_else(Archetype_to_agreg == ",'"',paste0(names(color_group[i])),'"',
-  #       " & color_agreg ==",'"', color_group[[i]]$color[[u]],'"',",",'"',
-  #       color_group[[i]]$groupe[[u]],'",'
-  #     )
-  #   }
-  #
-  # }
-  
-  for (i in seq_along(name_group)) {
-    nested_if_else <- paste0(
-      nested_if_else, "if_else(Archetype_to_agreg %in% ", "c(", paste0('"', name_group[[i]], '"', collapse = ","), "),", '"',
-      names(name_group[i]), '",'
-    )
-  }
-  
-  for (i in seq_along(regex_group)) {
-    nested_if_else <- paste0(
-      nested_if_else, 'if_else(str_detect(Archetype_to_agreg,"',
-      regex_group[[i]], '"', "),", '"',
-      names(regex_group[i]), '",'
-    )
-  }
-  
-  
-  
-  
-  
-  number_of_nested_ifelse <-
-    # length(color_group) +
-    # lapply(color_group, function(x){
-    #   length(x$color)
-    # }) %>% unlist() %>% sum() +
-    length(name_group) +
-    length(regex_group)
-  
-  
-  
-  nested_if_else <- paste0(nested_if_else, "Archetype_to_agreg", paste0(rep(")", number_of_nested_ifelse), collapse = ""))
-  
-  # nested_if_else <- paste0(nested_if_else,"Archetype_to_agreg",paste0(rep(")",length(name_group)),collapse = "") )
-  
-  
-  res <- eval(parse(text = nested_if_else))
-  
-  return(res)
-}
 
 
 
@@ -270,7 +30,7 @@ model_generic_grid_fun <- function(data, model, rerun_ml_fun,rerun_grid,grid = N
       plan(sequential)
       
     }else{
-    plan(multisession, workers = 5,gc = TRUE)
+    plan(multisession, workers = 10,gc = TRUE)
     }
     cv <- vfold_cv(data, v = 5,strata = Archetype, repeats = 3)
     rf_spec <- model
@@ -302,8 +62,8 @@ model_generic_grid_fun <- function(data, model, rerun_ml_fun,rerun_grid,grid = N
           resamples = cv,
           grid = search_grid,
           control = control_grid(
-            save_pred = TRUE,
-            verbose = TRUE
+            # verbose = TRUE,
+            save_pred = TRUE
             ),
           metrics = metric_set(roc_auc,accuracy ,brier_class )
         ) 
@@ -453,6 +213,7 @@ finalize(mtry(), known_arch),
                              min_n(),
                              levels = 5)
 # Grid aroud 9 hours
+# pred Time difference of 3.75581 mins
 Result_raw_rf <- model_generic_grid_fun(
   data = known_arch,
   model = model_rf_base,
@@ -472,6 +233,7 @@ model_regression_base <- multinom_reg(
   set_engine("glmnet") %>%
   set_mode("classification")
 # Grid aroud 11 hours
+# pred Time difference of 20.1837 mins
 # a regarder nombreuse error for small lambda
 grid_regression_base <- grid_regular(
   penalty(),
@@ -481,10 +243,7 @@ grid_regression_base <- grid_regular(
 
 
 Result_raw_regression <- model_generic_grid_fun(
-  data = known_arch %>%
-    mutate(across(starts_with("color_"),
-                  ~as.numeric(.))
-    ),
+  data = known_arch ,
   model = model_regression_base,
   rerun_ml_fun = rerun_ml,#rerun_ml,
   rerun_grid = rerun_grid_par,
@@ -492,8 +251,136 @@ Result_raw_regression <- model_generic_grid_fun(
   model_name = "regression_tidy",
   data_name = "raw_data"
 )
+# # xgboost
+# The tree method `gpu_hist` is deprecated since 2.0.0. To use GPU training, set the `device` parameter to CUDA instead.
+# Change   E.g. tree_method = "hist", device = "cuda"
+# pred Time difference of 3.528562 mins
+model_xgboost_base <- boost_tree(
+  trees = 1000,
+  tree_depth = tune(),
+  min_n = tune(),
+  loss_reduction = tune(),                     ## first three: model complexity
+  sample_size = tune(), mtry = tune(),         ## randomness
+  learn_rate = tune(),                         ## step size
+) %>%
+  set_engine(
+    "xgboost",
+    # tree_method = 'gpu_hist'
+    tree_method = "hist",
+    device = "cuda"
+    ) %>%
+  set_mode("classification")
+
+#Grid search time 16.3h
+grid_xgboost_base <- grid_latin_hypercube(
+  tree_depth(),
+  min_n(),
+  loss_reduction(),                     ## first three: model complexity
+  sample_size = sample_prop(),
+  finalize(
+    mtry(),
+    known_arch
+    ),
+  learn_rate(),
+  size = 30
+)
+
+Result_raw_xgboost <- model_generic_grid_fun(
+  data = known_arch,
+  model = model_xgboost_base,
+  rerun_ml_fun = rerun_ml,#rerun_ml,
+  rerun_grid = rerun_grid_par,
+  grid = grid_xgboost_base,
+  model_name = "xgboost_tidy",
+  data_name = "raw_data"
+)
+
+# decision tree with bagtree
+# Grid 5h
+# pred 9.871191 mins
+model_decision_tree_base <-
+  bag_tree(
+    cost_complexity = tune(),
+    tree_depth = tune()
+  ) %>%
+  set_engine("rpart") %>%
+  set_mode("classification")
+
+
+
+grid_decision_tree_base <-
+  grid_latin_hypercube(
+    cost_complexity(),
+    tree_depth(range = c(5, 30)),
+    size = 50)
+
+
+Result_raw_decision_tree <- model_generic_grid_fun(
+  data = known_arch,
+  model = model_decision_tree_base,
+  rerun_ml_fun = rerun_ml,#rerun_ml,
+  rerun_grid = rerun_grid_par,
+  grid = grid_decision_tree_base,
+  model_name = "decision_tree_tidy",
+  data_name = "raw_data"
+)
+
+
+model_decision_tree_base_c5 <-
+  bag_tree(
+    min_n =  tune()
+  ) %>%
+  set_engine("C5.0") %>%
+  set_mode("classification")
+
+grid_decision_tree_base_c5 <-
+  grid_latin_hypercube(
+    min_n(),
+    size = 50)
+
+Result_raw_decision_treec5 <- model_generic_grid_fun(
+  data = known_arch,
+  model = model_decision_tree_base_c5,
+  rerun_ml_fun = rerun_ml,#rerun_ml,
+  rerun_grid = rerun_grid_par,
+  grid = grid_decision_tree_base_c5,
+  model_name = "decision_c5_tree_tidy",
+  data_name = "raw_data"
+)
+
+# # # svm
+# # 
+# # ## grid > 42 h to slow
+# model_svm_base <-
+#   svm_rbf(
+#     cost = tune(),
+#     rbf_sigma = tune()
+#   ) %>%
+#   set_engine("kernlab") %>%
+#   set_mode("classification")
+# 
+# 
+# 
+# grid_svm_base <-
+#   grid_latin_hypercube(
+#     cost(),
+#     rbf_sigma(),
+#     levels = 10)
+# 
+# Result_raw_svm <- model_generic_grid_fun(
+#   data = known_arch ,
+#   model = model_svm_base,
+#   rerun_ml_fun = rerun_ml,#rerun_ml,
+#   rerun_grid = rerun_grid_par,
+#   grid = grid_svm_base,
+#   model_name = "SVM_tidy",
+#   data_name = "raw_data"
+# )
+
+
 # # KNN
 # # grid 8h
+## pred Time difference of 1.600804 hours
 model_knn_base <- nearest_neighbor(
   neighbors = tune()
 ) %>%
@@ -516,111 +403,6 @@ Result_raw_knn <- model_generic_grid_fun(
 )
 
 
-# # xgboost
-# The tree method `gpu_hist` is deprecated since 2.0.0. To use GPU training, set the `device` parameter to CUDA instead.
-# Change   E.g. tree_method = "hist", device = "cuda"
-model_xgboost_base <- boost_tree(
-  trees = 1000,
-  tree_depth = tune(),
-  min_n = tune(),
-  loss_reduction = tune(),                     ## first three: model complexity
-  sample_size = tune(), mtry = tune(),         ## randomness
-  learn_rate = tune(),                         ## step size
-) %>%
-  set_engine(
-    "xgboost",
-    tree_method = 'gpu_hist'
-    ) %>%
-  set_mode("classification")
-
-# 16.3h
-grid_xgboost_base <- grid_latin_hypercube(
-  tree_depth(),
-  min_n(),
-  loss_reduction(),                     ## first three: model complexity
-  sample_size = sample_prop(),
-  finalize(
-    mtry(),
-           known_arch %>% select(-starts_with("color_"))),
-
-  learn_rate(),
-  size = 30
-)
-
-Result_raw_xgboost <- model_generic_grid_fun(
-  data = known_arch %>% select(-starts_with("color_")),
-  model = model_xgboost_base,
-  rerun_ml_fun = rerun_ml,#rerun_ml,
-  rerun_grid = rerun_grid_par,
-  grid = grid_xgboost_base,
-  model_name = "xgboost_tidy",
-  data_name = "xgboost_data"
-)
-
-# decision tree with bagtree
-# Grid 5h
-model_decision_tree_base <-
-  # decision_tree(
-  bag_tree(
-    cost_complexity = tune(),
-    tree_depth = tune()
-  ) %>%
-  set_engine("rpart") %>%
-  set_mode("classification")
-
-
-
-grid_decision_tree_base <-
-  grid_latin_hypercube(
-    cost_complexity(),
-    tree_depth(range = c(5, 30)),
-    size = 50)
-
-Result_raw_decision_tree <- model_generic_grid_fun(
-  data = known_arch,
-  model = model_decision_tree_base,
-  rerun_ml_fun = rerun_ml,#rerun_ml,
-  rerun_grid = rerun_grid_par,
-  grid = grid_decision_tree_base,
-  model_name = "decision_tree_tidy",
-  data_name = "raw_data"
-)
-
-
-
-# svm
-model_svm_base <- 
-  svm_rbf(
-    cost = tune(),
-    rbf_sigma = tune()
-  ) %>%
-  set_engine("kernlab") %>% 
-  set_mode("classification")
-
-
-
-grid_svm_base <-  
-  grid_regular(
-    cost(),
-    rbf_sigma(),
-    levels = 5)
-
-Result_raw_svm <- model_generic_grid_fun(
-  data = known_arch ,
-  model = model_svm_base,
-  rerun_ml_fun = rerun_ml,#rerun_ml,
-  rerun_grid = rerun_grid_par,
-  grid = grid_svm_base,
-  model_name = "SVM_tidy",
-  data_name = "raw_data"
-)
-
-
-
-
-
-
-
 
 
 
@@ -637,6 +419,67 @@ Result_raw_svm <- model_generic_grid_fun(
 
 
 
+
+
+
+################################################################################
+# temp opti svm
+
+# # 
+# 
+# debug_df_index <- caret::createDataPartition(known_arch$Archetype, p = .1, list = FALSE) 
+# debug_df <- known_arch[debug_df_index,]
+# 
+# 
+# show_engines("svm_rbf")
+# 
+# 
+# 
+# model_svm_base <-
+#   svm_rbf(
+#     cost = tune(),
+#     rbf_sigma = tune()
+#   ) %>%
+#   set_engine("kernlab") %>%
+#   set_mode("classification")
+# 
+# 
+# 
+# grid_svm_base <-
+#   grid_latin_hypercube(
+#     cost(),
+#     rbf_sigma(),
+#     size = 10)
+# 
+# Result_raw_svm <- model_generic_grid_fun(
+#   data = debug_df ,
+#   model = model_svm_base,
+#   rerun_ml_fun = rerun_ml,#rerun_ml,
+#   rerun_grid = rerun_grid_par,
+#   grid = grid_svm_base,
+#   model_name = "debug_kernlab_SVM_tidy",
+#   data_name = "debug_kernlab_raw_data"
+# )
+# 
+# 
+# model_svm_base_liquid <-
+#   svm_rbf(
+#     cost = tune(),
+#     rbf_sigma = tune()
+#   ) %>%
+#   set_engine("liquidSVM") %>%
+#   set_mode("classification")
+# 
+# 
+# Result_raw_svm <- model_generic_grid_fun(
+#   data = debug_df ,
+#   model = model_svm_base_liquid,
+#   rerun_ml_fun = rerun_ml,#rerun_ml,
+#   rerun_grid = rerun_grid_par,
+#   grid = grid_svm_base,
+#   model_name = "debug_liquid_SVM_tidy",
+#   data_name = "debug_liquid_raw_data"
+# )
 ################################################################################
 # 
 # temp_test <- known_arch %>%

@@ -22,7 +22,7 @@ df_export_pre_60_filter <- json_parsing %>%
   mutate(across(c(Wins, Losses, Draws), ~ as.numeric(.))) %>%
   mutate(matches = Wins + Losses + Draws) %>%
   mutate(Base_Archetype = Archetype) %>%
-  mutate(Archetype = Archetype_agreger2(Base_Archetype, Color)) %>%
+  mutate(Archetype = Archetype_agreger(Base_Archetype, Color)) %>%
   rownames_to_column(var = "id") %>%
   group_by(Archetype) %>%
   mutate(
@@ -56,6 +56,7 @@ df_export <- df_export_pre_60_filter %>%
 
 
 
+predict_archetype <- read_rds("data/intermediate_result/pred_fallback.rds")
 
 
 

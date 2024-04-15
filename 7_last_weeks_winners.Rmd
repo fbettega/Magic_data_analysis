@@ -154,9 +154,9 @@ top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
     
     Unnest_filter_table <- df %>%  
       select(
-        cols_fun,not_colfuns,Place,Player,AnchorUri, Archetype,Base_Archetype
+        all_of(cols_fun),not_colfuns,Place,Player,AnchorUri, Archetype,Base_Archetype
       ) %>% 
-      select(-not_colfuns) %>% 
+      select(-all_of(not_colfuns)) %>% 
       filter(Place <= max(sort(Place)[1:top_x_rank])) %>% 
       arrange(Place) %>% 
       # mutate(rank = 1:nrow(.)) %>% 

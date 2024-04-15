@@ -20,6 +20,7 @@ library(lubridate)
 library(kableExtra)
 library(tidyverse)
 library(plotly)
+# devtools::install_github("hoesler/rwantshue")
 library("rwantshue")
 library(htmltools)
 

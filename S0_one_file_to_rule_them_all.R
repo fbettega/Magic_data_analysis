@@ -26,7 +26,12 @@ run_command_from_dir("./MTGOArchetypeParser.App.exe json detect", "MTGOArchetype
 
 # run_command_from_dir("git pull","MTGOArchetypeParser_20231227/MTGODecklistCache/")
 
-source("S1_Json_to_Curated_data.R", local = calledProgram <- new.env(), echo = TRUE)
+# replace by ml predictions
+# source("S1_Json_to_Curated_data.R", local = calledProgram <- new.env(), echo = TRUE)
+source("S3_Archetype_classif_models.R", local = calledProgram <- new.env(), echo = TRUE)
+
+rm(calledProgram)
+source("S4_predict_arch_with_ML.R", local = calledProgram <- new.env(), echo = TRUE)
 rm(calledProgram)
 
 fichiers_rmd <- c(

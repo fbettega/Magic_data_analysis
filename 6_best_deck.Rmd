@@ -62,10 +62,12 @@ df_export <- readRDS("data/data_meta_en_cours.rds") %>%
   mutate(
     Deck_winrate = winrate_1_data(Wins, Losses)
   ) %>%
+  group_by(Archetype) %>% 
   mutate(
     Archetype_count = n()
   ) %>%
-  filter(Archetype != "Unknown")
+  filter(Archetype != "Unknown") %>% 
+  ungroup()
 ```
 
 
@@ -296,33 +298,38 @@ lapply_around_table_list <- function(df_main_fun,df_side_fun,Number_of_deck,obse
 }
 
 
-
 unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_fun){
   not_colfuns <- ifelse(cols_fun == "Sideboard","Mainboard","Sideboard")
+  # if(Archetype_fun == "Footfalls") browser()
+  if(nrow(df %>% 
+          filter(Archetype == Archetype_fun) ) == 0){
+    Unnest_filter_table <- NULL
+    
+  }else {
   
   Unnest_filter_table <- df %>%  
     select(
       -id,-proba,
-  -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
-  -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
-  -ReferenceArchetype_Companion,- matches,-Base_Archetype,-Archetype_count,-Matchups
-  ) %>% 
-  mutate(Date = lubridate::date(Date))%>% 
+      -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
+      -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
+      -ReferenceArchetype_Companion,- matches,-Base_Archetype,-Archetype_count,-Matchups
+    ) %>% 
+    mutate(Date = lubridate::date(Date))%>% 
     select(-not_colfuns) %>% 
-  filter(Week >= (max(Week) - Week_fun)) %>% 
-  filter(Archetype == Archetype_fun) %>%
-  filter(type_of_model == Model) %>% 
+    filter(Week >= (max(Week) - Week_fun)) %>% 
+    filter(Archetype == Archetype_fun) %>%
+    filter(type_of_model == Model) %>% 
     filter(rank <= max(sort(rank)[1:top_x_rank])) %>% 
     arrange(rank) %>% 
-  mutate(rank = 1:nrow(.)) %>% 
-     mutate(Player = paste0('[',rank,'](',AnchorUri,')'))%>% 
+    mutate(rank = 1:nrow(.)) %>% 
+    mutate(Player = paste0('[',rank,'](',AnchorUri,')'))%>% 
     select(-AnchorUri#,-rank
-           ) %>%
+    ) %>%
     unnest_longer(!!rlang::sym(cols_fun)) %>%
     unnest_wider(!!rlang::sym(cols_fun), names_sep = "_") %>% 
     mutate(Main_or_side = cols_fun) %>% 
     rename(Count = paste0(cols_fun, "_Count") ,CardName = paste0(cols_fun, "_CardName"))
-  
+  }
   
   return(Unnest_filter_table)
 }
@@ -346,6 +353,11 @@ table_generator_sub_fun <- function(
     Week_fun,
     maind_and_side = "All" #"Main" "Side"
   ){
+  
+  if(is.null(df_fun)){
+    Table_result <- NULL
+    }else{
+  
   Table_main_side <- df_fun %>%
   mutate(
     Tournament = Tournament_agreger(Tournament),
@@ -421,7 +433,7 @@ Table_result <- Table_main_side %>%
     title = gt::md(title_table),
     subtitle = gt::md(Subtitle)
   )
-
+}
 
 
 return(Table_result)
@@ -549,17 +561,7 @@ Df_archetype_cards_land_name_agreg <- rbind(
       Mainboard_CardName =
         Card_agregueur(
           Mainboard_CardName,
-          fetch = TRUE,
-          Tron = TRUE,
-          snow = TRUE,
-          surveil = TRUE,
-          shock = TRUE,
-          triome = TRUE,
-          filter_land = TRUE,
-          fast_land = TRUE,
-          bounce_land = TRUE,
-          horizon_land = TRUE,
-          basic_land = TRUE
+          ALL_mod = TRUE
         )
     ) %>%
     ungroup() %>%
@@ -725,8 +727,6 @@ Uncommon_cards_pre_process <- Df_archetype_cards_agreg %>%
     most_common_quantity = Mainboard_Count[count_iteration_cards == max(count_iteration_cards)][1],
     min_count_group = Mainboard_Count
   )
-
-
 
 
 Uncommon_cards_agreg_out <- Agreg_count_by_cards(
@@ -941,9 +941,6 @@ res_main_and_side_gt_table <- lapply_around_table_list(
   Number_of_deck = Number_of_deck,
   observ_duration = Inf
 )
-  
-
-
 ```
 
 
