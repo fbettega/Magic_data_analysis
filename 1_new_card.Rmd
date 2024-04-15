@@ -299,9 +299,11 @@ df_export <- readRDS("data/data_meta_en_cours.rds") %>%
   mutate(
     Deck_winrate = Wins / (Losses + Wins)
   ) %>%
+  group_by(Archetype) %>% 
   mutate(
     Archetype_count = n()
-  )
+  ) %>% 
+    ungroup()
 
 
 modern_DB_card <- read_csv("data/DBcarte_modern.csv")
@@ -310,12 +312,12 @@ modern_DB_card <- read_csv("data/DBcarte_modern.csv")
 
 
 ```{r set_choose }
-Meta_of_interest <- c("PostMurdersAtKarlovManor")
+# Meta_of_interest <- c("PostMurdersAtKarlovManor")
 
 set_of_interest <- c(
-  "mkm",
-  "mkc",
-  "clu"
+  "otj",
+  "otp",
+  "big"
 )
 
 # set_of_interest <- c(
@@ -324,8 +326,8 @@ set_of_interest <- c(
 card_of_interest <- modern_DB_card %>%
   filter(set %in% set_of_interest & !reprint) # filter(released_at > "2024-01-01")
 
-df_export_meta_filter <- df_export %>%
-  filter(Meta %in% Meta_of_interest)
+df_export_meta_filter <- df_export# %>%
+  # filter(Meta %in% Meta_of_interest)
 ```
 
 

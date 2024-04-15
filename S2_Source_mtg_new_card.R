@@ -321,7 +321,8 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     # ajouter point d'accroche pour red aggro
     `UWhiteX Control` = c(
       "Azorius Control _fallback",
-      "Taking Turns"#,
+      "Taking Turns",
+      "Miracle"
     ),
     # Group UB base control and midrange in maccro archetype deck share with UW are in the UW groups
     

@@ -336,7 +336,9 @@ model_decision_tree_base_c5 <-
 grid_decision_tree_base_c5 <-
   grid_latin_hypercube(
     min_n(),
-    size = 50)
+    size = 25)
+
+
 
 Result_raw_decision_treec5 <- model_generic_grid_fun(
   data = known_arch,
