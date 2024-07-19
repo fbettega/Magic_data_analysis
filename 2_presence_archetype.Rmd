@@ -25,23 +25,18 @@ library("rwantshue")
 library(htmltools)
 
 # css: TOC.css
-source("S2_Source_mtg_new_card.R")
+source("S2_Source_mtg_new_card.R",local = TRUE)
 
 loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
-
+# Réfléchir pour les couleurs et meilleurs distances
 # Manque ajouter du texte après les % pour la variation
 conflicted::conflicts_prefer(dplyr::filter)
 ```
-
-Réfléchir pour les couleurs et meilleurs distances
-
-
 
 
 ```{r}
 knitr::read_chunk("S2_Source_mtg_new_card.R")
 ```
-
 
 
 ```{r, Introduction_chunk_2_Deck_analysis, results='asis'}
@@ -116,6 +111,14 @@ one_month_inline <- Presence_df_base_all_data %>%
 
 
 
+```{r}
+# a <- DF_presence_fun(
+#       df_base = Presence_df_base,
+#   time_limit = Inf,
+#   compare_time_limit = NULL
+#   )
+
+```
 
 ```{r}
 spaghetti_plot_df <- Presence_df_base %>%
@@ -151,18 +154,29 @@ spaghetti_plot_df <- Presence_df_base %>%
 
 
 
-Low_Arch_spaghetti <- as.character(spaghetti_plot_df %>%
+Low_Arch_spaghetti <- as.character(
+  spaghetti_plot_df %>%
   distinct(Week, Archetype, Archetype_percent) %>%
   group_by(Archetype) %>%
-  summarise(Archetype_percent = sum(Archetype_percent) / max(Week), ) %>%
-  filter(Archetype_percent < 0.03) %>% pull(Archetype))
+  # old based on mean presence
+  # summarise(Archetype_percent = sum(Archetype_percent) / max(Week), ) %>%
+  # now based on max presence
+  summarise(Archetype_percent = max(Archetype_percent)) %>%
+   filter(Archetype_percent < 0.025) %>% pull(Archetype)
+)
 
 
-Low_base_Arch_spaghetti <- as.character(spaghetti_plot_df %>%
+Low_base_Arch_spaghetti <- as.character(
+  spaghetti_plot_df %>%
   distinct(Week, Base_Archetype, Base_Archetype_percent) %>%
   group_by(Base_Archetype) %>%
-  summarise(Base_Archetype_percent = sum(Base_Archetype_percent) / max(Week), ) %>%
-  filter(Base_Archetype_percent < 0.015) %>% pull(Base_Archetype))
+  # old based on mean presence
+  # summarise(Base_Archetype_percent = sum(Base_Archetype_percent) / max(Week), ) %>%
+  # now based on max presence
+  summarise(Base_Archetype_percent = max(Base_Archetype_percent)) %>%
+  
+  filter(Base_Archetype_percent < 0.025) %>% pull(Base_Archetype)
+  )
 ```
 
 
@@ -267,21 +281,6 @@ plot_base_archetype_spaghetti
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # All Data 
 
 * All data : `r format(as.Date(min(Presence_df_base$Date)), "%d-%m-%Y")` to `r format(as.Date(max(Presence_df_base$Date)), format = "%d/%m/%Y")`. 
@@ -349,3 +348,52 @@ plot_presence_fun(
   compare_time_limit = 5
 )
 ```
+
+
+
+
+
+
+
+```{r}
+a <- DF_presence_fun(
+      df_base = Presence_df_base,
+  time_limit = Inf,
+  compare_time_limit = NULL
+  )
+
+```
+
+```{r}
+unique(loaded_base_data$Tournament)
+a <- loaded_base_data %>% 
+  group_by(TournamentFile) %>% 
+  # mutate(min_wins = min(Wins,na.rm = TRUE)) %>% 
+  # filter(str_detect(Tournament,
+  #              "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"))%>% view()
+  # rowwise() 
+  mutate( a =  if_else(
+    str_detect(Tournament,
+               "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"),
+    Wins - min(Wins,na.rm = TRUE),Wins
+    
+    ),.before = Wins
+    
+    ) 
+
+
+
+
+a %>% group_by(TournamentFile) %>% 
+  summarise(winrate_base = sum(Wins,na.rm = TRUE)/(sum(Losses,na.rm = TRUE)+sum(Wins,na.rm = TRUE)),
+            patch_mtg0 = sum(a,na.rm = TRUE)/(sum(Losses,na.rm = TRUE) + sum(a,na.rm = TRUE))
+            
+            ) %>% 
+  mutate(confirm = winrate_base== patch_mtg0) %>% 
+  
+  view()
+```
+
+
+
+

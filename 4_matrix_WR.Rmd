@@ -25,7 +25,7 @@ library("rwantshue")
 library(ggfittext)
 # css: TOC.css
 
-source("S2_Source_mtg_new_card.R")
+source("S2_Source_mtg_new_card.R",local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(plotly::layout)
 loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
@@ -367,8 +367,10 @@ plot_win_rate_mat <- function(
   )
 
 
-
-  plot_en_cours <- (
+ 
+  
+  if (nrow(Df_winrate_format_filter) > 0){
+  plot_base_en_cours <- 
     ggplot(
       Df_winrate_format_filter,
       aes(
@@ -421,13 +423,21 @@ plot_win_rate_mat <- function(
         label = label_y,
         # sec.axis = dup_axis()
         # guide = guide_axis(n.dodge = 2)
-      ) +
-      geom_tile(
-        data =
-          Df_winrate_format_filter %>%
+      ) 
+    
+  
+    signif_dataframe <- Df_winrate_format_filter %>%
             filter(
               !!rlang::sym(paste0("CI_WR_sign_diff_0_", group_column))
-            ),
+            )
+    
+    
+    
+    if (nrow(signif_dataframe) > 0){
+    plot_signif_en_cours <- plot_base_en_cours +
+      geom_tile(
+        data =
+         signif_dataframe,
         aes(
           Matchups_OpponentArchetype,
           Archetype
@@ -435,21 +445,29 @@ plot_win_rate_mat <- function(
         fill = "transparent",
         colour = "black",
         size = 1
-      ) +
+      )
+    } else {
+      plot_signif_en_cours <- plot_base_en_cours 
+      }
+  
+  plot_en_cours <- (
+    plot_signif_en_cours  +
       theme(
         axis.title = element_blank(),
         legend.position = "none",
         panel.border = element_blank(),
         panel.grid.major = element_blank(),
         axis.text.x = element_text(angle = 315)
-      )
-
-  ) %>%
+      ) 
+    ) %>%
     ggplotly(
       tooltip = c("text"),
       height = (480 * size_multiplier), width = (640 * size_multiplier)
     ) %>%
     plotly::layout(margin = marges)
+  } else {
+    plot_en_cours <- NULL
+  }
 
 
 

@@ -1,5 +1,5 @@
 ---
-title: "Présentation des différents résultats"
+title: "Overview of results"
 output: 
   html_document:
     css: other_file/TOC.css
@@ -16,8 +16,11 @@ knitr::opts_chunk$set(
 )
 library(tidyverse)
 library(gt)
-source("S2_Source_mtg_new_card.R")
+source("S2_Source_mtg_new_card.R",local = TRUE)
 knitr::read_chunk("S2_Source_mtg_new_card.R")
+
+# a faire
+# Cards by matchup when possible
 ```
 
 Code available at [https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result](https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result)

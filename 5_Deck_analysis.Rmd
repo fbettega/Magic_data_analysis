@@ -27,7 +27,7 @@ library(tidyverse)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 conflicted::conflicts_prefer(purrr::discard)
-source("S2_Source_mtg_new_card.R")
+source("S2_Source_mtg_new_card.R",local = TRUE)
 
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 

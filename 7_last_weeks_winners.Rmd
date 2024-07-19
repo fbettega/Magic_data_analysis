@@ -30,7 +30,7 @@ library(plotly)
 library("rwantshue")
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
-source("S2_Source_mtg_new_card.R")
+source("S2_Source_mtg_new_card.R",local = TRUE)
 
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
@@ -85,9 +85,6 @@ Tournament_of_interest_df <- right_join(
 rm(pre_rename_Tournament_of_interest_df,rename_tournament)
 
 scheme <- iwanthue(seed = 42, force_init = TRUE)  
-
-
-
 ```
 
 

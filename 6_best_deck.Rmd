@@ -2,13 +2,11 @@
 title: "Best deck"
 output: 
   html_document:
-    css: other_file/TOC.css
     toc: true # table of content true
     toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    theme: united  # many options for theme, this one is my favorite.
     number_sections: true  ## if you want number sections at each table header
     toc_float: true
-    theme: united  # many options for theme, this one is my favorite.
-    highlight: tango
 date: "`r Sys.Date()`"
 knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
@@ -23,6 +21,16 @@ knitr::opts_chunk$set(
   warning = FALSE #,
    # cache = TRUE
 )
+
+    #     pandoc_args: [
+    #   "+RTS", "-K1500m",
+    #   "-RTS"
+    # ]
+
+
+
+
+    # css: other_file/TOC.css
 library(pander)
 library("rjson")
 library(tidyverse)
@@ -512,9 +520,7 @@ Best_deck_get_table_function <- function(res_fun_init_main,
       main = format_table_side,
       side = format_table_side
                          )
-    
   }
-  
   return(format_table)
 }
 
@@ -975,7 +981,7 @@ for (i in sort(unique(res_global$Archetype))) {
   # Section contents
   pander::pandoc.header(i, level = 2)
   pander::pandoc.p("")
-  
+
   pander::pandoc.header("Global deck models", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("")
@@ -985,7 +991,7 @@ for (i in sort(unique(res_global$Archetype))) {
 ::: {.column width="50%"}')
 
     print(htmltools::tagList(res_global_gt_table[[i]]$any))
-    
+
     pander::pandoc.p("")
     pander::pandoc.p(":::")
 
@@ -993,7 +999,7 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     print(htmltools::tagList(res_global_gt_table[[i]]$count))
-    
+
     pander::pandoc.p(":::
 ::::::::::::::")
   }
@@ -1003,15 +1009,15 @@ for (i in sort(unique(res_global$Archetype))) {
   pander::pandoc.p("")
 
   if (i %in% names(res_main_and_side_gt_table)) {
-    
-    
+
+
     pander::pandoc.header("Mainboard", level = 4)
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
 
-    
+
     print(htmltools::tagList(res_main_and_side_gt_table[[i]]$any$main))
-    
+
     pander::pandoc.p("")
     pander::pandoc.p(":::")
 
@@ -1019,20 +1025,20 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     print(htmltools::tagList(res_main_and_side_gt_table[[i]]$count$main))
-    
+
 
     pander::pandoc.p(":::
 ::::::::::::::")
       pander::pandoc.p("")
 
       pander::pandoc.header("Sideboard", level = 4)
-      
+
       pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
 
-  
+
     print(htmltools::tagList(res_main_and_side_gt_table[[i]]$any$side))
-    
+
     pander::pandoc.p("")
     pander::pandoc.p(":::")
 
@@ -1040,7 +1046,7 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     print(htmltools::tagList(res_main_and_side_gt_table[[i]]$count$side))
-    
+
 
     pander::pandoc.p(":::
 ::::::::::::::")
@@ -1068,7 +1074,7 @@ for (i in sort(unique(res_global$Archetype))) {
   # Section contents
   pander::pandoc.header(i, level = 2)
   pander::pandoc.p("")
-  
+
   pander::pandoc.header("Global deck models", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("")
@@ -1078,15 +1084,12 @@ for (i in sort(unique(res_global$Archetype))) {
 ::: {.column width="50%"}')
 
     print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$any))
-    
     pander::pandoc.p("")
     pander::pandoc.p(":::")
-
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
-
     print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$count))
-    
+
     pander::pandoc.p(":::
 ::::::::::::::")
   }
@@ -1102,15 +1105,13 @@ for (i in sort(unique(res_global$Archetype))) {
 
 
     print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$any$main))
-    
+
     pander::pandoc.p("")
     pander::pandoc.p(":::")
-
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
-
     print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$count$main))
-    
+
 
     pander::pandoc.p(":::
 ::::::::::::::")
@@ -1121,7 +1122,7 @@ for (i in sort(unique(res_global$Archetype))) {
 
 
     print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$any$side))
-    
+
     pander::pandoc.p("")
     pander::pandoc.p(":::")
 
@@ -1129,7 +1130,7 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$count$side))
-    
+
 
     pander::pandoc.p(":::
 ::::::::::::::")
@@ -1140,5 +1141,4 @@ for (i in sort(unique(res_global$Archetype))) {
 
 }
 ```
-
 

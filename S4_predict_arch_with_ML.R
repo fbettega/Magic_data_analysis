@@ -9,11 +9,13 @@ library(tidymodels)
 library(kknn)
 library(future)
 
-source("S2_Source_mtg_new_card.R")
+source("S2_Source_mtg_new_card.R",local = TRUE)
 
 # scale_this <- function(x){
 #   (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
 # }
+
+No_pred <- FALSE #TRUE FALSE
 
 ################################################################################
 my_table_from_model <- function(pred_class,pred_proba,data,string){
@@ -44,10 +46,15 @@ my_table_from_model <- function(pred_class,pred_proba,data,string){
 
 
 bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
+  
+  
   list_of_table <- lapply(
     seq_along(model_list),
     function(x){
       print(x)
+      plan(multisession, workers = 7
+           #,gc = TRUE
+      )
       model <- readRDS(
         paste0(
           "data/ml_model/", model_list[[x]][1],
@@ -58,7 +65,7 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
         predict(pred_data, type = "class")
       predict_proba <- model %>%
         predict(pred_data, type =  "prob")
-      
+      plan(sequential)
       return(
         list(
           class = predict_class,
@@ -126,6 +133,16 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
 # Otion one rf on raw data
 df_export <- read_rds("data/intermediate_result/base_classif_data.rds")
 
+if (No_pred){
+  write_rds(df_export, "data/data_meta_en_cours.rds")
+}else {
+
+if(file.exists("data/intermediate_result/not_train_col.rds")) {
+  
+  exclude_col <- read_rds("data/intermediate_result/not_train_col.rds")
+} else {
+  exclude_col <- character()
+}
 
 min_number_of_arch <- 20
 known_arch <- df_export %>%
@@ -133,7 +150,7 @@ known_arch <- df_export %>%
   prett_fun_classif("Mainboard") %>% 
   mutate(
     Archetype = as.factor(Archetype)
-    )
+    ) %>% select(-any_of(exclude_col))
 
 
 
@@ -170,7 +187,7 @@ list_of_model_for_prediction <- list(
   regression = c("regression_tidy", "raw_data"),
   rando_forest = c("RF_tidy","raw_data"),
   knn = c("knn_tidy", "raw_data"),
-  decision_tree = c("decision_tree_tidy","raw_data"),
+  decision_tree_c5 = c("decision_c5_tree_tidy","raw_data"),
   xgboost = c("xgboost_tidy", "raw_data")
 )
 
@@ -201,23 +218,26 @@ df_export_remove_bann <- Ban_patch(
 )
 
 
+
+df_export_patch_mtgo <- df_export_remove_bann 
+
 write_rds(df_export_remove_bann, "data/data_meta_en_cours.rds")
+}
 
 
 
-
-# # # explore model 
+# # # # explore model 
 # grid_debug <- read_rds(
 #     paste0(
 #       "data/ml_model/grid/Grid_search_",
-#       "knn_tidy",#"regression_tidy" ,# modif "decision_tree_tidy" RF_tidy "xgboost_tidy" knn_tidy
+#       "decision_c5_tree_tidy",# decision_c5_tree_tidy "regression_tidy" ,# modif "decision_tree_tidy" RF_tidy "xgboost_tidy" knn_tidy
 #       "_predict_archetype_",
 #       "raw_data", # modif
 #       ".rds"
 #     )
 #   )
-# # 
-# # 
+# #
+# #
 # a <- grid_debug %>%
 #   collect_metrics()
 

@@ -285,11 +285,9 @@ format_df_result_card_table <- function(
 
 
 
-
-
-
+##
+## HANDLE lot of copies off one cards ex slime against humanity
 ################################################################################
-
 # A reflechir grouping conditionnel basé sur la quantité des arch cumulé
 Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   
@@ -317,9 +315,11 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     Merfolk = c("Merfolk"),
     
     
-    Devotion = c("Nykthos Leyline", "Green Devotion"),
+    Devotion = c("Nykthos Leyline"),
     # ajouter point d'accroche pour red aggro
     `UWhiteX Control` = c(
+      "Azorius Control",
+      "Jeskai Energy _fallback",
       "Azorius Control _fallback",
       "Taking Turns",
       "Miracle"
@@ -333,14 +333,20 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     # Not murktide UR control
     `URedX Control` = c(
       "Izzet Control _fallback",
+      "Temur Energy _fallback",
+      "Wizard Control",
       "Reclamation",
       "Delver",
+      "Izzet Energy _fallback",
       "Faeries"
     ),
     
     `The Rock Midrange` = c("Saga Party"),
     
     `RWx aggro` = c(
+      "Mardu Energy _fallback",
+      "Naya Energy _fallback",
+      "Mono White Energy _fallback",
       "Mono Red Aggro _fallback",
       "Mono Red Midrange _fallback",
       "Boros Aggro _fallback",
@@ -351,7 +357,10 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     
     
     # groupe eldra avec eldra tron
-    Tron = c("Eldrazi"),
+    
+    
+    
+    Eldrazi = c("Eldrazi","Eldrazi Tron"),
     ############################ Réfléxion a mener #################################
     # groupe all deck blade a reflechir sur le fait de grouper avec blink
     Stoneblade = c(
@@ -381,14 +390,9 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
       "The Rack",
       "Coffers Control" # ,"Mono Black Midrange _fallback"
     ),
+    Enchantress = c("Enchantress","Enigmatic Incarnation"),
     
     
-    
-    # Merge all rock soupes together
-    # `Golgarix Midrange` = c(
-    #   "Golgari Midrange _fallback", "Jund Midrange _fallback",
-    #   "Abzan Midrange _fallback", "Jund Aggro", "Jund Midrange"
-    # ),
     # Merge the two combo breach potentiellement breach storm groupable avec les autres storms
     
     # `Breach combo` = c(
@@ -415,10 +419,11 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     # Merge the two combo breach potentiellement breach with storm groupable
     # Ascendancy Combo et adnauseam groupe avec le reste même si pas vraiment storm
     Storm = c(
+      
       "Breach Storm", "Grinding Breach",
       "Ad Nauseam", "Ascendancy Combo",
       "Grixis Storm", "Boros Storm", "Mono Red Storm",
-      "Gifts Storm", "Twiddle Storm"
+      "Gifts Storm", "Twiddle Storm","Ruby Storm"
     ),
     # Regroupement de toutes les 4/5C soupe avec des betes
     `Omnath Control` = c(
@@ -444,7 +449,7 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     # not  enougth data 
     Enchantress = c("Enchantress","Enduring Ideal"),
     # `Kiki Jiki` = c("Kiki Jiki", "Kiki Chord"),
-    Creature_combo = c(
+    `Creature combo` = c(
       "Neobrand",
       "Vivien Combo",
       "Sacrifice",
@@ -464,6 +469,8 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     Scam = "Scam$",
     # Merge tout les titan sauf titan shift
     `Amulet Titan` = "Titan$",
+    Devotion = "Devotion$",
+    `Creature combo` = "Creature Combo _fallback$",
     # Groupement de tout les Burn quelquesois les couleurs
     Burn = "Burn",
     Blink = "Blink$",
@@ -471,8 +478,9 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     `Combo Artifact` = "Combo Artifact$",
     `Black Or Red Midrange` = "The Rock Midrange$"
   )
+
   
-  nested_if_else <- ""
+  nested_if_else <- "case_when("
   ##############################################################################
   
   # Delver Gestion
@@ -492,44 +500,34 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
   #
   # }
   
+  
+
   for (i in seq_along(name_group)) {
     nested_if_else <- paste0(
-      nested_if_else, "if_else(Archetype_to_agreg %in% ", "c(", paste0('"', name_group[[i]], '"', collapse = ","), "),", '"',
+      nested_if_else, "Archetype_to_agreg %in% ", "c(", paste0('"', name_group[[i]], '"', collapse = ","), ")", '~"',
       names(name_group[i]), '",'
     )
   }
   
+  
+  
   for (i in seq_along(regex_group)) {
     nested_if_else <- paste0(
-      nested_if_else, 'if_else(str_detect(Archetype_to_agreg,"',
-      regex_group[[i]], '"', "),", '"',
+      nested_if_else, 'str_detect(Archetype_to_agreg,"',
+      regex_group[[i]], '"', ")", '~"',
       names(regex_group[i]), '",'
     )
   }
   
   
-  
-  
-  
-  number_of_nested_ifelse <-
-    # length(color_group) +
-    # lapply(color_group, function(x){
-    #   length(x$color)
-    # }) %>% unlist() %>% sum() +
-    length(name_group) +
-    length(regex_group)
-  
-  
-  
-  nested_if_else <- paste0(nested_if_else, "Archetype_to_agreg", paste0(rep(")", number_of_nested_ifelse), collapse = ""))
-  
-  # nested_if_else <- paste0(nested_if_else,"Archetype_to_agreg",paste0(rep(")",length(name_group)),collapse = "") )
-  
-  
-  res <- eval(parse(text = nested_if_else))
-  
+  nested_if_else_final <- paste0(nested_if_else,".default = Archetype_to_agreg)")
+
+  res <- eval(parse(text = nested_if_else_final))
+
+
   return(res)
 }
+
 
 
 
@@ -799,6 +797,17 @@ Card_agregueur <- function(
 `%notin%` <- Negate(`%in%`)
 ################################################################################
 
+################################################################################
+#######################  Remove NULL from nested list  #########################
+## a list of NULLs
+is.NullOb <- function(x) is.null(x) | all(sapply(x, is.null))
+
+## Recursively step down into list, removing all such objects 
+rmNullObs <- function(x) {
+  x <- Filter(Negate(is.NullOb), x)
+  lapply(x, function(x) if (is.list(x)) rmNullObs(x) else x)
+}
+
 
 
 ################################################################################
@@ -1060,7 +1069,7 @@ DF_presence_fun <- function(
         formating_CI(Based_Arch_winrate, CI_Based_Arch_winrate)
       )
     )
-  
+  # browser()
   if (!is.null(compare_time_limit)) {
     df_comparisson <- DF_presence_fun(df_base, time_limit = compare_time_limit)
     
@@ -1650,8 +1659,8 @@ pander::pandoc.p("")
 ################################################################################
 #######################  Intro of script 6  #####################################
 ## ---- Introduction_chunk_6_best_deck
-min_sample_size_6 <- 50
-filter_archetype_count_6 <- 150
+min_sample_size_6 <- 25
+filter_archetype_count_6 <- 75
 
 
 Introduction_char_vec_par_6_1 <- paste0("This analysis attempts to use regression to determine the decks with the best performance.\n
