@@ -2,9 +2,7 @@
 title: "Description de la présence de chaque Archetype"
 output: 
   html_document:
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
+    css: ../other_file/TOC.css
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
@@ -25,9 +23,9 @@ library("rwantshue")
 library(htmltools)
 
 # css: TOC.css
-source("S2_Source_mtg_new_card.R",local = TRUE)
+source("../S2_Source_mtg_new_card.R",local = TRUE)
 
-loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
+loaded_base_data <- readRDS("../data/data_meta_en_cours.rds")
 # Réfléchir pour les couleurs et meilleurs distances
 # Manque ajouter du texte après les % pour la variation
 conflicted::conflicts_prefer(dplyr::filter)
@@ -35,7 +33,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 
 ```{r}
-knitr::read_chunk("S2_Source_mtg_new_card.R")
+knitr::read_chunk("../S2_Source_mtg_new_card.R")
 ```
 
 
@@ -180,10 +178,10 @@ Low_base_Arch_spaghetti <- as.character(
 ```
 
 
+# Presence archetype
+## Presence over Time 
 
-# Presence over Time 
-
-## Archetype 
+### Archetype 
 ```{r out.width="100%"}
 plot_archetype_spaghetti <- (ggplot(
   spaghetti_plot_df,
@@ -231,7 +229,7 @@ plot_archetype_spaghetti
 ```
 
 
-## Base Archetype
+### Base Archetype
 
 ```{r out.width="100%"}
 plot_base_archetype_spaghetti <- (ggplot(
@@ -280,8 +278,9 @@ plot_base_archetype_spaghetti
 
 
 
+## Presence graph 
 
-# All Data 
+### All Data 
 
 * All data : `r format(as.Date(min(Presence_df_base$Date)), "%d-%m-%Y")` to `r format(as.Date(max(Presence_df_base$Date)), format = "%d/%m/%Y")`. 
 * Duration `r round(max(difftime(Sys.Date(),Presence_df_base$Date,units = "weeks")),0)` weeks.
@@ -299,7 +298,7 @@ plot_presence_fun(
 )
 ```
 
-# 1 Month
+### 1 Month
 
 * 1 Month data : `r format(as.Date(min(one_month_inline$Date)), "%d-%m-%Y")` to `r format(as.Date(max(one_month_inline$Date)), "%d-%m-%Y")`.
 * Duration `r round(max(difftime(Sys.Date(),one_month_inline$Date,units = "days")),0)` days.
@@ -316,7 +315,7 @@ plot_presence_fun(
 ```
 
 
-# 2 Weeks 
+### 2 Weeks 
 
 * 2 Weeks data : `r format(as.Date(min(two_week_inline$Date)), "%d-%m-%Y")` to `r format(as.Date(max(two_week_inline$Date)), "%d-%m-%Y")`.
 * Duration `r round(max(difftime(Sys.Date(),two_week_inline$Date,units = "days")),0)` days.
@@ -333,7 +332,7 @@ plot_presence_fun(
 ```
 
 
-# 1 Weeks 
+### 1 Weeks 
 
 * 1 Weeks data : `r format(as.Date(min(one_week_inline$Date)), "%d-%m-%Y")` to `r format(as.Date(max(one_week_inline$Date)), "%d-%m-%Y")`.
 * Duration `r round(max(difftime(Sys.Date(),one_week_inline$Date,units = "days")),0)` days.
@@ -356,42 +355,42 @@ plot_presence_fun(
 
 
 ```{r}
-a <- DF_presence_fun(
-      df_base = Presence_df_base,
-  time_limit = Inf,
-  compare_time_limit = NULL
-  )
+# a <- DF_presence_fun(
+#       df_base = Presence_df_base,
+#   time_limit = Inf,
+#   compare_time_limit = NULL
+#   )
 
 ```
 
 ```{r}
-unique(loaded_base_data$Tournament)
-a <- loaded_base_data %>% 
-  group_by(TournamentFile) %>% 
-  # mutate(min_wins = min(Wins,na.rm = TRUE)) %>% 
-  # filter(str_detect(Tournament,
-  #              "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"))%>% view()
-  # rowwise() 
-  mutate( a =  if_else(
-    str_detect(Tournament,
-               "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"),
-    Wins - min(Wins,na.rm = TRUE),Wins
-    
-    ),.before = Wins
-    
-    ) 
-
-
-
-
-a %>% group_by(TournamentFile) %>% 
-  summarise(winrate_base = sum(Wins,na.rm = TRUE)/(sum(Losses,na.rm = TRUE)+sum(Wins,na.rm = TRUE)),
-            patch_mtg0 = sum(a,na.rm = TRUE)/(sum(Losses,na.rm = TRUE) + sum(a,na.rm = TRUE))
-            
-            ) %>% 
-  mutate(confirm = winrate_base== patch_mtg0) %>% 
-  
-  view()
+# unique(loaded_base_data$Tournament)
+# a <- loaded_base_data %>% 
+#   group_by(TournamentFile) %>% 
+#   # mutate(min_wins = min(Wins,na.rm = TRUE)) %>% 
+#   # filter(str_detect(Tournament,
+#   #              "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"))%>% view()
+#   # rowwise() 
+#   mutate( a =  if_else(
+#     str_detect(Tournament,
+#                "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"),
+#     Wins - min(Wins,na.rm = TRUE),Wins
+#     
+#     ),.before = Wins
+#     
+#     ) 
+# 
+# 
+# 
+# 
+# a %>% group_by(TournamentFile) %>% 
+#   summarise(winrate_base = sum(Wins,na.rm = TRUE)/(sum(Losses,na.rm = TRUE)+sum(Wins,na.rm = TRUE)),
+#             patch_mtg0 = sum(a,na.rm = TRUE)/(sum(Losses,na.rm = TRUE) + sum(a,na.rm = TRUE))
+#             
+#             ) %>% 
+#   mutate(confirm = winrate_base== patch_mtg0) %>% 
+#   
+#   view()
 ```
 
 

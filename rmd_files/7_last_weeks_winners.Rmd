@@ -2,16 +2,7 @@
 title: "Last weeks winner"
 output: 
   html_document:
-    css: other_file/TOC.css
-    toc: true # table of content true
-    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
-    number_sections: true  ## if you want number sections at each table header
-    toc_float: true
-    theme: united  # many options for theme, this one is my favorite.
-    highlight: tango
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
+    css: ../other_file/TOC.css
 ---
 
 
@@ -30,16 +21,16 @@ library(plotly)
 library("rwantshue")
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
-source("S2_Source_mtg_new_card.R",local = TRUE)
+source("../S2_Source_mtg_new_card.R",local = TRUE)
 
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
 
 # sample size minimum pour etre un groupe
 
 
-df_export <- readRDS("data/data_meta_en_cours.rds") %>%
+df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
   mutate(
     Deck_winrate = winrate_1_data(Wins, Losses)
   ) %>%
@@ -91,14 +82,11 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 
 
 ```{r sources_introduction}
-knitr::read_chunk("S2_Source_mtg_new_card.R")
+knitr::read_chunk("../S2_Source_mtg_new_card.R")
 ```
 
 
 
-```{r, Introduction_chunk_7_top8, results='asis'}
-
-```
 
 
 
@@ -259,7 +247,6 @@ return(list(Title = Title_str,
 ```
 
 ```{r}
-
 TournamentFile_by_week <- lapply(unique(Tournament_of_interest_df$Week),function(x){
   
   Tournament_of_interest_df %>%
@@ -270,12 +257,14 @@ TournamentFile_by_week <- lapply(unique(Tournament_of_interest_df$Week),function
   
 }) %>%
   purrr::set_names(unique(Tournament_of_interest_df$Week))
-
-
 ```
-```{r include=FALSE}
-#JS dependency
-plot_ly()
+
+
+
+# Winner of last tournament
+
+```{r, Introduction_chunk_7_top8, results='asis'}
+
 ```
 
 
@@ -284,23 +273,22 @@ plot_ly()
 # last week
 # two weeks ago
 for (i in seq_along(TournamentFile_by_week)){
-  pander::pandoc.header(paste0("Week : ",names(TournamentFile_by_week)[i]), level = 1)
+  pander::pandoc.header(paste0("Week : ",names(TournamentFile_by_week)[i]), level = 2)
   pander::pandoc.p("")
   
   for (u in seq_along(total_result)){
     if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
-      pander::pandoc.header(total_result[[u]]$Title, level = 2)
+      pander::pandoc.header(total_result[[u]]$Title, level = 3)
       pander::pandoc.p("")
-      pander::pandoc.header("Presence plot", level = 3)
+      pander::pandoc.header("Presence plot", level = 4)
       print(htmltools::tagList(total_result[[u]]$plot$plot_prez))
       pander::pandoc.p("")
       pander::pandoc.p("")
-      pander::pandoc.header("Top 8 list", level = 3)
+      pander::pandoc.header("Top 8 list", level = 4)
       print(htmltools::tagList(total_result[[u]]$plot$top8_table))
       pander::pandoc.p("")
       pander::pandoc.p("")}
   }
-  
   }
   
 ```

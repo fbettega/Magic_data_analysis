@@ -2,10 +2,7 @@
 title: "Winrate matrix"
 output: 
   html_document:
-    css: other_file/TOC.css
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
+    css: ../other_file/TOC.css
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
@@ -25,10 +22,10 @@ library("rwantshue")
 library(ggfittext)
 # css: TOC.css
 
-source("S2_Source_mtg_new_card.R",local = TRUE)
+source("../S2_Source_mtg_new_card.R",local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(plotly::layout)
-loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
+loaded_base_data <- readRDS("../data/data_meta_en_cours.rds")
 
 # Je ne compte pas faire de matrix pour les SUB archetype pour le moment Car les sample sizes sont trop souvent ridicules a réfléchir
 
@@ -46,15 +43,12 @@ loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
 
 ```{r}
-knitr::read_chunk("S2_Source_mtg_new_card.R")
+knitr::read_chunk("../S2_Source_mtg_new_card.R")
 # Prendre en compte mieux le nombres de deck avec CI pour le best deck
 ```
 
 
 
-```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
-
-```
 
 
 
@@ -107,12 +101,17 @@ df_base_all_data <- df_base %>%
 
 
 
+# Win rate matrix
+
 
 * All data : `r format(as.Date(min(df_base$Date)), "%d-%m-%Y")` to `r format(as.Date(max(df_base$Date)), format = "%d/%m/%Y")`. 
 * Duration `r round(max(difftime(Sys.Date(),df_base$Date,units = "weeks")),0)` weeks.
 * Include meta : `r unique(df_base$Meta)`.
 
-## Win rate matrix
+
+```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
+
+```
 
 
 
@@ -477,17 +476,17 @@ plot_win_rate_mat <- function(
 
 
 
-# Matrice utilisant le nombres de manches
+## Matrice utilisant le nombres de manches
 
 Par exemple un socre de 2-1 compte comme 3 manches
 
-## Total matrix
+### Total matrix
 
 ```{r out.width="100%"}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games", size_multiplier = 4)
 ```
 
-## Only significative CI
+### Only significative CI
 
 ```{r out.width="100%"}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games",
@@ -496,7 +495,7 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "games",
 )
 ```
 
-## Only more than 20 matches
+### Only more than 20 matches
 
 ```{r out.width="100%"}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games",
@@ -511,19 +510,19 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "games",
 
 
 
-# Matrice utilisant le nombres de partie
+## Matrice utilisant le nombres de partie
 
 Par exemple un socre de 2-1 compte comme 1 partie gagné.
 
 
-## Total matrix  
+### Total matrix  
 
 ```{r out.width="100%"}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 4)
 ```
 
 
-## Only significative CI
+### Only significative CI
 
 ```{r out.width="100%"}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
@@ -533,7 +532,7 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
 ```
 
 
-## Only more than 20 matches
+### Only more than 20 matches
 
 ```{r out.width="100%"}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
@@ -778,122 +777,3 @@ DT::datatable(
 ```
 
 
-## Best deck if some deck are remove
-```{r}
-Custom_presence_base_df <- xlsx::read.xlsx("data/best_deck_presence_customizable.xlsx", sheetIndex = 1)
-
-update_presence_from_data <- df_base_all_data %>%
-  group_by(Archetype) %>%
-  summarise(n = n(), .groups = "drop") %>%
-  rename(Matchups_OpponentArchetype = Archetype) %>%
-  arrange(desc(n))
-
-
-Updated_presence_rewrite <- full_join(update_presence_from_data,
-  Custom_presence_base_df %>%
-    select(-n),
-  by = "Matchups_OpponentArchetype", keep = TRUE
-) %>%
-  select(-Matchups_OpponentArchetype.y) %>%
-  rename(Matchups_OpponentArchetype = Matchups_OpponentArchetype.x)
-
-
-xlsx::write.xlsx(
-  as.data.frame(Updated_presence_rewrite),
-  file = "data/best_deck_presence_customizable.xlsx",
-  showNA = FALSE,
-  row.names = FALSE
-)
-```
-
-
-Deck remove from the metagame : `r Updated_presence_rewrite %>% filter(Custom_meta_less == 0) %>% pull(Matchups_OpponentArchetype) %>% as.character() %>% cat(sep = ", ")`
-
-
-```{r}
-Updated_presence <- Updated_presence_rewrite %>%
-  mutate(
-    Custom_meta_less = if_else(is.na(Custom_meta_less), n, Custom_meta_less),
-    Custom_meta_less = Custom_meta_less / (sum(Custom_meta_less) / sum(n))
-  ) %>%
-  filter(Custom_meta_less > 0)
-
-
-Df_Expected_number_of_win_custom_less <- Updated_presence %>%
-  select(Matchups_OpponentArchetype, Custom_meta_less) %>%
-  full_join(
-    Df_win_rate_matrix_summarise %>%
-      mutate(no_data_arch = Archetype %in% (
-        Updated_presence_rewrite %>%
-          filter(Custom_meta_less == 0) %>%
-          pull(Matchups_OpponentArchetype)
-      )) %>%
-      filter(!no_data_arch) %>%
-      select(-no_data_arch) %>%
-      filter(
-        CI_WR_matches != 0,
-        !is.na(CI_WR_matches)
-      ) %>%
-      mutate(lower_ci_bound = WR_matches + CI_WR_matches) %>%
-      select(
-        Archetype, WR_matches,
-        lower_ci_bound,
-        Matchups_OpponentArchetype
-      ),
-    by = c("Matchups_OpponentArchetype"), relationship = "many-to-many"
-  ) %>%
-  mutate(
-    lower_ci_bound = replace(
-      replace(lower_ci_bound, lower_ci_bound < 0, 0),
-      lower_ci_bound > 1, 1
-    ),
-    lower_ci_bound = ifelse(Matchups_OpponentArchetype == Archetype,
-      0.5, lower_ci_bound
-    ),
-    expected_win_WR = WR_matches * Custom_meta_less,
-    expected_win_lower_ci = lower_ci_bound * Custom_meta_less
-  ) %>%
-  drop_na() %>%
-  ungroup()
-
-
-
-Df_expected_of_custom_less_sum <-
-  Df_Expected_number_of_win_custom_less %>%
-  group_by(Archetype) %>%
-  summarise(
-    S_wr = sum(expected_win_WR) / sum(Custom_meta_less),
-    S_ci = sum(expected_win_lower_ci) / sum(Custom_meta_less),
-    number_of_matchup = n(),
-    .groups = "drop"
-  ) %>%
-  distinct()
-```
-
-
-
-```{r}
-DT::datatable(Df_expected_of_custom_less_sum,
-  filter = "top", rownames = FALSE,
-  callback = DT::JS(
-    #         paste0(
-    #         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
-    #     header = table.columns().header();
-    # for (var i = 0; i < tips.length; i++) {
-    #   $(header[i]).attr('title', tips[i]);
-    # }
-    # ",
-    onfly_filter_js
-    # )
-  ),
-  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_expected_of_custom_less_sum)),
-  caption = htmltools::tags$caption(
-    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
-    "Table : Best deck using Win rate"
-  )
-) %>%
-  DT::formatRound(
-    columns = 2:3,
-    digits = 2
-  )
-```

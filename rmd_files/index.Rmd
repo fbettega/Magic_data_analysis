@@ -2,10 +2,10 @@
 title: "Overview of results"
 output: 
   html_document:
-    css: other_file/TOC.css
+    css: ../other_file/TOC.css
 date: "`r Sys.Date()`"
 knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout") })
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout") })
 ---
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 knitr::opts_chunk$set(
@@ -16,23 +16,27 @@ knitr::opts_chunk$set(
 )
 library(tidyverse)
 library(gt)
-source("S2_Source_mtg_new_card.R",local = TRUE)
-knitr::read_chunk("S2_Source_mtg_new_card.R")
+source("../S2_Source_mtg_new_card.R",local = TRUE)
+knitr::read_chunk("../S2_Source_mtg_new_card.R")
 
 # a faire
 # Cards by matchup when possible
 ```
 
+
+# Introduction 
+
+
+
 Code available at [https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result](https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result)
 
-
-
-**Please note that the data shown is a modified version of the data where all the pre-ban decks containing the Violent Outburst card have been ignored.**
-
-
-# Methode
-## Archetype definition
+### Archetype definition
 [Modify version of archetype definition](https://github.com/fbettega/Modern_FB_archetype) initial definition [from Badaro](https://github.com/Badaro/MTGOFormatData)
+
+
+**Acknowledgements**
+Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.
+Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.
 
 ```{r}
 proportion_format_fun <- function(nb,tot){
@@ -42,7 +46,7 @@ proportion_format_fun <- function(nb,tot){
 }
 
 
-df_export <- readRDS("data/data_meta_en_cours.rds")
+df_export <- readRDS("../data/data_meta_en_cours.rds")
 
 Table_with_arch_count_and_sub_count <- df_export %>%
   select(
@@ -104,12 +108,12 @@ Tournament with matchup
 -->
 
 
-# Outpout
-## [New card](/result/1_new_card.html)
+## Principal chapter
+### New card
 
 Contains an analysis of the cards limited to certain recent sets to assess the impact of the new cards on each archetypes.
 
-## [Presence archetype](/result/2_presence_archetype.html)
+### Presence archetype
 
 <!---
 potentiellement selecteur de deck sous contrainte en script annexe
@@ -119,38 +123,40 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 ```
 
-### [Top 8 deck](/result/7_last_weeks_winners.html)
+### Top 8 deck
 
 ```{r, Introduction_chunk_7_top8, results='asis'}
 
 ```
 
-## Card win rate analysis  
 
 
-### [Card win rate table](/result/3_Card_win_rate_table.html)
+
+### Card win rate table
 ```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
 
 ```
 
-### [Cards WR models](/result/5_Deck_analysis.html)
+### Cards WR models
 ```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
 
 ```
 
-## [Matrix WR](/result/4_matrix_WR.html)
+### Matrix WR
 ```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
 
 ```
 
 
-## [Best deck analysis](/result/6_best_deck.html)
+### Best deck analysis
 
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
 ```
 
-# Archetype aggregation  
+
+## Archetype aggregation  
+
 
 ```{r results='asis'}
 title_table <- paste0("**Tabler summarise how the archetypes are aggregated**")
@@ -206,9 +212,6 @@ Table_with_arch_count_and_sub_count  %>%
 ```
 
 
-# Acknowledgements
 
-Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.
-Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.
 
 

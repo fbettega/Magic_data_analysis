@@ -2,16 +2,7 @@
 title: "Deck winrate Analysis"
 output: 
   html_document:
-    css: other_file/TOC.css
-    toc: true # table of content true
-    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
-    number_sections: true  ## if you want number sections at each table header
-    toc_float: true
-    theme: united  # many options for theme, this one is my favorite.
-    highlight: tango
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
+    css: ../other_file/TOC.css
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
@@ -27,11 +18,11 @@ library(tidyverse)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 conflicted::conflicts_prefer(purrr::discard)
-source("S2_Source_mtg_new_card.R",local = TRUE)
+source("../S2_Source_mtg_new_card.R",local = TRUE)
 
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
 
 # sample size minimum pour etre un groupe
 
@@ -56,7 +47,7 @@ rm(tmp)
 
 
 
-df_export <- readRDS("data/data_meta_en_cours.rds") %>%
+df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
   mutate(
     Deck_winrate = winrate_1_data(Wins, Losses)
   ) %>%
@@ -75,9 +66,11 @@ df_export <- readRDS("data/data_meta_en_cours.rds") %>%
 ```
 
 ```{r}
-knitr::read_chunk("S2_Source_mtg_new_card.R")
+knitr::read_chunk("../S2_Source_mtg_new_card.R")
 ```
 
+
+# Deck analysis 
 
 
 ```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
@@ -781,16 +774,18 @@ Side_uncomon_card_format_model <- format_model_list(Side_result_models_Uncommon_
   name_list_of_model_with_string(unique(Side_Model_data_Uncommon_cards$Archetype))
 ```
 
-Side_result_models_variable_count_all_arch
+
+
+
 
 ```{r print_result, results='asis', out.width="100%"}
 for (i in sort(levels(df_Archetype_long$Archetype))) {
   # Inserts Month titles
-  pander::pandoc.header(i, level = 1)
+  pander::pandoc.header(i, level = 2)
   # Section contents
-  pander::pandoc.header("Main deck", level = 2)
+  pander::pandoc.header("Main deck", level = 3)
   pander::pandoc.p("")
-  pander::pandoc.header("Base Cards", level = 3)
+  pander::pandoc.header("Base Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
   pander::pandoc.p("")
@@ -811,7 +806,7 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
       ) %>% flextable::align(align = "center", part = "all")
     )
   }
-  pander::pandoc.header("Base Cards Variable count", level = 3)
+  pander::pandoc.header("Base Cards Variable count", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with  different count using binomial regression for WR")
   pander::pandoc.p("")
@@ -841,7 +836,7 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
 ::::::::::::::")
   }
 
-  pander::pandoc.header("Uncommon Cards", level = 3)
+  pander::pandoc.header("Uncommon Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards not always in deck using binomial regression for WR")
   pander::pandoc.p("")
@@ -873,9 +868,9 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
   pander::pandoc.p("")
   pander::pandoc.p("")
 
-  pander::pandoc.header("Side Board", level = 2)
+  pander::pandoc.header("Side Board", level = 3)
   pander::pandoc.p("")
-  pander::pandoc.header("Base Cards", level = 3)
+  pander::pandoc.header("Base Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
   pander::pandoc.p("")
@@ -921,7 +916,7 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
     pander::pandoc.p(":::
 ::::::::::::::")
   }
-  pander::pandoc.header("Base Cards Variable count", level = 3)
+  pander::pandoc.header("Base Cards Variable count", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with  different count using binomial regression for WR")
   pander::pandoc.p("")
@@ -950,7 +945,7 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
 ::::::::::::::")
   }
 
-  pander::pandoc.header("Uncommon Cards", level = 3)
+  pander::pandoc.header("Uncommon Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards not always in deck using binomial regression for WR")
   pander::pandoc.p("")

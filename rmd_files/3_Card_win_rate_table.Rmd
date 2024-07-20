@@ -2,10 +2,7 @@
 title: "Win rates des cartes par archetypes"
 output: 
   html_document:
-    css: other_file/TOC.css
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
+    css: ../other_file/TOC.css
 ---
 
 
@@ -22,7 +19,7 @@ library(kableExtra)
 library(tidyverse)
 library(htmltools)
 
-source("S2_Source_mtg_new_card.R",local = TRUE)
+source("../S2_Source_mtg_new_card.R",local = TRUE)
 
 conflicted::conflicts_prefer(dplyr::filter)
 # All table include tooltip column description
@@ -31,7 +28,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 
 ```{r}
-knitr::read_chunk("S2_Source_mtg_new_card.R")
+knitr::read_chunk("../S2_Source_mtg_new_card.R")
 ```
 
 
@@ -46,7 +43,7 @@ knitr::read_chunk("S2_Source_mtg_new_card.R")
 ```{r data_reading }
 filter_archetype_count <- 10#50
 
-df_export <- readRDS("data/data_meta_en_cours.rds") %>%
+df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
   mutate(
     Deck_winrate = Wins / (Losses + Wins)
   ) %>%
@@ -453,8 +450,9 @@ win_rate_side_board <- Count_and_winrates_cards_in_decklist_total(
 
 
 
-# Archetype
-## Mainboard cards
+# Archetype Card winrate table 
+
+## Mainboard cards 
 
 ### Base cards Mainboard  
 
@@ -496,7 +494,7 @@ for (var i = 0; i < tips.length; i++) {
 
 
 
-### Variable Cards Side
+### Variable Cards Mainboard
 
 
 ```{r}
@@ -566,8 +564,8 @@ for (var i = 0; i < tips.length; i++) {
 
 
 
-### Variable Cards  
-
+### Variable Cards Side    
+ 
 ```{r}
 DT::datatable(
   format_df_result_card_table(
@@ -596,7 +594,7 @@ for (var i = 0; i < tips.length; i++) {
 ```
 
 
-# Based Archetype
+# Based Archetype Card winrate table  
 
 ```{r}
 win_rate_main_board_based_arch <- Count_and_winrates_cards_in_decklist_total(
@@ -656,7 +654,7 @@ for (var i = 0; i < tips.length; i++) {
 )
 ```
 
-### Variable Cards 
+### Variable Cards Mainboard  
 
 
 ```{r}
@@ -695,7 +693,7 @@ for (var i = 0; i < tips.length; i++) {
 ## sideboard cards
 
 
-### Base cards
+### Base cards sideboard
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
@@ -730,7 +728,7 @@ for (var i = 0; i < tips.length; i++) {
 )
 ```
 
-### Variable Cards 
+### Variable Cards sideboard   
 
 
 
