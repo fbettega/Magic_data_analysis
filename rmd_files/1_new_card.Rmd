@@ -3,6 +3,9 @@ title: "Carte Dans les nouveaux set"
 output: 
   html_document:
     css: ../other_file/TOC.css
+date: "`r Sys.Date()`"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout/result") })
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 

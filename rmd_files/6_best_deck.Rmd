@@ -2,7 +2,14 @@
 title: "Best deck"
 output: 
   html_document:
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    toc_float: true
     css: ../other_file/TOC.css
+date: "`r Sys.Date()`"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout/result") })
 ---
 
 
@@ -11,17 +18,16 @@ output:
 knitr::opts_chunk$set(
   echo = FALSE,
   message = FALSE,
-  warning = FALSE #,
-   # cache = TRUE
+  warning = FALSE# , cache = TRUE
 )
-
+#     theme: united  # many options for theme, this one is my favorite.
 library(pander)
 library("rjson")
 library(tidyverse)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 source("../S2_Source_mtg_new_card.R")
-
+options(kableExtra.auto_format = FALSE)
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
 modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
@@ -49,7 +55,6 @@ rm(tmp)
 
 
 
-
 df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
   mutate(
     Deck_winrate = winrate_1_data(Wins, Losses)
@@ -66,10 +71,6 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
 ```{r}
 knitr::read_chunk("../S2_Source_mtg_new_card.R")
 ```
-
-
-
-
 
 
 ```{r}
@@ -994,7 +995,7 @@ for (i in sort(unique(res_global$Archetype))) {
 ::: {.column width="50%"}')
 
     # print(htmltools::tagList(res_global_gt_table[[i]]$any))
-    print(res_global_gt_table[[i]]$any)
+    print(htmltools::tagList(htmltools::HTML(res_global_gt_table[[i]]$any)))
 
     pander::pandoc.p("")
     pander::pandoc.p(":::")
@@ -1003,7 +1004,7 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     # print(htmltools::tagList(res_global_gt_table[[i]]$count))
-    print(res_global_gt_table[[i]]$count)
+    print(htmltools::tagList(htmltools::HTML(res_global_gt_table[[i]]$count)))
 
     pander::pandoc.p(":::
 ::::::::::::::")
@@ -1022,7 +1023,7 @@ for (i in sort(unique(res_global$Archetype))) {
 
 
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$any$main))
-    print(res_main_and_side_gt_table[[i]]$any$main)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$any$main)))
 
     pander::pandoc.p("")
     pander::pandoc.p(":::")
@@ -1031,7 +1032,7 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$count$main))
-    print(res_main_and_side_gt_table[[i]]$count$main)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$count$main)))
 
 
     pander::pandoc.p(":::
@@ -1045,7 +1046,7 @@ for (i in sort(unique(res_global$Archetype))) {
 
 
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$any$side))
-    print(res_main_and_side_gt_table[[i]]$any$side)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$any$side)))
 
     pander::pandoc.p("")
     pander::pandoc.p(":::")
@@ -1054,7 +1055,7 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$count$side))
-    print(res_main_and_side_gt_table[[i]]$count$side)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$count$side)))
 
 
     pander::pandoc.p(":::
@@ -1100,14 +1101,14 @@ for (i in sort(unique(res_global$Archetype))) {
 ::: {.column width="50%"}')
 
     # print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$any))
-    print(res_global_gt_table_2weeks[[i]]$any)
+    print(htmltools::tagList(htmltools::HTML(res_global_gt_table_2weeks[[i]]$any)))
 
     pander::pandoc.p("")
     pander::pandoc.p(":::")
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
     # print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$count))
-    print(res_global_gt_table_2weeks[[i]]$count)
+    print(htmltools::tagList(htmltools::HTML(res_global_gt_table_2weeks[[i]]$count)))
     pander::pandoc.p(":::
 ::::::::::::::")
   }
@@ -1123,14 +1124,14 @@ for (i in sort(unique(res_global$Archetype))) {
 
 
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$any$main))
-    print(res_main_and_side_gt_table_2weeks[[i]]$any$main)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$any$main)))
 
     pander::pandoc.p("")
     pander::pandoc.p(":::")
     pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$count$main))
-    print(res_main_and_side_gt_table_2weeks[[i]]$count$main)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$count$main)))
 
 
     pander::pandoc.p(":::
@@ -1142,7 +1143,7 @@ for (i in sort(unique(res_global$Archetype))) {
 
 
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$any$side))
-    print(res_main_and_side_gt_table_2weeks[[i]]$any$side)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$any$side)))
 
     pander::pandoc.p("")
     pander::pandoc.p(":::")
@@ -1151,7 +1152,7 @@ for (i in sort(unique(res_global$Archetype))) {
     pander::pandoc.p("")
 
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$count$side))
-    print(res_main_and_side_gt_table_2weeks[[i]]$count$side)
+    print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$count$side)))
 
     pander::pandoc.p(":::
 ::::::::::::::")

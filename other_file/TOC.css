@@ -3,10 +3,5 @@
   max-width: unset !important; 
   margin-left: 0;
   margin-right: auto;
-}
-.book .book-body .page-wrapper .page-inner {
-  width: 100% !important;
-  max-width: unset !important; 
-  margin-left: 0;
-  margin-right: auto;
+  padding:0px;
 }

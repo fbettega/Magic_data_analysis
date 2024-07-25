@@ -3,6 +3,9 @@ title: "Description de la présence de chaque Archetype"
 output: 
   html_document:
     css: ../other_file/TOC.css
+date: "`r Sys.Date()`"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout/result") })
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
@@ -348,50 +351,65 @@ plot_presence_fun(
 )
 ```
 
-
-
-
-
-
-
+## CI plot win rates
 ```{r}
-# a <- DF_presence_fun(
-#       df_base = Presence_df_base,
-#   time_limit = Inf,
-#   compare_time_limit = NULL
-#   )
+df_Ci_by_week <- rbind(
+  Presence_df_base,
+  Presence_df_base %>% 
+    mutate(Week = 0)
+  ) %>%
+      group_by(Archetype,Week) %>% 
+  mutate( 
+    Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
+    CI_Arch_winrate = CI_prop(Arch_winrate, sum(Losses + Wins, na.rm = TRUE)) 
+    ) %>% 
+  ungroup() %>%
+  group_by(Base_Archetype,Week) %>% 
+  mutate(   
+    Base_Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
+    CI_Base_Arch_winrate = CI_prop(Base_Arch_winrate, sum(Losses + Wins, na.rm = TRUE)) 
+    ) %>% 
+  ungroup() %>% 
+  distinct(Base_Archetype,Week,.keep_all = TRUE) %>% 
+  select(
+    Archetype,Base_Archetype,Week,Archetype_count,
+    Arch_winrate,CI_Arch_winrate,Base_Arch_winrate,
+    CI_Base_Arch_winrate
+    ) %>% 
+  mutate(Week = factor(ifelse(Week == 0,"all",Week),levels = c("all",as.character(seq(1,max(Presence_df_base$Week))))))
 
+
+
+
+(ggplot(data = df_Ci_by_week %>% 
+         filter(Week == "all") %>% 
+         distinct(Archetype,.keep_all = TRUE) %>% 
+         mutate(
+           Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate + .$CI_Arch_winrate)])
+         )
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate,
+      x = Archetype
+      ),
+    position = position_dodge(0.75)
+    )  +
+      geom_errorbar(aes(
+        x = Archetype,
+        ymin = Arch_winrate + CI_Arch_winrate,
+                        ymax = Arch_winrate - CI_Arch_winrate),
+      position = position_dodge(width = .75), width = .45
+      )  +
+  coord_flip())  %>%
+  ggplotly(
+    #tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25)
+  )
+  
 ```
 
-```{r}
-# unique(loaded_base_data$Tournament)
-# a <- loaded_base_data %>% 
-#   group_by(TournamentFile) %>% 
-#   # mutate(min_wins = min(Wins,na.rm = TRUE)) %>% 
-#   # filter(str_detect(Tournament,
-#   #              "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"))%>% view()
-#   # rowwise() 
-#   mutate( a =  if_else(
-#     str_detect(Tournament,
-#                "Modern Challenge \\d+|Modern Preliminary|Modern Showcase Challenge|Modern Super Qualifier|Modern Last Chance|Modern Showcase Qualifier"),
-#     Wins - min(Wins,na.rm = TRUE),Wins
-#     
-#     ),.before = Wins
-#     
-#     ) 
-# 
-# 
-# 
-# 
-# a %>% group_by(TournamentFile) %>% 
-#   summarise(winrate_base = sum(Wins,na.rm = TRUE)/(sum(Losses,na.rm = TRUE)+sum(Wins,na.rm = TRUE)),
-#             patch_mtg0 = sum(a,na.rm = TRUE)/(sum(Losses,na.rm = TRUE) + sum(a,na.rm = TRUE))
-#             
-#             ) %>% 
-#   mutate(confirm = winrate_base== patch_mtg0) %>% 
-#   
-#   view()
-```
+
+
 
 
 

@@ -2,15 +2,23 @@
 title: "Deck winrate Analysis"
 output: 
   html_document:
-    css: ../other_file/TOC.css
+    css: other_file/TOC.css
+    toc: true # table of content true
+    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
+    number_sections: true  ## if you want number sections at each table header
+    toc_float: true
+    theme: united  # many options for theme, this one is my favorite.
+    highlight: tango
+date: "`r Sys.Date()`"
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 knitr::opts_chunk$set(
   echo = FALSE,
   message = FALSE,
-  warning = FALSE # ,
-  # cache = TRUE
+  warning = FALSE 
 )
 library(pander)
 library("rjson")
@@ -513,6 +521,11 @@ Df_side_archetype_cards_agreg <- df_side_Archetype_long %>%
 ```
 
 
+```{r}
+# a <- df_Archetype_long %>% filter(Archetype == "Nadu")
+# 
+# write_rds(a,"test_list.rds")
+```
 
 ```{r base_card_and_variable_count}
 # First because of cards with 1 level after agreg
@@ -694,8 +707,6 @@ Model_data_base_cards <- prepare_df_for_model(
   cols_fun = "Mainboard"
   )
 
-
-
 # Intégré base card and base count
 # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
 # regression just of number of cards
@@ -703,6 +714,13 @@ result_models_variable_count_all_arch <- model_base_var_count_cards_fun(Model_da
 ```
 
 
+```{r}
+a <- result_models_variable_count_all_arch[[4]]
+car::vif(a$Model_count)
+
+b <- result_models_Uncommon_cards_all_arch[[4]]
+car::vif(b$Model_count)
+```
 
 
 
@@ -713,8 +731,6 @@ Side_Model_data_base_cards <- prepare_df_for_model(
   base_df = df_side_Archetype_long,
   cols_fun = "Sideboard"
   )
-
-
 
 # Intégré base card and base count
 # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
@@ -733,19 +749,9 @@ Model_data_Uncommon_cards <- prepare_df_for_model(
   cols_fun = "Mainboard"
   )
 
-
-
-
-
 # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
 result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(Model_data_Uncommon_cards, "Mainboard")
 ```
-
-
-
-
-
-
 
 ```{r side_model_unco_cards}
 Side_Model_data_Uncommon_cards <-  prepare_df_for_model(
@@ -758,6 +764,7 @@ Side_Model_data_Uncommon_cards <-  prepare_df_for_model(
 Side_result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(Side_Model_data_Uncommon_cards, "Sideboard")
 ```
 
+
 ```{r format_main_models}
 Base_card_variable_count_format_model <- format_model_list(result_models_variable_count_all_arch) %>%
   name_list_of_model_with_string(unique(Model_data_base_cards$Archetype))
@@ -766,6 +773,7 @@ uncomon_card_format_model <- format_model_list(result_models_Uncommon_cards_all_
   name_list_of_model_with_string(unique(Model_data_Uncommon_cards$Archetype))
 ```
 
+
 ```{r format_side_models}
 Side_Base_card_variable_count_format_model <- format_model_list(Side_result_models_variable_count_all_arch) %>%
   name_list_of_model_with_string(unique(Side_Model_data_base_cards$Archetype)) 
@@ -773,7 +781,6 @@ Side_Base_card_variable_count_format_model <- format_model_list(Side_result_mode
 Side_uncomon_card_format_model <- format_model_list(Side_result_models_Uncommon_cards_all_arch) %>%
   name_list_of_model_with_string(unique(Side_Model_data_Uncommon_cards$Archetype))
 ```
-
 
 
 
