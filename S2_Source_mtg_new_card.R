@@ -1158,7 +1158,10 @@ plot_presence_fun <- function(
     df_base,
     color_scheme,
     time_limit = Inf,
-    compare_time_limit = NULL) {
+    compare_time_limit = NULL,
+    plot_scaling = 2.25
+    
+    ) {
   # browser()
   
   df_plot_presence <- DF_presence_fun(
@@ -1226,7 +1229,9 @@ plot_presence_fun <- function(
           ]
         )
     ) %>%
-      ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
+      ggplotly(
+        tooltip = c("text"), height = (480 * plot_scaling), width = (820 * plot_scaling)
+               )
   } else {
     Plot_presence <- (
       ggplot(
@@ -1274,7 +1279,9 @@ plot_presence_fun <- function(
           ]
         )
     ) %>%
-      ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 2.25))
+      ggplotly(
+        tooltip = c("text"), height = (480 * plot_scaling), width = (820 * plot_scaling)
+               )
   }
   
   # Truc compliqué pour enlever l'overlay du texte

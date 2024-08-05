@@ -1,0 +1,43 @@
+project:
+  type: book
+  output-dir: ../outpout
+  
+book:
+  title: "modern data analysis"
+  date: today
+  chapters:
+    - index.qmd
+    - part: "New cards"
+      chapters:
+      - 1_new_card.qmd
+    - part: "Metagame"
+      chapters:
+      - 2_presence_archetype.qmd
+      - 4_matrix_WR.qmd
+    - part: "Deck winrate"
+      chapters:
+      - 3_Card_win_rate_table.qmd
+      - 5_Deck_analysis.qmd
+    - part: "Best performing deck"
+      chapters:
+      - 6_best_deck.qmd
+      - 7_last_weeks_winners.qmd
+format:
+  html:
+    theme: cosmo
+    page-layout: full
+    grid:
+      sidebar-width: 175px
+      body-width: 2250px
+      margin-width: 150px
+      # gutter-width: 1.5rem
+    # css: large_plot.css
+knitr:
+  opts_chunk:
+    out.width: "100%"
+    out.height: "100%"
+    cache: false
+    echo: false
+    message: false
+    warning: false
+fig-responsive: false

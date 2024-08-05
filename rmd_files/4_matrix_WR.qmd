@@ -1,20 +1,8 @@
 ---
-title: "Winrate matrix"
-output: 
-  html_document:
-    css: ../other_file/TOC.css
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout/result") })
+title: "Matchup matrix"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-knitr::opts_chunk$set(
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE
-)
-#
 
 library("rjson")
 library(lubridate)
@@ -120,11 +108,47 @@ df_base_all_data <- df_base %>%
 
 
 ```{r}
-Df_win_rate_matrix_base <- df_base_all_data %>%
+Df_win_rate_matrix_simple_unnest_matchup <- df_base_all_data %>%
   rowwise() %>%
   filter(!is.null(Matchups)) %>%
   unnest_longer(Matchups) %>%
-  unnest_wider(Matchups, names_sep = "_") %>%
+  unnest_wider(Matchups, names_sep = "_")
+
+
+tournament_with_matchup <- unique(Df_win_rate_matrix_simple_unnest_matchup$TournamentFile)
+
+
+Df_win_rate_matrix_correct_maccro_archetype_oppo <- Df_win_rate_matrix_simple_unnest_matchup %>% 
+  select(TournamentFile,Matchups_Opponent,Matchups_OpponentArchetype) %>% 
+  distinct(TournamentFile,Matchups_Opponent,Matchups_OpponentArchetype) %>% 
+  rename(Matchups_Opponent_basedArchetype = Matchups_OpponentArchetype) %>% 
+  group_by(TournamentFile,Matchups_Opponent) %>% 
+  left_join(
+    Df_win_rate_matrix_simple_unnest_matchup %>% 
+      select(TournamentFile,Player,Archetype,Base_Archetype),
+    by = c("TournamentFile" = "TournamentFile",
+           "Matchups_Opponent" = "Player"
+           )
+            ) %>% 
+  rename(Matchups_OpponentArchetype = Archetype)  %>% 
+  distinct()
+
+
+
+
+
+
+
+
+Df_win_rate_matrix_base <-  Df_win_rate_matrix_simple_unnest_matchup %>% 
+  select(-Matchups_OpponentArchetype) %>% 
+inner_join(Df_win_rate_matrix_correct_maccro_archetype_oppo %>%
+  select(-Base_Archetype),
+  by = c(
+    "TournamentFile",
+    "Matchups_Opponent"
+           )
+  ) %>%
   select(
     id, Meta, Week, Date, Archetype, Player,
     Matchups_Opponent, Matchups_OpponentArchetype, Matchups_Wins,
@@ -140,10 +164,22 @@ Df_win_rate_matrix_base <- df_base_all_data %>%
     Matchups_OpponentArchetype = factor(Matchups_OpponentArchetype, levels = rev(levels(Archetype)))
   )
 
+```
+
+
+```{r some_check_chunk}
+if(!all(
+  Df_win_rate_matrix_correct_maccro_archetype_oppo$Matchups_Opponent_basedArchetype == 
+  Df_win_rate_matrix_correct_maccro_archetype_oppo$Base_Archetype)){
+  print("problem in base archetype in matchup") 
+} 
 
 
 
+```
 
+
+```{r}
 Df_win_rate_matrix_summarise <- Df_win_rate_matrix_base %>%
   select(
     Archetype, Matchups_OpponentArchetype,
@@ -214,11 +250,13 @@ Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>%
 
 
 
+
+
 ggplotly remove legend
 
 
 
-```{r}
+```{r }
 plot_win_rate_mat <- function(
     Df_winrate_format,
     group_column,
@@ -485,27 +523,30 @@ Par exemple un socre de 2-1 compte comme 3 manches
 
 ### Total matrix
 
-```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format, "games", size_multiplier = 4)
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_format, "games", 
+                  size_multiplier = 3) %>%
+  bslib::card(full_screen = TRUE)
 ```
 
 ### Only significative CI
 
-```{r out.width="100%"}
+```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games",
   # simplify_tab_ratio = 0.1,
-  only_signif = TRUE, size_multiplier = 4
-)
+  only_signif = TRUE, size_multiplier = 3
+) %>%
+  bslib::card(full_screen = TRUE)
 ```
 
 ### Only more than 20 matches
 
-```{r out.width="100%"}
+```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games",
   Cut_of_number_of_data = 20,
   simplify_tab_ratio = 0.5,
   size_multiplier = 3
-)
+) %>% bslib::card(full_screen = TRUE)
 ```
 
 
@@ -520,29 +561,29 @@ Par exemple un socre de 2-1 compte comme 1 partie gagné.
 
 ### Total matrix  
 
-```{r out.width="100%"}
-plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 4)
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 3)
 ```
 
 
 ### Only significative CI
 
-```{r out.width="100%"}
+```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
   # simplify_tab_ratio = 0.5,
-  only_signif = TRUE, size_multiplier = 4
-)
+  only_signif = TRUE, size_multiplier = 3
+) %>% bslib::card(full_screen = TRUE)
 ```
 
 
 ### Only more than 20 matches
 
-```{r out.width="100%"}
+```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
   Cut_of_number_of_data = 20,
   simplify_tab_ratio = 0.5,
   size_multiplier = 3
-)
+) %>% bslib::card(full_screen = TRUE)
 ```
 
 
@@ -686,7 +727,7 @@ plot_archetype_spaghetti <- (
     panel.border = element_blank()
   )
 ) %>%
-  ggplotly(tooltip = c("text"), height = (480 * 2.25), width = (640 * 4)) %>%
+  ggplotly(tooltip = c("text"), height = (480 * 2.5), width = (840 * 2.5)) %>%
   plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
@@ -698,8 +739,8 @@ plot_archetype_spaghetti <- (
 
 
 
-```{r out.width="100%"}
-plot_archetype_spaghetti
+```{r}
+plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ```
 
 
@@ -740,8 +781,8 @@ DT::datatable(
 
 
 
-```{r out.width="100%"}
-plot_archetype_spaghetti
+```{r}
+plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ```
 
 

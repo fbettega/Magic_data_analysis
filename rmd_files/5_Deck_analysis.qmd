@@ -1,25 +1,8 @@
 ---
-title: "Deck winrate Analysis"
-output: 
-  html_document:
-    css: other_file/TOC.css
-    toc: true # table of content true
-    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
-    number_sections: true  ## if you want number sections at each table header
-    toc_float: true
-    theme: united  # many options for theme, this one is my favorite.
-    highlight: tango
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "outpout/result") })
+title: "Deck analysis"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-knitr::opts_chunk$set(
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE 
-)
 library(pander)
 library("rjson")
 library(tidyverse)
@@ -56,6 +39,8 @@ rm(tmp)
 
 
 df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+      # include filter bad deck
+  filter(Valide_deck) %>% 
   mutate(
     Deck_winrate = winrate_1_data(Wins, Losses)
   ) %>%
@@ -715,11 +700,11 @@ result_models_variable_count_all_arch <- model_base_var_count_cards_fun(Model_da
 
 
 ```{r}
-a <- result_models_variable_count_all_arch[[4]]
-car::vif(a$Model_count)
-
-b <- result_models_Uncommon_cards_all_arch[[4]]
-car::vif(b$Model_count)
+# a <- result_models_variable_count_all_arch[[4]]
+# car::vif(a$Model_count)
+# 
+# b <- result_models_Uncommon_cards_all_arch[[4]]
+# car::vif(b$Model_count)
 ```
 
 

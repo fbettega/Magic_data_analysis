@@ -176,16 +176,31 @@ df_export_pre_60_filter <- json_parsing %>%
   mutate(Archetype = make.names(Archetype))
 
 
+
 rm(json_parsing)
 Not_60_cards_main <- df_export_pre_60_filter %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_") %>%
   group_by(id) %>%
-  summarise(Number_of_main_deck_cards = sum(Mainboard_Count)) %>%
-  filter(Number_of_main_deck_cards < 60)
+  summarise(Number_of_main_deck_cards = sum(Mainboard_Count) ) %>%
+  mutate(Valide_deck = Number_of_main_deck_cards >= 60) 
+
+
+
+
 
 df_export <- df_export_pre_60_filter %>%
-  filter(id %notin% Not_60_cards_main$id)
+  left_join(Not_60_cards_main, by = c("id")) %>% 
+  mutate(
+    Valide_deck = if_else(
+      is.na(Valide_deck),
+      FALSE,Valide_deck),
+    Number_of_main_deck_cards = if_else(
+      is.na(Number_of_main_deck_cards),0,
+      Number_of_main_deck_cards)    
+         )
+  
+  # filter(id %notin% Not_60_cards_main$id)
 
 rm(df_export_pre_60_filter, Not_60_cards_main)
 

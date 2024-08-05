@@ -1,12 +1,8 @@
 ---
-title: "Carte Dans les nouveaux set"
-output: 
-  html_document:
-    css: ../other_file/TOC.css
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout/result") })
+title: "New cards"
 ---
+
+
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 # Note globale
@@ -16,13 +12,6 @@ knit: (function(inputFile, encoding) {
 # Reflechir a passer en shiny
 #
 # ajouter une colonne nombre de deck
-
-knitr::opts_chunk$set(
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE
-)
-
 library(binom)
 library("rjson")
 library(kableExtra)
@@ -30,10 +19,10 @@ library(tidyverse)
 library(scryr)
 source("../S2_Source_mtg_new_card.R",local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
-
-
 refetch_cards_new_set <- FALSE
 ```
+
+
 
 
 
@@ -124,7 +113,6 @@ Count_cards_in_decklist <- function(df, Name_of_card_of_interest, colname_deck_l
 # )
 
 # Fonction that count + win rates cards in given arhcetype
-
 Count_and_winrates_cards_in_decklist <- function(df, Name_of_card_of_interest, colname_deck_list, filter_archetype_count = 10) {
   winrate_by_archetype <- df %>%
     filter(!is.na(Wins)) %>%
@@ -143,14 +131,6 @@ Count_and_winrates_cards_in_decklist <- function(df, Name_of_card_of_interest, c
   } else {
     expected_min_size <- 0
   }
-
-
-
-
-
-
-
-
   df_new_card_base <- df %>%
     filter(!is.na(Wins)) %>%
     filter(!is.null(!!colname_deck_list)) %>%
@@ -299,6 +279,8 @@ Count_and_winrates_cards_in_decklist <- function(df, Name_of_card_of_interest, c
 
 ```{r data_reading }
 df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+      # include filter bad deck
+  filter(Valide_deck) %>% 
   mutate(
     Deck_winrate = Wins / (Losses + Wins)
   ) %>%
@@ -314,14 +296,22 @@ modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
 
 
 ```{r}
-if (refetch_cards_new_set){
-  
-  cards_in_set_of_interest <- scry_cards("e:mh3")
-  cards_in_set_of_interest_name <- cards_in_set_of_interest$name
-  write_rds(cards_in_set_of_interest_name,"../data/intermediate_result/list_of_new_cards")
-} else {
-  cards_in_set_of_interest_name <- read_rds("../data/intermediate_result/list_of_new_cards")
-}
+set_code_help_search <- modern_DB_card %>% 
+  arrange(desc(released_at)) %>%
+  select(released_at,set) %>% 
+  distinct(set,.keep_all = TRUE)
+
+## all code to pull cards new to moder
+# if (refetch_cards_new_set) {
+#   cards_in_set_of_interest <- scry_cards(
+#     paste0("e:",set_code_help_search$set %>% head(7),collapse = " or ")
+#     # "e:mh3"
+#     )
+#   cards_in_set_of_interest_name <- cards_in_set_of_interest$name
+#   write_rds(cards_in_set_of_interest_name,"../data/intermediate_result/list_of_new_cards")
+# } else {
+#   cards_in_set_of_interest_name <- read_rds("../data/intermediate_result/list_of_new_cards")
+# }
 ```
 
 
@@ -336,19 +326,16 @@ exclude_cards <- c(
 
 
 card_of_interest <- modern_DB_card %>%
-  filter(name %in% cards_in_set_of_interest_name,
-         name %notin% exclude_cards,
-         !str_detect(type_line,"Basic Land — "),
-         #& !reprint
+  filter(
+    set %in% (set_code_help_search$set %>% head(7)),
+     !reprint,
+    # name %in% cards_in_set_of_interest_name,
+    # name %notin% exclude_cards,
+    # !str_detect(type_line,"Basic Land — ")
          ) %>% 
   mutate(
     name = str_remove(name,"\\s? //.+")
          )
-
-
-
-
-
 ```
 
 
@@ -432,9 +419,12 @@ selection_content[0].innerHTML = content_str;
 Inclues les leagues (5-0) pour le compte des nouvelles cartes même si aucun winrate
 
 ```{r data_select_with_new_card_main_L}
-df_new_card_main_base <- df_export %>%
+
+df_main_unnest <- df_export %>%
   unnest_longer(Mainboard) %>%
-  unnest_wider(Mainboard, names_sep = "_") %>%
+  unnest_wider(Mainboard, names_sep = "_")
+
+df_new_card_main_base <- df_main_unnest %>%
   filter(Mainboard_CardName %in% card_of_interest$name)
 ```
 
@@ -467,77 +457,29 @@ General_presence_sideboard <- Count_cards_in_decklist(
 ```
 
 
-## New cards list
-
-```{r}
-Bulk_new_cards <- rbind( df_new_card_main_base  %>% 
-  select(Mainboard_Count,Mainboard_CardName,id) %>% 
-  rename(Count = 1 , CardName = 2) ,
-  df_export %>%
-  unnest_longer(Sideboard) %>%
-  unnest_wider(Sideboard, names_sep = "_") %>%
-  filter(Sideboard_CardName %in% card_of_interest$name) %>% 
-  select(Sideboard_Count,Sideboard_CardName,id) %>% 
-  rename(Count = 1 , CardName = 2)
-  ) %>% 
-  group_by(CardName,id) %>% 
-  summarise(
-    Count = sum(Count) ,
-    .groups = "drop"
-    ) %>% 
-  group_by(CardName) %>% 
-  summarise(
-    Max = max(Count),
-    Count = n()
-            )
-
-already_save <- read.delim(
-  "../data/save_mh3_cards.txt",
-  header = FALSE ,
-  blank.lines.skip = FALSE
-  ) %>% 
-  mutate(
-    V1 = trimws(str_remove(V1,"^\\d+"))
-  )
-
-tresh_hold_to_put_in_file <- 10
-  
-write_new_cards_df <- Bulk_new_cards %>%
-      filter(Count > tresh_hold_to_put_in_file,
-             !(CardName %in% already_save$V1)) 
-
-writeLines(
-  paste0(
-     write_new_cards_df %>%
-      pull(Max)," ",
-   write_new_cards_df %>%
-      pull(CardName)),
-  "../data/intermediate_result/played_mh3_cards.txt")
-
-```
 
 ```{r html_new_cards_table}
-
-Bulk_new_cards_show_html <- Bulk_new_cards  %>% 
-  left_join(
-    card_of_interest %>%
-      select(name,rarity,scryfall_uri),
-    by = c("CardName" = "name")
-    ) %>% 
-  mutate(
-    rarity = as.factor(rarity),
-    CardName = paste0('<a href=\"',scryfall_uri,'">',CardName,'</a>'),
-    CardName = as.factor(CardName)
-         ) %>% 
-  select(-scryfall_uri) %>% 
-  arrange(desc(Count)) 
-
-
-
-
-DT::datatable(Bulk_new_cards_show_html, escape = FALSE,
-  filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25))
+# 
+# Bulk_new_cards_show_html <- Bulk_new_cards  %>% 
+#   left_join(
+#     card_of_interest %>%
+#       select(name,rarity,scryfall_uri),
+#     by = c("CardName" = "name")
+#     ) %>% 
+#   mutate(
+#     rarity = as.factor(rarity),
+#     CardName = paste0('<a href=\"',scryfall_uri,'">',CardName,'</a>'),
+#     CardName = as.factor(CardName)
+#          ) %>% 
+#   select(-scryfall_uri) %>% 
+#   arrange(desc(Count)) 
+# 
+# 
+# 
+# 
+# DT::datatable(Bulk_new_cards_show_html, escape = FALSE,
+#   filter = "top", rownames = FALSE,
+#   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25))
 ```
 
 
@@ -590,9 +532,6 @@ for (var i = 0; i < tips.length; i++) {
 
 
 ## sideboard_card
-
-
-
 ```{r}
 DT::datatable(
   full_join(
@@ -635,3 +574,61 @@ for (var i = 0; i < tips.length; i++) {
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
 )
 ```
+
+
+
+::: {.content-visible when-profile="collection_tracking"}
+
+
+## New cards list
+
+```{r}
+
+
+# Bulk_new_cards <-
+#   rbind( df_main_unnest  %>% 
+#   select(Mainboard_Count,Mainboard_CardName,Archetype,id) %>% 
+#   rename(Count = 1 , CardName = 2) %>% 
+#   mutate(main_side = "Main"),
+#   df_export %>%
+#   unnest_longer(Sideboard) %>%
+#   unnest_wider(Sideboard, names_sep = "_") %>%
+#   select(Sideboard_Count,Sideboard_CardName,Archetype,id) %>% 
+#   rename(Count = 1 , CardName = 2) %>% 
+#   mutate(main_side = "Side")
+#   ) 
+# 
+# 
+# a <- Bulk_new_cards %>% 
+#   group_by(Archetype,CardName,main_side,Count) %>% 
+#   summarise(
+#     nb_ite = n() ,
+#     .groups = "drop"
+#     ) 
+
+```
+
+
+
+
+
+# Cards in deck and not in collection 
+
+## Mainboard
+
+## SideBoard
+
+
+
+:::
+ 
+
+
+
+
+
+
+
+
+
+

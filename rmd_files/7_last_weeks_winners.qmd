@@ -1,27 +1,9 @@
 ---
-title: "Last weeks winner"
-output: 
-  html_document:
-    css: ../other_file/TOC.css
-    toc: true # table of content true
-    toc_depth: 3  # upto three depths of headings (specified by #, ## and ###)
-    number_sections: true  ## if you want number sections at each table header
-    toc_float: true
-    theme: united  # many options for theme, this one is my favorite.
-    highlight: tango
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout/result") })
+title: "Last winners"
 ---
 
 
-
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-knitr::opts_chunk$set(
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE
-)
 library(pander)
 library("rjson")
 library(tidyverse)
@@ -39,6 +21,8 @@ modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
 
 
 df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+      # include filter bad deck
+  filter(Valide_deck) %>% 
   mutate(
     Deck_winrate = winrate_1_data(Wins, Losses)
   ) %>%

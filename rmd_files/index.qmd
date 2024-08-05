@@ -1,21 +1,15 @@
 ---
 title: "Overview of results"
-output: 
-  html_document:
-    css: ../other_file/TOC.css
-date: "`r Sys.Date()`"
-knit: (function(inputFile, encoding) {
-  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout") })
 ---
 
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-knitr::opts_chunk$set(
-  echo = FALSE,
-  message = FALSE,
-  warning = FALSE #,
-   # cache = TRUE
-)
+# knitr::opts_chunk$set(
+#   echo = FALSE,
+#   message = FALSE,
+#   warning = FALSE,
+#    cache = TRUE
+# )
 library(tidyverse)
 library(gt)
 source("../S2_Source_mtg_new_card.R",local = TRUE)
@@ -53,9 +47,9 @@ df_export <- readRDS("../data/data_meta_en_cours.rds")
 Table_with_arch_count_and_sub_count <- df_export %>%
   select(
     # id,Week,Color,
-    Archetype,Base_Archetype,ReferenceArchetype_Archetype) %>% 
+    Valide_deck,Archetype,Base_Archetype,ReferenceArchetype_Archetype) %>% 
   mutate(across(Archetype:ReferenceArchetype_Archetype, ~ as.numeric(table(.x)[as.character(.x)]), .names = "count_{.col}")) %>% 
-  group_by(Archetype) %>% 
+  group_by(Archetype,Valide_deck) %>% 
   mutate(across(Base_Archetype:ReferenceArchetype_Archetype, ~ as.numeric(table(.x)[as.character(.x)]), .names = "count_in_arch_{.col}")) %>% 
   distinct() %>% 
   arrange(desc(count_Archetype)) %>% 
@@ -81,14 +75,17 @@ Table_with_arch_count_and_sub_count <- df_export %>%
              count_ReferenceArchetype_Archetype
              )
          ) %>% 
-  select(Archetype,
+  select(
+    Valide_deck,
+    Archetype,
          Base_Archetype,
          ReferenceArchetype_Archetype,
          starts_with("proportion_")
          ) %>% 
   rename(Custom = Base_Archetype,
          Reference = ReferenceArchetype_Archetype
-         )
+         ) %>% 
+  ungroup()
 
 ```
 
@@ -170,7 +167,8 @@ Subtitle <- paste0(
 )
 
 Table_with_arch_count_and_sub_count  %>%
-
+  filter(Valide_deck) %>% 
+  select(-Valide_deck) %>% 
   gt::gt(groupname_col = "Archetype") %>%  
   gt::text_transform(
     locations = cells_row_groups(),
@@ -213,6 +211,57 @@ Table_with_arch_count_and_sub_count  %>%
     )
 ```
 
+
+
+```{r}
+# recalculer les quatités ..... TODO
+title_table_invalide <- paste0(
+  "**Invalid deck (< 60 cards) Tabler summarise how the archetypes are aggregated**"
+  )
+
+Table_with_arch_count_and_sub_count  %>%
+  filter(!Valide_deck) %>%
+  select(-Valide_deck) %>%
+  gt::gt(groupname_col = "Archetype") %>%
+  gt::text_transform(
+    locations = cells_row_groups(),
+    fn = function(x) {
+      lapply(x, function(x) {
+        gt::md(x)
+      })
+     }
+  ) %>%
+  tab_options(row_group.as_column = TRUE) %>%
+  tab_spanner(
+    label = md("**Parser**"),
+    columns = c(Custom, Reference)
+  )  %>%
+  tab_spanner(
+    label = md("**Custom**"),
+    columns = c(proportion_Base_Arch_in_Arch,proportion_Arch_in_Base_Arch)
+  ) %>%
+  tab_spanner(
+    label = md("**Reference**"),
+    columns = c(proportion_Ref_Arch_in_Arch,proportion_Arch_in_Ref_Arch)
+  ) %>%
+   cols_label(
+    proportion_Base_Arch_in_Arch = md("Percent Archetype"),
+    proportion_Arch_in_Base_Arch = md("Percent Sub Archetype"),
+    proportion_Ref_Arch_in_Arch = md("Percent Archetype"),
+    proportion_Arch_in_Ref_Arch = md("Percent Sub Archetype")
+  ) %>%
+  gt::cols_align(
+    align = c("center"),
+    columns = everything()
+  ) %>%
+  gt::tab_header(
+    title = gt::md(title_table_invalide)
+  ) %>%
+  gt::tab_options(
+    # column_labels.hidden = TRUE,
+    table.layout = "Auto"
+    )
+```
 
 
 
