@@ -1667,7 +1667,7 @@ pander::pandoc.p("")
 #######################  Intro of script 6  #####################################
 ## ---- Introduction_chunk_6_best_deck
 min_sample_size_6 <- 25
-filter_archetype_count_6 <- 75
+filter_archetype_count_6 <- 50
 
 
 Introduction_char_vec_par_6_1 <- paste0("This analysis attempts to use regression to determine the decks with the best performance.\n

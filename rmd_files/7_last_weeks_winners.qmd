@@ -147,7 +147,7 @@ top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
     return(Unnest_filter_table)
   }
   
-  
+  browser()
   Df_combine <- rbind(
     unlist_side_or_main_deck_winner(
       Tournament_of_interest_en_cours, 

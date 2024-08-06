@@ -288,10 +288,11 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
       -id,-proba,
       -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
       -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
-      -ReferenceArchetype_Companion,- matches,-Base_Archetype,-Archetype_count,-Matchups
+      -ReferenceArchetype_Companion,- matches,-Base_Archetype,
+      -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck
     ) %>% 
     mutate(Date = lubridate::date(Date))%>% 
-    select(-not_colfuns) %>% 
+    select(-all_of(not_colfuns)) %>% 
     filter(Week >= (max(Week) - Week_fun)) %>% 
     filter(Archetype == Archetype_fun) %>%
     filter(type_of_model == Model) %>% 
@@ -299,12 +300,16 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
     arrange(rank) %>% 
     mutate(rank = 1:nrow(.)) %>% 
     mutate(Player = paste0('[',rank,'](',AnchorUri,')'))%>% 
-    select(-AnchorUri#,-rank
+    select(
+      -AnchorUri#,-rank
     ) %>%
     unnest_longer(!!rlang::sym(cols_fun)) %>%
     unnest_wider(!!rlang::sym(cols_fun), names_sep = "_") %>% 
     mutate(Main_or_side = cols_fun) %>% 
-    rename(Count = paste0(cols_fun, "_Count") ,CardName = paste0(cols_fun, "_CardName"))
+    rename(
+      Count = paste0(cols_fun, "_Count") ,
+      CardName = paste0(cols_fun, "_CardName")
+      )
   }
   
   return(Unnest_filter_table)
@@ -328,104 +333,103 @@ table_generator_sub_fun <- function(
     top_x_rank, 
     Week_fun,
     maind_and_side = "All" #"Main" "Side"
-  ){
+){
   
   if(is.null(df_fun)){
     Table_result <- NULL
-    }else{
-  
-  Table_main_side <- df_fun %>%
-  mutate(
-    Tournament = Tournament_agreger(Tournament),
-    Player = paste0(Player, "<br>", Tournament, "<br>Week : ", Week),
-  ) %>%
-  select(
-    -rank, -Tournament,
-    -Week, -type_of_model, -Date, -Archetype, -Deck_winrate
-  ) %>%
-  pivot_wider(
-    names_from = Player,
-    values_from = c(Count),
-    values_fill = 0
-  ) %>%
-  rowwise() %>%
-  # Récupération des divers deck pour obtenir les stat desc par cartes
-  mutate(
-    mean_number = round(mean(c_across(starts_with(
-      "[" # "<a href=https://"
-    ))), 1),
-    min_number = min(c_across(starts_with(
-      "[" # "<a href=https://"
-    ))),
-    max_number = max(c_across(starts_with(
-      "[" # "<a href=https://"
-    ))),
-    .before = 3
-  ) %>%
-  ungroup() %>%
-  mutate(CardName = paste0(CardName, "<br>", mean_number, "[", min_number, ";", max_number, "]")) %>%
-  select(-c(mean_number, min_number, max_number))
-
-title_table <- paste0(
-  "Top ", top_x_rank,
-  " best performing ",ifelse(
-    maind_and_side == "All","list",
-    ifelse(
-      maind_and_side == "Main","Mainboard","Sideboard"
-    )),
-  " in ",
-  ifelse(Week_fun == Inf, "all data ",
-         paste0("last ", Week_fun, " weeks ")
-  ),
-  "**Archetype : ", Archetype_fun, "**"
-)
-
-Subtitle <- paste0(
-  "`Using quasibinomial regression models ",
-  ifelse(Model == "cout", "with each possible number of cards",
-         "with absence vs presence for each cards"
-  ), "`"
-)
-
-
-Table_result <- Table_main_side %>%
-      select(-Main_or_side) %>% 
-      rename(` ` = CardName	 ) %>% 
-    #   group_by(Main_or_side) %>%
-    #   gt::gt(rowname_col = "CardName") %>%
-    #   gt::cols_label(
-    #     .fn = gt::md,
-    #     .process_units = TRUE
-    #   ) %>%
-    #   gt::fmt_markdown(columns = everything()) %>%
-    #   gt::tab_style(
-    #     style = gt::cell_text(weight = "bold"),
-    #     locations = gt::cells_row_groups()
-    #   ) %>%
-    #   gt::opt_stylize(style = 5, color = "cyan", add_row_striping = TRUE) %>%
-    #   gt::cols_align(
-    #     align = c("center"),
-    #     columns = everything()
-    #   ) %>%
-    #   gt::tab_header(
-    #     title = gt::md(title_table),
-    #     subtitle = gt::md(Subtitle)
-    #   )
-    # 
-    # Table_main_side %>%
-      knitr::kable(format = "html",escape = FALSE,
-      caption = paste0(title_table,"<br>", #"\\\\",
-                       "\\scriptsize ",Subtitle
-                       )
-      ) %>% 
-      kableExtra::kable_styling(bootstrap_options = "striped",  position = "center") %>% 
-     kableExtra::pack_rows(index = table(Table_main_side$Main_or_side))
-
+  }else{
+    Table_main_side <- df_fun %>%
+      mutate(
+        Tournament = Tournament_agreger(Tournament),
+        Player = paste0(Player, "<br>", Tournament, "<br>Week : ", Week),
+      ) %>%
+      select(
+        -rank, -Tournament,
+        -Week, -type_of_model, -Date, -Archetype, -Deck_winrate
+      ) %>%
+      pivot_wider(
+        names_from = Player,
+        values_from = c(Count),
+        values_fill = 0
+      ) %>%
+      rowwise() %>%
+      # Récupération des divers deck pour obtenir les stat desc par cartes
+      mutate(
+        mean_number = round(mean(c_across(starts_with(
+          "[" # "<a href=https://"
+        ))), 1),
+        min_number = min(c_across(starts_with(
+          "[" # "<a href=https://"
+        ))),
+        max_number = max(c_across(starts_with(
+          "[" # "<a href=https://"
+        ))),
+        base_deck_cards =min_number == max_number ,
+        .before = 3
+      ) %>%
+      ungroup() %>%
+      mutate(
+        CardName = 
+          ifelse(
+            base_deck_cards,
+            paste0(
+              CardName, " ",
+              mean_number
+              ),
+            paste0(
+              CardName, "<br>",
+              mean_number, "[",
+              min_number, ";",
+              max_number, "]"
+                   )
+                 )
+             ) %>%
+      select(-c(mean_number, min_number, max_number))
     
-}
-
-
-return(Table_result)
+    title_table <- paste0(
+      "Top ", top_x_rank,
+      " best performing ",ifelse(
+        maind_and_side == "All","list",
+        ifelse(
+          maind_and_side == "Main","Mainboard","Sideboard"
+        )),
+      " in ",
+      ifelse(Week_fun == Inf, "all data ",
+             paste0("last ", Week_fun, " weeks ")
+      ),
+      "**Archetype : ", Archetype_fun, "**"
+    )
+    
+    Subtitle <- paste0(
+      "`Using quasibinomial regression models ",
+      ifelse(Model == "cout", "with each possible number of cards",
+             "with absence vs presence for each cards"
+      ), "`"
+    )
+    
+    
+    Table_result <- Table_main_side %>%
+      dplyr::arrange(Main_or_side,desc(base_deck_cards)) %>% 
+      select(-Main_or_side,-base_deck_cards) %>% 
+      rename(` ` = CardName) %>% 
+      knitr::kable(
+        format = "html",escape = FALSE,
+        caption = paste0(title_table,"<br>", #"\\\\",
+                         "\\scriptsize ",Subtitle
+                   )
+      ) %>% 
+      kableExtra::kable_styling(
+        bootstrap_options = "striped",  position = "center"
+        ) %>% 
+      kableExtra::pack_rows(
+        index = table(Table_main_side$Main_or_side)
+        )
+    
+    
+  }
+  
+  
+  return(Table_result)
 }
 
 
@@ -880,6 +884,8 @@ Best_maindeck_res_model <- model_total_cards_fun(Main_deck_Total_df_model, "Main
 Best_sideboard_res_model <- model_total_cards_fun(Side_Total_df_model, "Sideboard")
  
 ```
+
+
 
 ```{r}
 res_global <- Get_best_deck_from_model(
