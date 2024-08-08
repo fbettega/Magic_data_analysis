@@ -165,9 +165,7 @@ model_total_cards_fun <- function(df_fun, cols_fun) {
     
   }
   
-  
-  
-  
+
   model_unco_fun <- lapply(
     unique(df_fun$Archetype),
     function(x) {
@@ -449,7 +447,7 @@ Best_deck_get_table_function <- function(res_fun_init_main,
                                          Week_fun#,
                                           
                                          ) {
-  if(identical(res_fun_init_main , res_fun_init_side)){
+  if (identical(res_fun_init_main , res_fun_init_side)) {
     Df_combine <- rbind(
     unlist_side_or_main(
       res_fun_init_main, Archetype_fun, Model,
@@ -502,7 +500,7 @@ Best_deck_get_table_function <- function(res_fun_init_main,
     )
     
     format_table <- list(
-      main = format_table_side,
+      main = format_table_main,
       side = format_table_side
                          )
   }

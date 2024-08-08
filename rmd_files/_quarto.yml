@@ -1,7 +1,6 @@
 project:
   type: book
   output-dir: ../outpout
-  
 book:
   title: "modern data analysis"
   date: today
@@ -10,6 +9,7 @@ book:
     - part: "New cards"
       chapters:
       - 1_new_card.qmd
+      - 1_1_collection_analysis.qmd
     - part: "Metagame"
       chapters:
       - 2_presence_archetype.qmd

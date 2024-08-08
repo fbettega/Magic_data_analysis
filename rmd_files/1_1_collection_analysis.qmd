@@ -1,0 +1,469 @@
+---
+title: "Collection Tracker"
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
+library(binom)
+library("rjson")
+library(kableExtra)
+library(tidyverse)
+library(scryr)
+source("../S2_Source_mtg_new_card.R",local = TRUE)
+conflicted::conflicts_prefer(dplyr::filter)
+```
+
+
+```{r data_reading }
+df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+      # include filter bad deck
+  filter(Valide_deck) %>% 
+  mutate(
+    Deck_winrate = Wins / (Losses + Wins)
+  ) %>%
+  group_by(Archetype) %>% 
+  mutate(
+    Archetype_count = n()
+  ) %>% 
+    ungroup()
+
+modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
+
+path_collection <- 
+  list.files(
+      path = "../data/",pattern = "^archidekt-collection-export-",
+               full.names = TRUE)
+```
+
+
+```{r}
+knitr::opts_chunk$set(
+  eval = length(path_collection) > 0
+)
+
+```
+
+
+
+```{r}
+basic_land_list <- c(
+  "Swamp", "Mountain", "Plains", "Island", "Forest","Wastes"
+  )
+
+Deck_list_cards_count <-
+  rbind(   df_export %>%
+  unnest_longer(Mainboard) %>%
+  unnest_wider(Mainboard, names_sep = "_")  %>%
+  select(Mainboard_Count,Mainboard_CardName,Archetype,Base_Archetype,id) %>%
+  rename(Count = 1 , CardName = 2)   %>%
+  mutate(main_side = "Main"),
+  df_export %>%
+  unnest_longer(Sideboard) %>%
+  unnest_wider(Sideboard, names_sep = "_") %>%
+  select(Sideboard_Count,Sideboard_CardName,Archetype,Base_Archetype,id) %>%
+  rename(Count = 1 , CardName = 2) %>%
+  mutate(main_side = "Side")
+  ) %>% 
+  group_by(
+    id,
+    CardName,
+    Archetype,
+    Base_Archetype
+    ) %>% 
+  summarise(Count = sum(Count),.groups = "drop") %>% 
+  filter(
+    !(CardName %in% c(
+    basic_land_list,
+    paste0(
+      "Snow-Covered ",basic_land_list
+      )  
+    )   
+    )  
+    ) %>% 
+  rownames_to_column("cards_id_temp")
+
+
+
+
+collection_archi <- 
+  read.csv(
+    path_collection
+    ) %>% 
+  group_by(Name) %>% 
+  summarise(Quantity = sum(Quantity)) %>% 
+  rownames_to_column("collect_id")
+
+
+
+
+initial_match <-  Deck_list_cards_count %>% 
+  inner_join(
+    collection_archi,
+    by = c("CardName" = "Name")
+    ) 
+
+match_double_face <-  Deck_list_cards_count %>% 
+  filter(cards_id_temp %notin% initial_match$cards_id_temp) %>% 
+    inner_join(
+      collection_archi %>% 
+        filter(collect_id %notin% initial_match$collect_id) %>% 
+        mutate(
+          Name = str_remove(Name,"\\s+//.*$")
+          ),
+    by = c("CardName" = "Name")
+    )
+
+
+match_deck_and_collection <- rbind(
+  initial_match,
+  match_double_face,
+  Deck_list_cards_count %>%
+    filter(cards_id_temp %notin% c(
+      match_double_face$cards_id_temp,
+      initial_match$cards_id_temp)
+      ) %>% 
+    mutate(
+      Quantity = 0,
+      collect_id = NA
+           )
+  ) %>% 
+  select(-c(cards_id_temp,collect_id))
+
+
+
+```
+
+
+
+```{r}
+not_owned_cards <- 
+  match_deck_and_collection %>% 
+  mutate(
+    Quantity = ifelse(is.na(Quantity),0,Quantity),
+    missing = Count - Quantity
+  ) %>% 
+  group_by(Archetype) %>% 
+  mutate(
+    Archetype_count = n_distinct(id)
+  ) %>% 
+  ungroup() %>% 
+  group_by(Base_Archetype) %>% 
+  mutate(
+    Base_Archetype_count = n_distinct(id)
+  ) %>% 
+  ungroup() %>% 
+  filter(missing > 0) %>% 
+  group_by(id) %>% 
+   mutate(
+     Number_of_card_missing_in_deck = sum(missing),
+     Number_of_distinct_card_missing_in_deck = n()
+  ) %>% 
+  ungroup() %>% 
+  mutate(
+    Quantity = paste0(Quantity,"/",Count)
+  ) %>% 
+  select(-Count) %>% 
+  group_by(CardName,Quantity,Archetype) %>% 
+  mutate(n_quant_arch = n()) %>% 
+  ungroup() %>% 
+  group_by(CardName,Quantity,Base_Archetype) %>% 
+  mutate(n_quant_base_arch = n()) %>% 
+  ungroup() #%>% 
+```
+
+
+# Cards in deck and not in collection 
+
+## Number of missing cards by archetype 
+
+```{r}
+
+value_to_string_with_mean_min_max <- function(x){
+            paste0(
+            round(mean(x),1) , " [",
+            min(x) ," ; ", max(x),"]"
+            )
+}
+
+
+Summary_missing_cards_by_archetype <-
+  df_export %>%
+  distinct(Archetype) %>%
+  right_join(
+    not_owned_cards %>%
+      group_by(Archetype) %>%
+      mutate(
+        number_of_deck_with_missing = n_distinct(id),
+        Number_of_card_missing_in_deck = 
+          value_to_string_with_mean_min_max(Number_of_card_missing_in_deck),
+        Number_of_distinct_card_missing_in_deck = 
+          value_to_string_with_mean_min_max(Number_of_distinct_card_missing_in_deck)
+      ) %>%
+      group_by(
+        Archetype, CardName, 
+        number_of_deck_with_missing,
+        Number_of_card_missing_in_deck,
+        Number_of_distinct_card_missing_in_deck
+      ) %>%
+      summarise(
+        Number_of_missing = max(missing),
+        Archetype_count = unique(Archetype_count),
+        .groups = "drop"
+      ) %>%
+      group_by(Archetype) %>%
+      mutate(
+        Number_of_missing = sum(Number_of_missing)
+      ) %>%
+      ungroup() %>%
+      distinct(
+        Archetype,
+        Number_of_missing,
+        Archetype_count,
+        number_of_deck_with_missing,
+        Number_of_card_missing_in_deck,
+        Number_of_distinct_card_missing_in_deck
+      ),
+    by = "Archetype"
+  ) %>%
+  arrange(
+    desc(Archetype_count)
+    ) %>%
+  mutate(
+    Number_of_missing = if_else(
+      is.na(Number_of_missing), 0,
+      Number_of_missing
+    ),
+    number_of_deck_with_missing = if_else(
+      is.na(number_of_deck_with_missing), 0,
+      number_of_deck_with_missing
+    ),
+    number_of_deck_without_missing = Archetype_count - number_of_deck_with_missing,
+    Archetype = as.factor(paste0(Archetype, " : ", Archetype_count)),
+    number_of_deck_with_missing = number_of_deck_with_missing,
+    Percent_of_deck_with_missing_cards = number_of_deck_with_missing / Archetype_count
+  ) %>%
+  select(-Archetype_count)
+
+
+
+ # print(
+      htmltools::tagList(
+      DT::datatable( 
+        Summary_missing_cards_by_archetype,
+        colnames = str_replace_all(colnames(Summary_missing_cards_by_archetype), "_", " "),
+  filter = "top", rownames = FALSE,
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
+) %>% 
+  DT::formatPercentage(c("Percent_of_deck_with_missing_cards"), 1)
+)
+     # )
+```
+
+
+#  Archetype 
+
+```{r}
+Archetype_list <- df_export %>%
+  filter(Archetype_count > 20) %>% 
+  arrange(desc(Archetype_count)) %>% 
+  pull(Archetype) %>%
+  unique() # %>%   sort()
+
+not_own_car_by_archetype_without_any <- not_owned_cards %>%
+  select(
+    -c(
+      id,Base_Archetype,
+      Base_Archetype_count,n_quant_base_arch
+      )
+    ) %>% 
+  distinct(
+    Archetype,
+    CardName,
+    Quantity,
+    .keep_all = TRUE
+    ) %>%
+    group_by(Archetype,CardName) %>% 
+    mutate(max_missing_quantity = max(missing)) %>% 
+    ungroup() %>% 
+  mutate(
+    Archetype_count = 
+      round(n_quant_arch/Archetype_count,1)
+  ) %>% 
+  distinct() %>% 
+    ungroup() %>% 
+  select(-missing) %>% 
+    mutate(across(where(is.character),as.factor))
+
+not_own_car_by_archetype <- 
+  rbind(
+  not_own_car_by_archetype_without_any %>% 
+  group_by(Archetype,CardName) %>% 
+  summarise(
+    Quantity = "Any",
+    Archetype_count = sum(Archetype_count),
+    n_quant_arch = sum(n_quant_arch),
+    max_missing_quantity = unique(max_missing_quantity),
+    .groups = "drop"
+  ),
+  not_own_car_by_archetype_without_any %>% 
+    select(
+      -c(
+        Number_of_card_missing_in_deck,
+        Number_of_distinct_card_missing_in_deck
+        )
+      )
+  ) %>% 
+  rename(Number_of_time_missing = n_quant_arch) %>% 
+  mutate(Quantity = as.factor(Quantity))
+
+```
+
+
+
+```{r, results='asis'}
+for (i in Archetype_list) {
+  # Inserts Month titles
+  # Section contents
+  pander::pandoc.header(i, level = 2)
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+  pander::pandoc.p(
+    paste0("Number of deck : ",not_owned_cards %>%
+  filter(Archetype == i) %>% 
+    pull(Archetype_count) %>% 
+    unique())
+  )
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+  if (i %in% not_owned_cards$Archetype) {
+    print(
+      htmltools::tagList(
+      DT::datatable(
+  not_own_car_by_archetype %>%
+  filter(Archetype == i) %>% 
+    select(-Archetype) %>% 
+    arrange(desc(Number_of_time_missing)),
+   colnames = str_replace_all(colnames(
+     not_own_car_by_archetype %>% 
+       select(-Archetype)), "_", " "),
+  filter = "top", rownames = FALSE,
+  # extensions = c("SearchBuilder", "DateTime"),
+  options = list(
+    dom = "ltipr", 
+  searchBuilder = TRUE,
+     searchCols = list(
+    NULL,
+    list(search = '["Any"]' ),
+    NULL,
+    list(search = '10 ...'),
+    NULL
+  ),
+    autoWidth = TRUE, 
+    pageLength = 25
+    )
+) %>% 
+  DT::formatPercentage(c("Archetype_count"), 1)
+)
+    )
+    pander::pandoc.p("")
+    pander::pandoc.p("")
+  } 
+  # else {
+  #   pander::pandoc.p("No cards missing")
+  # }
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+
+}
+```
+
+
+# Base Archetype
+
+```{r}
+base_archetype_not_owned_without_any <-   
+  not_owned_cards %>%
+  select(-c(id,Archetype,Archetype_count,n_quant_arch)) %>% 
+    group_by(Base_Archetype,CardName) %>% 
+    mutate(max_missing_quantity = max(missing)) %>% 
+    ungroup() %>% 
+    
+  group_by(
+    Base_Archetype,
+    CardName,
+    Quantity
+    ) %>% 
+  mutate(
+    # n_quant_base_arch = sum(n_quant_base_arch),
+    Base_Archetype_count = #paste0(
+      n_quant_base_arch/Base_Archetype_count
+     # "(",Base_Archetype_count,")")
+  ) %>% 
+  distinct() %>% 
+    ungroup() 
+
+
+base_archetype_not_owned <- rbind(
+  base_archetype_not_owned_without_any,
+  not_owned_cards %>%
+  select(-c(id,Archetype,Archetype_count,n_quant_arch)) %>% 
+    group_by(Base_Archetype,CardName) %>% 
+    mutate(max_missing_quantity = max(missing)) %>% 
+    ungroup() %>% 
+    mutate(Quantity = "Any") %>% 
+  group_by(
+    Base_Archetype,
+    CardName,
+    Quantity
+    ) %>% 
+  mutate(
+    # n_quant_base_arch = sum(n_quant_base_arch),
+    Base_Archetype_count = #paste0(
+      n_quant_base_arch/Base_Archetype_count
+     # "(",Base_Archetype_count,")")
+  ) %>% 
+  distinct() %>% 
+    ungroup() ) %>% 
+  select(
+    -c(
+      Number_of_card_missing_in_deck,
+      Number_of_distinct_card_missing_in_deck
+      )
+    )  %>% 
+    mutate(across(where(is.character),as.factor)) %>%
+    arrange(desc(n_quant_base_arch))
+
+```
+
+
+```{r}
+ # print(
+      htmltools::tagList(
+      DT::datatable(
+        base_archetype_not_owned,
+  colnames = str_replace_all(colnames(
+     base_archetype_not_owned), "_", " "),
+  filter = "top", rownames = FALSE,
+  # extensions = c("SearchBuilder", "DateTime"),
+  options = list(
+    dom = "ltipr", 
+  searchBuilder = TRUE,
+     searchCols = list(
+    NULL,NULL,
+    list(search = '["Any"]' ),
+    NULL, NULL,
+    list(search = '10 ...'),
+    NULL
+  ),
+    autoWidth = TRUE, 
+    pageLength = 25
+    )
+) %>% 
+  DT::formatPercentage(c("Base_Archetype_count"), 1)
+)
+    # )
+
+```
+
+
+
+

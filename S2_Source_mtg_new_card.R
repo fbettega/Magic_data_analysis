@@ -341,7 +341,9 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
       "Faeries"
     ),
     
-    `The Rock Midrange` = c("Saga Party"),
+    # `The Rock Midrange` = 
+    `Black Or Red Midrange` = 
+      c("Saga Party"),
     
     `RWx aggro` = c(
       "Mardu Energy _fallback",
@@ -360,7 +362,7 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     
     
     
-    Eldrazi = c("Eldrazi","Eldrazi Tron"),
+    Eldrazi = c("Eldrazi","Eldrazi Tron","Breach Eldrazi"),
     ############################ Réfléxion a mener #################################
     # groupe all deck blade a reflechir sur le fait de grouper avec blink
     Stoneblade = c(
@@ -450,6 +452,7 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     Enchantress = c("Enchantress","Enduring Ideal"),
     # `Kiki Jiki` = c("Kiki Jiki", "Kiki Chord"),
     `Creature combo` = c(
+      "Soultrader Combo",
       "Neobrand",
       "Vivien Combo",
       "Sacrifice",

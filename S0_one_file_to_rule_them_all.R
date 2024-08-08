@@ -69,18 +69,38 @@ sys.source(
 rm(calledProgram)
 
 
-if(
-  length(
-    list.files(path = "data/",
-               pattern = "^archidekt-collection-export-.*\\.csv")
-    ) == 1){
-withr::with_envvar(new = c("QUARTO_PROFILE" = "collection_tracking"), {
-  quarto::quarto_render("rmd_files/", output_format = "html")
-})
+# quarto_yml <- readr::read_file("rmd_files/_quarto.yml"#, delim = "\t"
+#                       ) %>%
+# # str_replace(
+# #   "  output-dir: ../outpout\r\n",
+# #   "  output-dir: ../outpout_collection\r\n"
+# # ) %>%
+#   str_replace(
+#     "      - 1_new_card.qmd\r\n",
+#     "      - 1_new_card.qmd\r\n      - 1_1_collection_analysis.qmd\r\n"
+#     ) %>% str_remove_all("\\n")
+# cat(
+#   quarto_yml,file="rmd_files/_quarto-collection_tracking.yml",sep=""
+#     )
+# 
+# rm(quarto_yml)
+# if(
+#   length(
+#     list.files(path = "data/",
+#                pattern = "^archidekt-collection-export-.*\\.csv")
+#     ) == 1) {
+# withr::with_envvar(new = c("QUARTO_PROFILE" = "collection_tracking"), {
+#   quarto::quarto_render("rmd_files/", output_format = "html")
+# })
+# 
+# } else{
+#   quarto::quarto_render("rmd_files/", output_format = "html")
+# }
 
-} else{
-  quarto::quarto_render("rmd_files/", output_format = "html")
-}
+quarto::quarto_render("rmd_files/", output_format = "html")
 
+quarto::quarto_render("rmd_files/1_1_collection_analysis.qmd", output_format = "html")
 
 tictoc::toc()
+
+
