@@ -12,9 +12,6 @@ run_command_from_dir <- function(cmd, dir_cmd) {
 }
 
 tictoc::tic("total")
-# conflicted::conflicts_prefer(dplyr::filter)
-# library(git2r)
-# conflicted::conflict_prefer("pull", "dplyr")
 git2r::config(
   global = TRUE, 
   user.name = "fbettega",
@@ -39,18 +36,10 @@ run_command_from_dir(
   "ArchetypeParser/"
   )
 
-# run_command_from_dir("git pull","MTGOArchetypeParser_20231227/MTGODecklistCache/")
-
-# replace by ml predictions
-# source("S1_Json_to_Curated_data.R", local = calledProgram <- new.env(), echo = TRUE)
-
-
-
-
 calledProgram <- new.env()
 
 sys.source(
-  "S3_Archetype_classif_models.R", 
+  "sources/S3_Archetype_classif_models.R", 
   envir = calledProgram,
   toplevel.env = calledProgram
   )
@@ -61,7 +50,7 @@ rm(calledProgram)
 calledProgram <- new.env()
 
 sys.source(
-  "S4_predict_arch_with_ML.R",
+  "sources/S4_predict_arch_with_ML.R",
   envir = calledProgram,
   # keep.source = FALSE,
   toplevel.env = calledProgram
@@ -69,38 +58,10 @@ sys.source(
 rm(calledProgram)
 
 
-# quarto_yml <- readr::read_file("rmd_files/_quarto.yml"#, delim = "\t"
-#                       ) %>%
-# # str_replace(
-# #   "  output-dir: ../outpout\r\n",
-# #   "  output-dir: ../outpout_collection\r\n"
-# # ) %>%
-#   str_replace(
-#     "      - 1_new_card.qmd\r\n",
-#     "      - 1_new_card.qmd\r\n      - 1_1_collection_analysis.qmd\r\n"
-#     ) %>% str_remove_all("\\n")
-# cat(
-#   quarto_yml,file="rmd_files/_quarto-collection_tracking.yml",sep=""
-#     )
-# 
-# rm(quarto_yml)
-# if(
-#   length(
-#     list.files(path = "data/",
-#                pattern = "^archidekt-collection-export-.*\\.csv")
-#     ) == 1) {
-# withr::with_envvar(new = c("QUARTO_PROFILE" = "collection_tracking"), {
-#   quarto::quarto_render("rmd_files/", output_format = "html")
-# })
-# 
-# } else{
-#   quarto::quarto_render("rmd_files/", output_format = "html")
-# }
-
 quarto::quarto_render("rmd_files/", output_format = "html")
 
-quarto::quarto_render("rmd_files/1_1_collection_analysis.qmd", output_format = "html")
-
+# quarto::quarto_render("rmd_files/1_1_collection_analysis.qmd", output_format = "html")
+# 1_1_collection_analysis.qmd
 tictoc::toc()
 
 

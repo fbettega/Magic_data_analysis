@@ -10,11 +10,11 @@ library("rjson")
 library(tidyverse)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
-source("../S2_Source_mtg_new_card.R")
+source("../sources/S2_Source_mtg_new_card.R")
 options(kableExtra.auto_format = FALSE)
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
 
 # sample size minimum pour etre un groupe
 
@@ -55,7 +55,7 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
 
 
 ```{r}
-knitr::read_chunk("../S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 ```
 
 
@@ -97,13 +97,7 @@ name_list_of_model_with_string <- function(list, string) {
   return(list)
 }
 
-
-
-
-
 # function that format model create in this script with gt summary
-
-
 format_model_list <- function(model_list) {
   
   format_model_sub_fun <- function(model_encours){
@@ -541,7 +535,6 @@ df_Archetype_long <- df_export %>%
       )
   )
 
-
 Df_archetype_cards_land_name_agreg <- rbind(
   df_Archetype_long %>%
     group_by(Archetype) %>%
@@ -810,9 +803,20 @@ Side_Model_data_Uncommon_cards
 Total_df_model <- rbind(
 Main_deck_Total_df_model %>%
   mutate(Mainboard_CardName = paste0(Mainboard_CardName,"_main")),
-Side_Total_df_model %>% left_join(Main_deck_Total_df_model %>% select(id,Number_of_cards) %>% distinct()) %>% 
-  mutate(Sideboard_CardName = paste0(Sideboard_CardName,"_side")) %>%
-  rename(Mainboard_CardName = Sideboard_CardName,Mainboard_Count = Sideboard_Count)
+Side_Total_df_model %>%
+  left_join(
+    Main_deck_Total_df_model %>% 
+      select(id,Number_of_cards) %>%
+      distinct(),
+    by = join_by(id)
+            ) %>% 
+  mutate(Sideboard_CardName = paste0(
+    Sideboard_CardName,"_side")
+    ) %>%
+  rename(
+    Mainboard_CardName = Sideboard_CardName,
+    Mainboard_Count = Sideboard_Count
+    )
 )
 
 ```

@@ -8,7 +8,7 @@ library("rjson")
 library(kableExtra)
 library(tidyverse)
 library(scryr)
-source("../S2_Source_mtg_new_card.R",local = TRUE)
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 ```
 
@@ -26,11 +26,11 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
   ) %>% 
     ungroup()
 
-modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
 
 path_collection <- 
   list.files(
-      path = "../data/",pattern = "^archidekt-collection-export-",
+      path = "../data/mtg_data/",pattern = "^archidekt-collection-export-",
                full.names = TRUE)
 ```
 
@@ -82,15 +82,18 @@ Deck_list_cards_count <-
   rownames_to_column("cards_id_temp")
 
 
-
-
 collection_archi <- 
   read.csv(
     path_collection
     ) %>% 
+  # TEmp
+  # filter(!str_detect(Tags, "Sealable|Commande_en_cours")) %>% 
+  
   group_by(Name) %>% 
   summarise(Quantity = sum(Quantity)) %>% 
   rownames_to_column("collect_id")
+
+
 
 
 
@@ -120,7 +123,7 @@ match_deck_and_collection <- rbind(
     filter(cards_id_temp %notin% c(
       match_double_face$cards_id_temp,
       initial_match$cards_id_temp)
-      ) %>% 
+      ) %>%
     mutate(
       Quantity = 0,
       collect_id = NA
@@ -173,18 +176,12 @@ not_owned_cards <-
 
 # Cards in deck and not in collection 
 
+
+
+
 ## Number of missing cards by archetype 
 
 ```{r}
-
-value_to_string_with_mean_min_max <- function(x){
-            paste0(
-            round(mean(x),1) , " [",
-            min(x) ," ; ", max(x),"]"
-            )
-}
-
-
 Summary_missing_cards_by_archetype <-
   df_export %>%
   distinct(Archetype) %>%
@@ -253,14 +250,64 @@ Summary_missing_cards_by_archetype <-
   filter = "top", rownames = FALSE,
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
 ) %>% 
-  DT::formatPercentage(c("Percent_of_deck_with_missing_cards"), 1)
+  DT::formatPercentage(
+    c("Percent_of_deck_with_missing_cards"),
+    digits = 2
+    )
 )
+     # )
+```
+
+## Number of missing cards aggregate
+
+```{r, results='asis'}
+Summary_missing_cards_aggregate <-
+  rbind(
+    not_owned_cards %>%
+      group_by(CardName,Quantity) %>%
+      summarise(
+        Max_Number_of_missing = max(missing),
+        Q1_med_Q3_of_missing = median_quantile_paste(missing),
+        Number_of_deck_with_missing_cards = n_distinct(id),
+        .groups = "drop"
+      ) ,
+    not_owned_cards %>%
+      group_by(CardName) %>%
+      summarise(
+        Quantity = "Any",
+        Max_Number_of_missing = max(missing),
+        Q1_med_Q3_of_missing = median_quantile_paste(missing),
+        Number_of_deck_with_missing_cards = n_distinct(id),
+        .groups = "drop"
+      )
+    ) %>% 
+    mutate(across(where(is.character),as.factor)) %>% 
+  arrange(desc(Number_of_deck_with_missing_cards))
+
+ # print(
+htmltools::tagList(
+      DT::datatable( 
+        Summary_missing_cards_aggregate,
+        colnames = str_replace_all(colnames(Summary_missing_cards_aggregate), "_", " "),
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+  dom = "ltipr",
+    searchCols = list(
+    NULL,
+    list(search = '["Any"]' ),
+    NULL,NULL,NULL,
+    list(search = '10 ...')
+  ),
+  autoWidth = TRUE,
+  pageLength = 25)
+  ) 
+  )
      # )
 ```
 
 
 #  Archetype 
-
 ```{r}
 Archetype_list <- df_export %>%
   filter(Archetype_count > 20) %>% 
@@ -286,7 +333,7 @@ not_own_car_by_archetype_without_any <- not_owned_cards %>%
     ungroup() %>% 
   mutate(
     Archetype_count = 
-      round(n_quant_arch/Archetype_count,1)
+      n_quant_arch/Archetype_count
   ) %>% 
   distinct() %>% 
     ungroup() %>% 
@@ -341,6 +388,7 @@ for (i in Archetype_list) {
   not_own_car_by_archetype %>%
   filter(Archetype == i) %>% 
     select(-Archetype) %>% 
+    mutate(across(where(is.factor),as.factor)) %>% 
     arrange(desc(Number_of_time_missing)),
    colnames = str_replace_all(colnames(
      not_own_car_by_archetype %>% 
@@ -349,7 +397,7 @@ for (i in Archetype_list) {
   # extensions = c("SearchBuilder", "DateTime"),
   options = list(
     dom = "ltipr", 
-  searchBuilder = TRUE,
+  # searchBuilder = TRUE,
      searchCols = list(
     NULL,
     list(search = '["Any"]' ),
@@ -361,7 +409,7 @@ for (i in Archetype_list) {
     pageLength = 25
     )
 ) %>% 
-  DT::formatPercentage(c("Archetype_count"), 1)
+  DT::formatPercentage(c("Archetype_count"),digits = 1)
 )
     )
     pander::pandoc.p("")
@@ -458,7 +506,7 @@ base_archetype_not_owned <- rbind(
     pageLength = 25
     )
 ) %>% 
-  DT::formatPercentage(c("Base_Archetype_count"), 1)
+  DT::formatPercentage(c("Base_Archetype_count"),digits = 1)
 )
     # )
 

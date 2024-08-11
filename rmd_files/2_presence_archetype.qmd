@@ -14,7 +14,7 @@ library("rwantshue")
 library(htmltools)
 
 # css: TOC.css
-source("../S2_Source_mtg_new_card.R",local = TRUE)
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 loaded_base_data <- readRDS("../data/data_meta_en_cours.rds")
 # Réfléchir pour les couleurs et meilleurs distances
@@ -24,13 +24,16 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 
 ```{r}
-knitr::read_chunk("../S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 ```
 
 
 ```{r, Introduction_chunk_2_Deck_analysis, results='asis'}
 
 ```
+
+
+
 
 ```{r}
 # Generate different color scheme for close archetype
@@ -42,18 +45,46 @@ Presence_df_base_no_filter <- loaded_base_data %>%
   mutate(
     Archetype_count = n()
   ) %>%
+  ungroup() %>% 
   arrange(Archetype_count)
 
 
 filter_archetype_count <- min(50, 
  sum(unique(Presence_df_base_no_filter$Archetype_count))/100 )
 
-Presence_df_base <- Presence_df_base_no_filter %>%
-  filter(Archetype_count > filter_archetype_count) %>%
-  ungroup()
+Presence_df_base <- Presence_df_base_no_filter %>%  
+  ungroup() %>% 
+  mutate(Archetype = if_else(
+    Archetype_count > filter_archetype_count,
+                             Archetype,"other")
+    ) %>%  
+  group_by(Archetype) %>%
+  mutate(
+    Archetype_count = n()
+  ) %>%
+  ungroup() %>% 
+  mutate(
+    Global_winrate =
+      winrate_1_data(
+        sum(Wins,na.rm = TRUE),
+        sum(Losses,na.rm = TRUE)
+        )
+    )
+
+```
 
 
 
+```{r}
+Presence_df_base
+
+
+
+```
+
+
+
+```{r presence_df_over_time}
 Presence_df_base_all_data <- Presence_df_base %>%
   mutate(
     Archetype =
@@ -70,7 +101,6 @@ Presence_df_base_all_data <- Presence_df_base %>%
       factor(Base_Archetype,
         level = unique(.$Base_Archetype)
       ),
-
     # A reflechir ou tu mets ça selon les filters
     Archetype_percent = Archetype_count / nrow(.)
   )
@@ -96,17 +126,6 @@ one_month_inline <- Presence_df_base_all_data %>%
   filter(
     Week > (max(Week) - 5)
   )
-```
-
-
-
-```{r}
-# a <- DF_presence_fun(
-#       df_base = Presence_df_base,
-#   time_limit = Inf,
-#   compare_time_limit = NULL
-#   )
-
 ```
 
 ```{r}
@@ -356,30 +375,63 @@ df_Ci_by_week <- rbind(
   Presence_df_base %>% 
     mutate(Week = 0)
   ) %>%
-      group_by(Archetype,Week) %>% 
+    group_by(Archetype,Week) %>% 
   mutate( 
-    Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
-    CI_Arch_winrate = CI_prop(Arch_winrate, sum(Losses + Wins, na.rm = TRUE)) 
+    Arch_winrate = winrate_1_data(
+      sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)
+      ),
+    CI_Arch_winrate = CI_prop(
+      Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
+      ),
     ) %>% 
   ungroup() %>%
-  group_by(Base_Archetype,Week) %>% 
-  mutate(   
-    Base_Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
-    CI_Base_Arch_winrate = CI_prop(Base_Arch_winrate, sum(Losses + Wins, na.rm = TRUE)) 
-    ) %>% 
-  ungroup() %>% 
-  distinct(Base_Archetype,Week,.keep_all = TRUE) %>% 
+  mutate(Arch_winrate = Arch_winrate - Global_winrate) %>% 
+  distinct(Archetype,Week,.keep_all = TRUE) %>% 
   select(
-    Archetype,Base_Archetype,Week,Archetype_count,
-    Arch_winrate,CI_Arch_winrate,Base_Arch_winrate,
-    CI_Base_Arch_winrate
+    Archetype,#Base_Archetype,
+    Week,Archetype_count,
+    Arch_winrate,CI_Arch_winrate #, Base_Arch_winrate,CI_Base_Arch_winrate
     ) %>% 
-  mutate(Week = factor(ifelse(Week == 0,"all",Week),levels = c("all",as.character(seq(1,max(Presence_df_base$Week))))))
+  mutate(
+    Week = factor(ifelse(Week == 0,"all",Week),
+                  levels = c("all",as.character(seq(1,max(Presence_df_base$Week)
+                                                    ))
+                             )
+                  )
+    ) %>% arrange(Archetype_count)
+
+df_Ci_by_week2 <- rbind(
+  Presence_df_base,
+  Presence_df_base %>% 
+    mutate(Week = 0)
+  ) %>%
+    group_by(Archetype,Archetype_count,Week,Global_winrate) %>% 
+  summarise( 
+    Arch_winrate = winrate_1_data(
+      sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)
+      ),
+    CI_Arch_winrate = CI_prop(
+      Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
+      ),
+    .groups = "drop"
+    ) %>%  
+  mutate( Arch_winrate = Arch_winrate - Global_winrate) %>% 
+  distinct() %>% 
+  mutate(
+    Week = factor(ifelse(Week == 0,"all",Week),
+                  levels = c("all",as.character(seq(1,max(Presence_df_base$Week)
+                                                    ))
+                             )
+                  )
+    ) %>% arrange(Archetype_count)
+
+
+
+
 
 
 df_Ci_by_all_week <- df_Ci_by_week %>% 
          filter(Week == "all") %>% 
-         distinct(Archetype,.keep_all = TRUE) %>% 
          mutate(
            Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate + .$CI_Arch_winrate)])
          )
@@ -393,9 +445,9 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
       y = Arch_winrate,
       x = Archetype,
       text = paste(
-      "Archetype: ", Base_Archetype, "<br>", # Archetype name
+      "Archetype: ", Archetype, "<br>", # Archetype name
       "Winrate: ", 
-      round(Arch_winrate * 100, 2), " %",
+      round(Arch_winrate * 100, 1), " %",
       "[",round((Arch_winrate + CI_Arch_winrate) * 100, 2),";",
       round((Arch_winrate - CI_Arch_winrate) * 100, 2),"]", "<br>",
       sep = ""
@@ -410,16 +462,16 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
         ),
       position = position_dodge(width = .75), width = .01
       )  +
-     geom_hline(yintercept= mean(df_Ci_by_all_week$Arch_winrate), linetype="dashed", color = "red") +
+     geom_hline(yintercept = mean(df_Ci_by_all_week$Arch_winrate), linetype="dashed", color = "red") +
     geom_hline(
       yintercept= c(mean(df_Ci_by_all_week$Arch_winrate - df_Ci_by_all_week$CI_Arch_winrate),
                     mean(df_Ci_by_all_week$Arch_winrate + df_Ci_by_all_week$CI_Arch_winrate)), 
       linetype="dashed", color = "blue") +
-  coord_flip())  %>%
+  coord_flip()
+  )  %>%
   ggplotly(
     tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
   ) %>% bslib::card(full_screen = TRUE)
-  
 ```
 
 

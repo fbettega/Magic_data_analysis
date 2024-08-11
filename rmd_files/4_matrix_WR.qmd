@@ -13,7 +13,7 @@ library("rwantshue")
 library(ggfittext)
 # css: TOC.css
 
-source("../S2_Source_mtg_new_card.R",local = TRUE)
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(plotly::layout)
 loaded_base_data <- readRDS("../data/data_meta_en_cours.rds")
@@ -34,7 +34,7 @@ loaded_base_data <- readRDS("../data/data_meta_en_cours.rds")
 
 
 ```{r}
-knitr::read_chunk("../S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 # Prendre en compte mieux le nombres de deck avec CI pour le best deck
 ```
 

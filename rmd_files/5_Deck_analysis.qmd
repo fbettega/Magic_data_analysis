@@ -9,11 +9,11 @@ library(tidyverse)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 conflicted::conflicts_prefer(purrr::discard)
-source("../S2_Source_mtg_new_card.R",local = TRUE)
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
 
 # sample size minimum pour etre un groupe
 
@@ -59,7 +59,7 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
 ```
 
 ```{r}
-knitr::read_chunk("../S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 ```
 
 
@@ -120,7 +120,9 @@ format_model_list <- function(model_list) {
       gtsummary::bold_labels() %>%
       gtsummary::add_n(location = "level") %>%
       gtsummary::modify_spanning_header(
-        c(stat_n, estimate, ci, p.value) ~
+        c(stat_n, estimate,
+          #ci
+          conf.low, p.value) ~
           paste0(
             "**", x$Model_any$Archetype, " N :",
             sum(x$Model_any$data$Wins + x$Model_any$data$Losses),
@@ -136,7 +138,9 @@ format_model_list <- function(model_list) {
       gtsummary::bold_labels() %>%
       gtsummary::add_n(location = "level") %>%
       gtsummary::modify_spanning_header(
-        c(stat_n, estimate, ci, p.value) ~
+        c(stat_n, estimate, 
+          #ci
+          conf.low, p.value) ~
           paste0(
             "**", x$Model_count$Archetype, " N :",
             sum(x$Model_count$data$Wins + x$Model_count$data$Losses),
@@ -696,19 +700,111 @@ Model_data_base_cards <- prepare_df_for_model(
 # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
 # regression just of number of cards
 result_models_variable_count_all_arch <- model_base_var_count_cards_fun(Model_data_base_cards, "Mainboard")
+
 ```
 
 
 ```{r}
-# a <- result_models_variable_count_all_arch[[4]]
-# car::vif(a$Model_count)
-# 
-# b <- result_models_Uncommon_cards_all_arch[[4]]
-# car::vif(b$Model_count)
+
+a <- Model_data_Uncommon_cards %>% 
+  select(
+    Archetype,
+    Archetype_count,
+    Mainboard_CardName,
+    
+    # Join_main_count,
+    Mainboard_Count,
+    
+    id
+    ) %>% 
+  pivot_wider(
+    names_from = Mainboard_CardName,
+    values_from = Mainboard_Count,#Join_main_count,
+    values_fill = "0"
+    )
+
+
+
 ```
 
 
+```{r}
+# library("lares")
+# 
+# 
+# 
+# 
+# 
+# b <- lapply(unique(as.character(a$Archetype)), function(x){
+#   print(x)
+#   
+#   data_en_cours <- a %>% 
+#        filter(Archetype == x) %>% 
+#        select(-Archetype,-id) %>% 
+#        select(where(~n_distinct(.) > 1))
+#   print(dim(data_en_cours))
+#   
+#    corr_cross_res <- corr_cross(
+#      df = data_en_cours,
+#      top = 2000
+#            )
+#   
+#   return(corr_cross_res$data %>% 
+#            arrange(desc(abs)))
+# }) %>% 
+#   set_names(unique(as.character(a$Archetype)))
+# 
+# 
+# a %>% 
+#        filter(Archetype == "Black Or.Red.Midrange") %>% 
+#        select(-Archetype,-id) %>% 
+#        select(where(~n_distinct(.) > 1))
+# 
+# b 
+```
 
+```{r}
+
+x <- result_models_variable_count_all_arch[[1]]
+
+
+filter_vif <- function(vif_res){
+  if (is.vector(vif_res)) {
+   res <- vif_res %>%
+    as.data.frame() %>%
+    rename(vif = 1 ) %>%
+    rownames_to_column("name")  %>%
+     filter(vif > 5 )
+    
+  } else {
+    res <- vif_res %>%
+    as_tibble() %>%
+    filter(`GVIF^(1/(2*Df))` > 5 )
+  }
+  
+  return(res)
+}
+
+
+
+
+
+vif_model <- lapply(result_models_Uncommon_cards_all_arch, function(x){
+  
+  vif_count <- car::vif(x$Model_count) %>%  filter_vif()
+  
+  vif_any <- car::vif(x$Model_any) %>% filter_vif()
+  
+  return(list(any = vif_any,
+              count = vif_count
+              ))
+})
+vif_model[[1]]
+
+# 
+b <- result_models_Uncommon_cards_all_arch[[4]]
+car::vif(b$Model_count)
+```
 
 ```{r Side_mdoel_based_cards}
 Side_Model_data_base_cards <- prepare_df_for_model(

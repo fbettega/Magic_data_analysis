@@ -15,7 +15,7 @@ library("rjson")
 library(kableExtra)
 library(tidyverse)
 library(scryr)
-source("../S2_Source_mtg_new_card.R",local = TRUE)
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 refetch_cards_new_set <- FALSE
 ```
@@ -289,7 +289,7 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
     ungroup()
 
 
-modern_DB_card <- read_csv("../data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
 ```
 
 

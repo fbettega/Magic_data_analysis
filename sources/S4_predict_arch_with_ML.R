@@ -9,7 +9,7 @@ library(tidymodels)
 library(kknn)
 library(future)
 
-source("S2_Source_mtg_new_card.R",local = TRUE)
+source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 # scale_this <- function(x){
 #   (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)

@@ -8,7 +8,7 @@ library(kableExtra)
 library(tidyverse)
 library(htmltools)
 
-source("../S2_Source_mtg_new_card.R",local = TRUE)
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 conflicted::conflicts_prefer(dplyr::filter)
 # All table include tooltip column description
@@ -17,7 +17,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 
 ```{r}
-knitr::read_chunk("../S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 ```
 
 
@@ -103,9 +103,6 @@ Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_de
     )
 
 
-
-
-
   df_new_card_base <- df %>%
     unnest_longer(!!colname_deck_list) %>%
     unnest_wider(!!colname_deck_list, names_sep = "_") %>%
@@ -115,17 +112,7 @@ Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_de
     filter(Number_of_cards >= expected_min_size) %>%
     mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      fetch = TRUE,
-      Tron = TRUE,
-      snow = TRUE,
-      surveil = TRUE,
-      shock = TRUE,
-      triome = TRUE,
-      filter_land = TRUE,
-      fast_land = TRUE,
-      bounce_land = TRUE,
-      horizon_land = TRUE,
-      basic_land = TRUE
+      ALL_mod = TRUE
     )) %>%
     group_by(id, !!rlang::sym(paste0(colname_deck_list, "_CardName"))) %>%
     mutate(
@@ -204,11 +191,6 @@ Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_de
 
 
   df_new_card_total <- df_new_card %>%
-    # group_by(
-    #   !!group_var,
-    #   !!rlang::sym(paste0(colname_deck_list,"_CardName"))) %>%
-    # je laisse le doublon dans le cas d'une seul carte pour faciliter les filters
-    # filter(n() > 1) %>%
     group_by(
       across(all_of(select_group_var)),
       Archetype_count,
@@ -226,7 +208,7 @@ Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_de
       .groups = "drop"
     ) %>%
     rbind(df_new_card) %>%
-    filter((Wins_card + Losses_card) > 10) %>%
+    # filter((Wins_card + Losses_card) > 10) %>%
     arrange(
       desc(Archetype_count), !!rlang::sym(group_var),
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
@@ -277,10 +259,13 @@ Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_de
           "-", "0"
         )
       ), levels = c("+", "0", "-")),
-      card_WR_vs_Total = round((card_WR - Total_WR) * 100, 2),
+      card_WR_vs_Total =
+        (card_WR - Total_WR) 
+      ,
       CI_card_WR_vs_Total = formating_CI((card_WR - Total_WR), CI_card_WR),
       CI_card_WR = formating_CI(card_WR, CI_card_WR),
-      card_WR = round(card_WR * 100, 2),
+      card_WR = 
+        card_WR ,
       CI_signe_vs_other = factor(ifelse(
         (delta_WR_card + CI_delta_WR_card) > 0,
         "+",
@@ -290,10 +275,13 @@ Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_de
         )
       ), levels = c("+", "0", "-")),
       CI_delta_WR_card = formating_CI(delta_WR_card, CI_delta_WR_card),
-      delta_WR_card = round(delta_WR_card * 100, 2),
-      card_draw_diff = round(card_draw_diff * 100, 2),
+      delta_WR_card =
+        delta_WR_card,
+      card_draw_diff = 
+        card_draw_diff,
       count_WR = count,
-      Count_WR_percent = paste0(round((count / Archetype_count) * 100, 2), "%")
+      Count_WR_percent = 
+        (count / Archetype_count) 
     ) %>%
     select(
       all_of(select_group_var),
@@ -320,7 +308,7 @@ Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_de
       # !!rlang::sym(paste0(colname_deck_list,"_Count"))
     ) %>%
     summarise(
-      !!rlang::sym(paste0("Most_present_", colname_deck_list, "_Count")) := last(!!rlang::sym(paste0(colname_deck_list, "_Count")), count),
+      !!rlang::sym(paste0("Most_present_", colname_deck_list, "_Count")) := as.numeric(last(!!rlang::sym(paste0(colname_deck_list, "_Count")), count)),
       N_most_prez = max(count),
       most_prez_perc = N_most_prez / unique(Archetype_count),
       !!rlang::sym(paste0(colname_deck_list, "_Count")) := paste0(!!rlang::sym(paste0(colname_deck_list, "_Count")), collapse = "/")
@@ -507,12 +495,21 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  options = list(dom = "ltipr",  
+                 searchCols = list(
+                   NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), 
+  autoWidth = TRUE, pageLength = 25),
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Mainboard cards"
   )
-)
+) %>% 
+  DT::formatPercentage(c(3,6,8,11),digits = 1)
 ```
 
 
@@ -576,12 +573,20 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  options = list(dom = "ltipr",  
+                 searchCols = list(
+                   NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), autoWidth = TRUE, pageLength = 25),
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Sideboard cards"
   )
-)
+) %>% 
+  DT::formatPercentage(c(3,6,8,11),digits = 1)
 ```
 
 
@@ -671,12 +676,21 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  options = list(dom = "ltipr", 
+                 searchCols = list(
+                   NULL,NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL
+  ),
+                 autoWidth = TRUE, pageLength = 25),
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Mainboard cards"
   )
-)
+) %>% 
+  DT::formatPercentage(c(4,7,9,12),digits = 1)
 ```
 
 
@@ -711,12 +725,14 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+  options = list(dom = "ltipr",
+                 
+                 autoWidth = TRUE, pageLength = 25),
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Sideboard base cards"
   )
-)
+) 
 ```
 
 ### Variable Cards sideboard   
@@ -749,12 +765,20 @@ for (var i = 0; i < tips.length; i++) {
   filter = "top", rownames = FALSE,
   options = list(
     dom = "ltipr",
-    # autoWidth = TRUE,
+                     searchCols = list(
+                   NULL,NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL
+  ),
+     autoWidth = TRUE,
     pageLength = 25
   ),
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Sideboard cards"
   )
-)
+)  %>% 
+  DT::formatPercentage(c(4,7,9,12),digits = 1)
 ```

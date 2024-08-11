@@ -9,7 +9,7 @@ library(tidymodels)
 library(future)
 library(baguette)
 library("xgboost")
-source("S2_Source_mtg_new_card.R",local = TRUE)
+source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 
 # install.packages("ranger")
@@ -20,6 +20,7 @@ source("S2_Source_mtg_new_card.R",local = TRUE)
 
 rerun_ml <- TRUE # TRUE FALSE
 rerun_grid_par <- FALSE
+options(future.globals.maxSize= 2097152000)
 
 ################################################################################
 ######################## Model  ################################################

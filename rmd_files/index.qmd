@@ -12,8 +12,8 @@ title: "Overview of results"
 # )
 library(tidyverse)
 library(gt)
-source("../S2_Source_mtg_new_card.R",local = TRUE)
-knitr::read_chunk("../S2_Source_mtg_new_card.R")
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
+knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 
 # a faire
 # Cards by matchup when possible

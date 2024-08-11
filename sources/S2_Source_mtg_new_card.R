@@ -44,8 +44,20 @@ prett_fun_classif <- function(df, colname_deck_list) {
   return(pre_tt_dataframe)
 }
 
+####################### print_quantile #################################
+median_quantile_paste <- function(x, Q1 = 0.25,Q2 = 0.75) paste0(
+  median(x)," [",quantile(x,Q1),";",quantile(x,Q2),"]"
+)
 
 
+value_to_string_with_mean_min_max <- function(x){
+  paste0(
+    round(mean(x),1) , " [",
+    min(x) ," ; ", max(x),"]"
+  )
+}
+
+####################### sanitize string #################################
 sanitize_string <- function(text) {
   # Supprimer les caractères spéciaux et les chiffres
   cleaned_text <- gsub("[^a-zA-Z\\s]", "", text)
@@ -274,7 +286,8 @@ format_df_result_card_table <- function(
         ),
         "CardName", "Card"
       )
-    )
+    ) 
+    
 
 
   return(df_res_fun)
@@ -923,7 +936,7 @@ Draw_diff_2_data <- function(
 
 # transforming a bound in CI like that [x ; y]
 formating_CI <- function(value,
-                         CI, round_val = 2,
+                         CI, round_val = 1,
                          percent = TRUE,
                          limit = c(-Inf, Inf) # c(min,max)
 ) {
@@ -1036,8 +1049,9 @@ DF_presence_fun <- function(
     group_by(Archetype) %>%
     mutate(
       Archetype_count = n(),
-      Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
+      Arch_winrate = winrate_1_data(sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)),
       CI_Arch_winrate = CI_prop(Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
+      Arch_winrate = Arch_winrate - Global_winrate
     ) %>%
     arrange(Archetype_count) %>%
     mutate(
@@ -1057,18 +1071,19 @@ DF_presence_fun <- function(
     group_by(Base_Archetype) %>%
     mutate(
       Based_Archetype_count = n(),
-      Based_Arch_winrate = sum(Wins, na.rm = TRUE) / sum(Losses + Wins, na.rm = TRUE),
+      Based_Arch_winrate = winrate_1_data(sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)),
       CI_Based_Arch_winrate = CI_prop(Based_Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
-      Based_Archetype_percent = round((Based_Archetype_count / nrow(.)) * 100, 2),
+      Based_Arch_winrate = Based_Arch_winrate - Global_winrate,
+      Based_Archetype_percent = round((Based_Archetype_count / nrow(.)) * 100, 1),
       Based_Archetype_inside_main_percent = round(
-        (Based_Archetype_count / Archetype_count) * 100, 2
+        (Based_Archetype_count / Archetype_count) * 100, 1
       ),
       Arch_winrate_format = paste0(
-        round(Arch_winrate * 100, 2),
+        round(Arch_winrate * 100, 1),
         formating_CI(Arch_winrate, CI_Arch_winrate)
       ),
       Based_Arch_winrate_format = paste0(
-        round(Based_Arch_winrate * 100, 2),
+        round(Based_Arch_winrate * 100, 1),
         formating_CI(Based_Arch_winrate, CI_Based_Arch_winrate)
       )
     )
@@ -1103,8 +1118,8 @@ DF_presence_fun <- function(
         Num_Delta_Arch_win_rate = Arch_winrate - !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1)),
         Num_Delta_based_Arch_win_rate = Based_Arch_winrate - !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1)),
         Delta_percent_arch = ifelse(Num_delta_perc_arch > 0,
-                                    paste0("+ ", round(Num_delta_perc_arch * 100, 2)),
-                                    paste0(round(Num_delta_perc_arch * 100, 2))
+                                    paste0("+ ", round(Num_delta_perc_arch * 100, 1)),
+                                    paste0(round(Num_delta_perc_arch * 100, 1))
         ),
         Delta_Arch_count = Archetype_count - !!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1)),
         CI_Delta_Arch_win_rate = CI_2_prop(
@@ -1122,21 +1137,21 @@ DF_presence_fun <- function(
         Delta_Arch_win_rate = ifelse(
           Num_Delta_Arch_win_rate > 0,
           paste0(
-            "+ ", round(Num_Delta_Arch_win_rate * 100, 2),
+            "+ ", round(Num_Delta_Arch_win_rate * 100, 1),
             formating_CI(Num_Delta_Arch_win_rate, CI_Delta_Arch_win_rate)
           ),
           paste0(
-            round(Num_Delta_Arch_win_rate * 100, 2),
+            round(Num_Delta_Arch_win_rate * 100, 1),
             formating_CI(Num_Delta_Arch_win_rate, CI_Delta_Arch_win_rate)
           )
         ),
         Delta_based_Arch_win_rate = ifelse(Num_Delta_based_Arch_win_rate > 0,
                                            paste0(
-                                             "+ ", round(Num_Delta_based_Arch_win_rate * 100, 2),
+                                             "+ ", round(Num_Delta_based_Arch_win_rate * 100, 1),
                                              formating_CI(Num_Delta_based_Arch_win_rate, CI_Delta_based_Arch_win_rate)
                                            ),
                                            paste0(
-                                             round(Num_Delta_based_Arch_win_rate * 100, 2),
+                                             round(Num_Delta_based_Arch_win_rate * 100, 1),
                                              formating_CI(Num_Delta_based_Arch_win_rate, CI_Delta_based_Arch_win_rate)
                                            )
         )
@@ -1197,7 +1212,7 @@ plot_presence_fun <- function(
         geom_text(
           aes(
             label = paste0(
-              round(prop.table(stat(count)) * 100, 2),
+              round(prop.table(stat(count)) * 100, 1),
               " % "
             ),
             y = prop.table(stat(count)) + 0.008,
@@ -1259,7 +1274,7 @@ plot_presence_fun <- function(
         geom_bar() +
         geom_text(
           aes(
-            label = paste0(round(prop.table(stat(count)) * 100, 2), " %"),
+            label = paste0(round(prop.table(stat(count)) * 100, 1), " %"),
             y = prop.table(stat(count)) + 0.008,
             group = 1
           ),
