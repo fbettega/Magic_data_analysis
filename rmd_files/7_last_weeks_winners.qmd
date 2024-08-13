@@ -28,16 +28,23 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
   mutate(
     Archetype_count = n()
   ) 
+
+big_mtgo_tournament <- c("Modern Challenge 64","Modern Showcase Challenge","Modern Super Qualifier","Modern Showcase Qualifier" )
+
 ```
 
 ```{r initial_data_loading}
 pre_rename_Tournament_of_interest_df <- df_export %>%
   filter(Tournament != "Modern League",
-         Week	> max(Week)-last_week_number_7	) %>% 
+         Week	>= max(Week)-last_week_number_7	) %>% 
   group_by(TournamentFile) %>% 
   mutate(number_of_player = n()) %>% 
   ungroup() %>% 
-  filter(number_of_player >= min_tournament_size_7,
+  
+  filter(
+    (
+  number_of_player >= min_tournament_size_7|Tournament %in% big_mtgo_tournament
+      ),
          str_detect(Result,"Place$")
          ) %>% 
   mutate(Place = as.integer(str_extract(Result,"^\\d+")))
@@ -209,6 +216,7 @@ top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
 ```
 
 ```{r}
+
 total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
         
   
@@ -232,6 +240,8 @@ return(list(Title = Title_str,
 
 ```
 
+
+
 ```{r}
 TournamentFile_by_week <- lapply(unique(Tournament_of_interest_df$Week),function(x){
   
@@ -245,33 +255,53 @@ TournamentFile_by_week <- lapply(unique(Tournament_of_interest_df$Week),function
   purrr::set_names(unique(Tournament_of_interest_df$Week))
 ```
 
-# Winner of last tournament
+```{r}
+# a <- total_result[[1]]
+# a$plot$plot_prez
+```
+
 
 ```{r, Introduction_chunk_7_top8, results='asis'}
 
 ```
+
 
 ```{r,  results='asis'}
 # this week
 # last week
 # two weeks ago
 for (i in seq_along(TournamentFile_by_week)){
-  pander::pandoc.header(paste0("Week : ",names(TournamentFile_by_week)[i]), level = 2)
+  pander::pandoc.header(paste0("Week : ",names(TournamentFile_by_week)[i]), level = 1)
   pander::pandoc.p("")
-  
-  for (u in seq_along(total_result)){
-    if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
+  pander::pandoc.p("")
+# res_function <- lapply(seq_along(total_result), function(u){
+
+for (u in seq_along(total_result)){
+if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
+      pander::pandoc.header(paste0("Week : ",names(total_result)[u]), level = 2)
+      pander::pandoc.p("")
+      pander::pandoc.p("")
       pander::pandoc.header(total_result[[u]]$Title, level = 3)
       pander::pandoc.p("")
-      pander::pandoc.header("Presence plot", level = 4)
-      print(htmltools::tagList(total_result[[u]]$plot$plot_prez))
+      pander::pandoc.p("")
+      pander::pandoc.header("Presence plot", level = 3)
       pander::pandoc.p("")
       pander::pandoc.p("")
-      pander::pandoc.header("Top 8 list", level = 4)
+       print(
+      htmltools::tagList(
+        # as_widget(
+        total_result[[u]]$plot$plot_prez
+        # )
+        )
+       )
+      pander::pandoc.p("")
+      pander::pandoc.p("")
+      pander::pandoc.header("Top 8 list", level = 3)
       print(htmltools::tagList(total_result[[u]]$plot$top8_table))
       pander::pandoc.p("")
-      pander::pandoc.p("")}
+      pander::pandoc.p("")
+      }
   }
   }
-  
+# )
 ```

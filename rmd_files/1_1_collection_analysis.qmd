@@ -14,6 +14,11 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 
 ```{r data_reading }
+
+exclude_archetype <- c(
+   # "Nadu"
+  )
+
 df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
       # include filter bad deck
   filter(Valide_deck) %>% 
@@ -24,7 +29,8 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
   mutate(
     Archetype_count = n()
   ) %>% 
-    ungroup()
+    ungroup() %>% 
+  filter(Archetype %notin% exclude_archetype)
 
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
 
@@ -50,7 +56,7 @@ basic_land_list <- c(
   )
 
 Deck_list_cards_count <-
-  rbind(   df_export %>%
+  rbind(df_export %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_")  %>%
   select(Mainboard_Count,Mainboard_CardName,Archetype,Base_Archetype,id) %>%
@@ -174,12 +180,17 @@ not_owned_cards <-
 ```
 
 
-# Cards in deck and not in collection 
 
 
 
 
-## Number of missing cards by archetype 
+
+# Number of missing cards by archetype 
+
+
+Exclude Archetype : `r paste0(exclude_archetype,collapse = " ,")`
+
+
 
 ```{r}
 Summary_missing_cards_by_archetype <-
@@ -242,6 +253,11 @@ Summary_missing_cards_by_archetype <-
 
 
 
+
+```
+
+
+```{r}
  # print(
       htmltools::tagList(
       DT::datatable( 
@@ -258,7 +274,7 @@ Summary_missing_cards_by_archetype <-
      # )
 ```
 
-## Number of missing cards aggregate
+# Number of missing cards aggregate
 
 ```{r, results='asis'}
 Summary_missing_cards_aggregate <-
@@ -281,8 +297,14 @@ Summary_missing_cards_aggregate <-
         .groups = "drop"
       )
     ) %>% 
+    mutate(percent_of_deck_with_missing = 
+           Number_of_deck_with_missing_cards / n_distinct(df_export$id) 
+           ) %>% 
     mutate(across(where(is.character),as.factor)) %>% 
-  arrange(desc(Number_of_deck_with_missing_cards))
+  arrange(
+    desc(Number_of_deck_with_missing_cards 
+         )
+    )
 
  # print(
 htmltools::tagList(
@@ -296,18 +318,22 @@ htmltools::tagList(
     searchCols = list(
     NULL,
     list(search = '["Any"]' ),
-    NULL,NULL,NULL,
-    list(search = '10 ...')
+    NULL,NULL,
+    list(search = '10 ...'),
+    NULL
   ),
   autoWidth = TRUE,
   pageLength = 25)
-  ) 
+  )  %>% 
+  DT::formatPercentage(c("percent_of_deck_with_missing"),digits = 1)
   )
      # )
 ```
 
 
 #  Archetype 
+
+
 ```{r}
 Archetype_list <- df_export %>%
   filter(Archetype_count > 20) %>% 

@@ -371,6 +371,7 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     ),
     
     
+    
     # groupe eldra avec eldra tron
     
     
@@ -1041,6 +1042,7 @@ DF_presence_fun <- function(
     df_base,
     time_limit = Inf,
     compare_time_limit = NULL) {
+
   Presence_df_base <- df_base %>%
     ungroup() %>%
     filter(
@@ -1051,8 +1053,19 @@ DF_presence_fun <- function(
       Archetype_count = n(),
       Arch_winrate = winrate_1_data(sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)),
       CI_Arch_winrate = CI_prop(Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
-      Arch_winrate = Arch_winrate - Global_winrate
+      # 
     ) %>%
+     ungroup() %>% 
+    {. ->> intermediateResult} %>%
+    mutate(Global_winrate = mean(intermediateResult %>%
+                                   distinct(Archetype,.keep_all = TRUE) %>% 
+                                 pull(Arch_winrate)
+                                 )
+           ) %>% 
+    group_by(Archetype) %>% 
+    mutate(
+      Arch_winrate = Arch_winrate - Global_winrate
+      ) %>% 
     arrange(Archetype_count) %>%
     mutate(
       Archetype =
@@ -1072,8 +1085,21 @@ DF_presence_fun <- function(
     mutate(
       Based_Archetype_count = n(),
       Based_Arch_winrate = winrate_1_data(sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)),
-      CI_Based_Arch_winrate = CI_prop(Based_Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
-      Based_Arch_winrate = Based_Arch_winrate - Global_winrate,
+      CI_Based_Arch_winrate = CI_prop(Based_Arch_winrate, sum(Losses + Wins, na.rm = TRUE))
+    ) %>%
+    ungroup() %>% 
+    {. ->> intermediateResult} %>%
+    mutate(
+      Global_winrate_base_arch = 
+        mean(
+          intermediateResult %>%
+            distinct(Base_Archetype,.keep_all = TRUE) %>% 
+            pull(Based_Arch_winrate)
+          )
+      ) %>% 
+    group_by(Base_Archetype) %>% 
+    mutate(  
+      Based_Arch_winrate = Based_Arch_winrate - Global_winrate_base_arch,
       Based_Archetype_percent = round((Based_Archetype_count / nrow(.)) * 100, 1),
       Based_Archetype_inside_main_percent = round(
         (Based_Archetype_count / Archetype_count) * 100, 1
@@ -1086,7 +1112,9 @@ DF_presence_fun <- function(
         round(Based_Arch_winrate * 100, 1),
         formating_CI(Based_Arch_winrate, CI_Based_Arch_winrate)
       )
-    )
+    ) %>% 
+    ungroup()
+    
   # browser()
   if (!is.null(compare_time_limit)) {
     df_comparisson <- DF_presence_fun(df_base, time_limit = compare_time_limit)

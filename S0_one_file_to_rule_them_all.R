@@ -26,7 +26,7 @@ git2r::config(
 
 deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache/")
 
-
+Sys.sleep(5400)
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 
 
@@ -58,10 +58,12 @@ sys.source(
 rm(calledProgram)
 
 
-quarto::quarto_render("rmd_files/", output_format = "html")
+quarto::quarto_render("rmd_files/", output_format = "html",as_job = FALSE)
 
-# quarto::quarto_render("rmd_files/1_1_collection_analysis.qmd", output_format = "html")
-# 1_1_collection_analysis.qmd
+
+# quarto::quarto_render("rmd_files/2_presence_archetype.qmd", output_format = "html")
+
+
 tictoc::toc()
-
+system('shutdown -s')
 

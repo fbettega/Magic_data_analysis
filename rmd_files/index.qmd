@@ -20,13 +20,11 @@ knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 ```
 
 
-# Introduction 
-
 
 
 Code available at [https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result](https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result)
 
-### Archetype definition
+# Archetype definition
 [Modify version of archetype definition](https://github.com/fbettega/Modern_FB_archetype) initial definition [from Badaro](https://github.com/Badaro/MTGOFormatData)
 
 
@@ -107,12 +105,12 @@ Tournament with matchup
 -->
 
 
-## Principal chapter
-### New card
+# Principal chapter
+## New card
 
 Contains an analysis of the cards limited to certain recent sets to assess the impact of the new cards on each archetypes.
 
-### Presence archetype
+## Presence archetype
 
 <!---
 potentiellement selecteur de deck sous contrainte en script annexe
@@ -122,7 +120,7 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 ```
 
-### Top 8 deck
+## Top 8 deck
 
 ```{r, Introduction_chunk_7_top8, results='asis'}
 
@@ -131,30 +129,30 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 
 
-### Card win rate table
+## Card win rate table
 ```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
 
 ```
 
-### Cards WR models
+## Cards WR models
 ```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
 
 ```
 
-### Matrix WR
+## Matrix WR
 ```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
 
 ```
 
 
-### Best deck analysis
+## Best deck analysis
 
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
 ```
 
 
-## Archetype aggregation  
+# Archetype aggregation  
 
 
 ```{r results='asis'}

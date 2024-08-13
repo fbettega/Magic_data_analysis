@@ -63,8 +63,6 @@ knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
 ```
 
 
-# Deck analysis 
-
 
 ```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
 
@@ -704,107 +702,6 @@ result_models_variable_count_all_arch <- model_base_var_count_cards_fun(Model_da
 ```
 
 
-```{r}
-
-a <- Model_data_Uncommon_cards %>% 
-  select(
-    Archetype,
-    Archetype_count,
-    Mainboard_CardName,
-    
-    # Join_main_count,
-    Mainboard_Count,
-    
-    id
-    ) %>% 
-  pivot_wider(
-    names_from = Mainboard_CardName,
-    values_from = Mainboard_Count,#Join_main_count,
-    values_fill = "0"
-    )
-
-
-
-```
-
-
-```{r}
-# library("lares")
-# 
-# 
-# 
-# 
-# 
-# b <- lapply(unique(as.character(a$Archetype)), function(x){
-#   print(x)
-#   
-#   data_en_cours <- a %>% 
-#        filter(Archetype == x) %>% 
-#        select(-Archetype,-id) %>% 
-#        select(where(~n_distinct(.) > 1))
-#   print(dim(data_en_cours))
-#   
-#    corr_cross_res <- corr_cross(
-#      df = data_en_cours,
-#      top = 2000
-#            )
-#   
-#   return(corr_cross_res$data %>% 
-#            arrange(desc(abs)))
-# }) %>% 
-#   set_names(unique(as.character(a$Archetype)))
-# 
-# 
-# a %>% 
-#        filter(Archetype == "Black Or.Red.Midrange") %>% 
-#        select(-Archetype,-id) %>% 
-#        select(where(~n_distinct(.) > 1))
-# 
-# b 
-```
-
-```{r}
-
-x <- result_models_variable_count_all_arch[[1]]
-
-
-filter_vif <- function(vif_res){
-  if (is.vector(vif_res)) {
-   res <- vif_res %>%
-    as.data.frame() %>%
-    rename(vif = 1 ) %>%
-    rownames_to_column("name")  %>%
-     filter(vif > 5 )
-    
-  } else {
-    res <- vif_res %>%
-    as_tibble() %>%
-    filter(`GVIF^(1/(2*Df))` > 5 )
-  }
-  
-  return(res)
-}
-
-
-
-
-
-vif_model <- lapply(result_models_Uncommon_cards_all_arch, function(x){
-  
-  vif_count <- car::vif(x$Model_count) %>%  filter_vif()
-  
-  vif_any <- car::vif(x$Model_any) %>% filter_vif()
-  
-  return(list(any = vif_any,
-              count = vif_count
-              ))
-})
-vif_model[[1]]
-
-# 
-b <- result_models_Uncommon_cards_all_arch[[4]]
-car::vif(b$Model_count)
-```
 
 ```{r Side_mdoel_based_cards}
 Side_Model_data_base_cards <- prepare_df_for_model(
@@ -869,16 +766,18 @@ Side_uncomon_card_format_model <- format_model_list(Side_result_models_Uncommon_
 ```{r print_result, results='asis', out.width="100%"}
 for (i in sort(levels(df_Archetype_long$Archetype))) {
   # Inserts Month titles
-  pander::pandoc.header(i, level = 2)
+  pander::pandoc.header(i, level = 1)
   # Section contents
-  pander::pandoc.header("Main deck", level = 3)
+  pander::pandoc.header("Main deck", level = 2)
   pander::pandoc.p("")
-  pander::pandoc.header("Base Cards", level = 4)
+
+
+  if (i %in% names(Base_cards_and_base_count)) {
+  pander::pandoc.header("Base Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
   pander::pandoc.p("")
-
-  if (i %in% names(Base_cards_and_base_count)) {
+    
     flextable::flextable_to_rmd(
       flextable::flextable(
         Base_cards_and_base_count[[i]] %>%
@@ -894,13 +793,13 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
       ) %>% flextable::align(align = "center", part = "all")
     )
   }
-  pander::pandoc.header("Base Cards Variable count", level = 4)
+
+
+  if (i %in% names(Base_card_variable_count_format_model)) {
+  pander::pandoc.header("Base Cards Variable count", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with  different count using binomial regression for WR")
   pander::pandoc.p("")
-
-  if (i %in% names(Base_card_variable_count_format_model)) {
-    
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
   if (!is.null(Base_card_variable_count_format_model[[i]]$Model_any)) {
@@ -924,12 +823,14 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
 ::::::::::::::")
   }
 
-  pander::pandoc.header("Uncommon Cards", level = 4)
+
+
+  if (i %in% names(uncomon_card_format_model)) {
+  pander::pandoc.header("Uncommon Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards not always in deck using binomial regression for WR")
   pander::pandoc.p("")
-
-  if (i %in% names(uncomon_card_format_model)) {
+    
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
 if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
@@ -956,18 +857,16 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
   pander::pandoc.p("")
   pander::pandoc.p("")
 
-  pander::pandoc.header("Side Board", level = 3)
+  pander::pandoc.header("Side Board", level = 2)
   pander::pandoc.p("")
-  pander::pandoc.header("Base Cards", level = 4)
+
+
+  if (i %in% names(Side_Base_cards_and_base_count)) {
+  pander::pandoc.header("Base Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
   pander::pandoc.p("")
-
-  if (i %in% names(Side_Base_cards_and_base_count)) {
-    pander::pandoc.p(':::::::::::::: {.columns}
-::: {.column width="50%"}')
-
-    flextable::flextable_to_rmd(
+   flextable::flextable_to_rmd(
       flextable::flextable(
         Side_Base_cards_and_base_count[[i]] %>%
           mutate(
@@ -982,35 +881,15 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
       ) %>%
         flextable::align(align = "center", part = "all")
     )
-    pander::pandoc.p(":::")
-
-    pander::pandoc.p('::: {.column width="50%"}')
-    pander::pandoc.p("")
-    flextable::flextable_to_rmd(
-      flextable::flextable(
-        Side_Base_cards_and_base_count[[i]] %>%
-          mutate(
-            WR = paste0(round(Wins * 100 / (Wins + Losses), 2), " %"),
-            Not_most_common_count = total_number_of_copie - most_common_count,
-            Card_not_in_deck = Archetype_count - total_number_of_copie
-          ) %>%
-          select(
-            Sideboard_CardName, WR, Sideboard_Count,
-            most_common_quantity, Card_not_in_deck, Not_most_common_count
-          )
-      ) %>%
-        flextable::align(align = "center", part = "all")
-    )
-    pander::pandoc.p(":::
-::::::::::::::")
   }
-  pander::pandoc.header("Base Cards Variable count", level = 4)
-  pander::pandoc.p("")
-  pander::pandoc.p("Cards Always in deck with  different count using binomial regression for WR")
-  pander::pandoc.p("")
+
 
 
   if (i %in% names(Side_Base_card_variable_count_format_model)) {
+  pander::pandoc.header("Base Cards Variable count", level = 3)
+  pander::pandoc.p("")
+  pander::pandoc.p("Cards Always in deck with  different count using binomial regression for WR")
+  pander::pandoc.p("")
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
         if (!is.null(Side_Base_card_variable_count_format_model[[i]]$Model_any )) {
@@ -1033,12 +912,14 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
 ::::::::::::::")
   }
 
-  pander::pandoc.header("Uncommon Cards", level = 4)
+
+
+  if (i %in% names(uncomon_card_format_model)) {
+  pander::pandoc.header("Uncommon Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards not always in deck using binomial regression for WR")
   pander::pandoc.p("")
-
-  if (i %in% names(uncomon_card_format_model)) {
+    
     pander::pandoc.p(':::::::::::::: {.columns}
 ::: {.column width="50%"}')
     if (!is.null(Side_uncomon_card_format_model[[i]]$Model_any)) {
@@ -1070,3 +951,152 @@ if (!is.null(Side_uncomon_card_format_model[[i]]$Model_count)) {
   pander::pandoc.p("")
 }
 ```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+```{r}
+
+a <- rbind(
+  Model_data_base_cards,
+  Model_data_Uncommon_cards) %>%
+  select(
+    Archetype,
+    Archetype_count,
+    Mainboard_CardName,
+
+    # Join_main_count,
+    Mainboard_Count,
+
+    id
+    ) %>%
+  pivot_wider(
+    names_from = Mainboard_CardName,
+    values_from = Mainboard_Count,#Join_main_count,
+    values_fill = "0"
+    ) %>%
+  select(
+    -all_of(
+      c("Basic land","Fetch land")
+      )
+    ) #%>%   mutate(across(where(is.character),as.factor))
+
+
+write_rds(a,"data_travail.rds")
+
+```
+
+```{r}
+# data_en_cours <- a %>%
+#        filter(Archetype == "Murktide") %>%
+#     mutate(id = as.numeric(id)) %>% 
+#        select(-Archetype#,-id
+#               ) %>%
+#        select(where(~n_distinct(.) > 1)) %>%
+#  pivot_longer(cols = where(is.character),
+#               names_to = "dummy_names",
+#               values_to = "dummy_levels") %>%
+#  mutate(dummy_value = 1) %>%
+#  pivot_wider(
+#    id_cols = id,
+#    names_from = c(dummy_names, dummy_levels),
+#              values_from = dummy_value, 
+#              values_fill = 0
+#              ) %>% 
+#   select(-id) %>% 
+#   select(sort(colnames(.)))
+#   
+# cor(data_en_cours)
+```
+
+
+
+```{r}
+# library("lares")
+# 
+# 
+# b <- lapply(unique(as.character(a$Archetype)), function(x){
+#   print(x)
+# 
+#   data_en_cours <- a %>%
+#        filter(Archetype == x) %>%
+#        select(-Archetype,-id) %>%
+#        select(where(~n_distinct(.) > 1))
+#   print(dim(data_en_cours))
+# 
+#    corr_cross_res <- corr_cross(
+#      df = data_en_cours,
+#      plot = FALSE,
+#      top = 2000
+#            )
+# 
+#   return(corr_cross_res$data %>%
+#            arrange(desc(abs)))
+# }) %>%
+#   set_names(unique(as.character(a$Archetype)))
+# 
+# 
+# a %>%
+#        filter(Archetype == "Black Or.Red.Midrange") %>%
+#        select(-Archetype,-id) %>%
+#        select(where(~n_distinct(.) > 1))
+# 
+# b
+```
+
+```{r}
+# 
+# x <- result_models_variable_count_all_arch[[1]]
+# 
+# 
+# filter_vif <- function(vif_res){
+#   if (is.vector(vif_res)) {
+#    res <- vif_res %>%
+#     as.data.frame() %>%
+#     rename(vif = 1 ) %>%
+#     rownames_to_column("name")  %>%
+#      filter(vif > 5 )
+#     
+#   } else {
+#     res <- vif_res %>%
+#     as_tibble() %>%
+#     filter(`GVIF^(1/(2*Df))` > 5 )
+#   }
+#   
+#   return(res)
+# }
+# 
+# 
+# 
+# 
+# 
+# vif_model <- lapply(result_models_Uncommon_cards_all_arch, function(x){
+#   
+#   vif_count <- car::vif(x$Model_count) %>%  filter_vif()
+#   
+#   vif_any <- car::vif(x$Model_any) %>% filter_vif()
+#   
+#   return(list(any = vif_any,
+#               count = vif_count
+#               ))
+# })
+# vif_model[[1]]
+# 
+# # 
+# b <- result_models_Uncommon_cards_all_arch[[4]]
+# car::vif(b$Model_count)
+```
+
+
+

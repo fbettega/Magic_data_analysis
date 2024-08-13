@@ -69,7 +69,7 @@ df_base_Archetype <- df_export %>%
   mutate(
     Archetype_count = n()
   ) %>%
-  filter(Archetype_count > filter_archetype_count) %>%
+  # filter(Archetype_count > filter_archetype_count) %>%
   arrange(desc(Archetype_count))
 
 # modern_DB_card <- read_csv("data/DBcarte_modern.csv")

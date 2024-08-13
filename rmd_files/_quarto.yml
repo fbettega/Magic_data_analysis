@@ -27,15 +27,17 @@ format:
     theme: cosmo
     page-layout: full
     grid:
-      sidebar-width: 175px
-      body-width: 2250px
-      margin-width: 150px
+      sidebar-width: 275px
+      body-width: 2050px
+      margin-width: 250px
       # gutter-width: 1.5rem
     # css: large_plot.css
 knitr:
   opts_chunk:
     out.width: "100%"
-    out.height: "100%"
+    # out.height: "100%"
+    # column: screen
+    # widget.layout.height: "100vh"
     cache: false
     echo: false
     message: false

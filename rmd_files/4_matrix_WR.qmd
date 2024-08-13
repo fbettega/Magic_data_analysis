@@ -92,7 +92,6 @@ df_base_all_data <- df_base %>%
 
 
 
-# Win rate matrix
 
 
 * All data : `r format(as.Date(min(df_base$Date)), "%d-%m-%Y")` to `r format(as.Date(max(df_base$Date)), format = "%d/%m/%Y")`. 
@@ -249,10 +248,6 @@ Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>%
 ```
 
 
-
-
-
-ggplotly remove legend
 
 
 
@@ -517,35 +512,35 @@ plot_win_rate_mat <- function(
 
 
 
-## Matrice utilisant le nombres de manches
+# Matrice utilisant le nombres de manches
 
 Par exemple un socre de 2-1 compte comme 3 manches
 
-### Total matrix
+## Total matrix
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games", 
-                  size_multiplier = 3) %>%
+                  size_multiplier =2.8) %>%
   bslib::card(full_screen = TRUE)
 ```
 
-### Only significative CI
+## Only significative CI
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games",
   # simplify_tab_ratio = 0.1,
-  only_signif = TRUE, size_multiplier = 3
+  only_signif = TRUE, size_multiplier =2.8
 ) %>%
   bslib::card(full_screen = TRUE)
 ```
 
-### Only more than 20 matches
+## Only more than 20 matches
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "games",
   Cut_of_number_of_data = 20,
   simplify_tab_ratio = 0.5,
-  size_multiplier = 3
+  size_multiplier =2.8
 ) %>% bslib::card(full_screen = TRUE)
 ```
 
@@ -554,35 +549,35 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "games",
 
 
 
-## Matrice utilisant le nombres de partie
+# Matrice utilisant le nombres de partie
 
 Par exemple un socre de 2-1 compte comme 1 partie gagné.
 
 
-### Total matrix  
+## Total matrix  
 
 ```{r}
-plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 3)
+plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier =2.8)
 ```
 
 
-### Only significative CI
+## Only significative CI
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
   # simplify_tab_ratio = 0.5,
-  only_signif = TRUE, size_multiplier = 3
+  only_signif = TRUE, size_multiplier =2.8
 ) %>% bslib::card(full_screen = TRUE)
 ```
 
 
-### Only more than 20 matches
+## Only more than 20 matches
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
   Cut_of_number_of_data = 20,
   simplify_tab_ratio = 0.5,
-  size_multiplier = 3
+  size_multiplier =2.8
 ) %>% bslib::card(full_screen = TRUE)
 ```
 
@@ -591,7 +586,7 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
 
 
 
-##  Best deck 
+#  Best deck 
 
 Tentative de multiplier la matrice de win rate (WR ou borne inférieure du CI) par la présence hebdomadaire des decks afin de calculer diviser par le nombre total de decks afin de calculer un expected winrate moyen pour un field donnée. 
 
@@ -727,7 +722,7 @@ plot_archetype_spaghetti <- (
     panel.border = element_blank()
   )
 ) %>%
-  ggplotly(tooltip = c("text"), height = (480 * 2.5), width = (840 * 2.5)) %>%
+  ggplotly(tooltip = c("text"), height = (450 * 2.5), width = (850 * 2.5)) %>%
   plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
@@ -740,6 +735,7 @@ plot_archetype_spaghetti <- (
 
 
 ```{r}
+#| column: screen
 plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ```
 
@@ -782,6 +778,7 @@ DT::datatable(
 
 
 ```{r}
+#| column: screen
 plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ```
 

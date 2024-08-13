@@ -235,7 +235,6 @@ lapply_around_table_list <- function(df_main_fun,df_side_fun,Number_of_deck,obse
   
   
   res_lapply <- lapply(Archetype_fun, function(x){
-  
   res_count_sep <- Best_deck_get_table_function(
     res_fun_init_main = df_main_fun,
     res_fun_init_side = df_side_fun,
@@ -244,7 +243,6 @@ lapply_around_table_list <- function(df_main_fun,df_side_fun,Number_of_deck,obse
     top_x_rank = Number_of_deck,
     Week_fun = observ_duration
     )
- 
   res_any <- Best_deck_get_table_function(
     res_fun_init_main = df_main_fun,
     res_fun_init_side = df_side_fun,
@@ -270,7 +268,23 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
   not_colfuns <- ifelse(cols_fun == "Sideboard","Mainboard","Sideboard")
   # if(Archetype_fun == "Footfalls") browser()
   if(nrow(df %>% 
-          filter(Archetype == Archetype_fun) ) == 0){
+          filter(Archetype == Archetype_fun) ) == 0|
+     nrow(df %>%  
+          select(
+            -id,-proba,
+            -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
+            -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
+            -ReferenceArchetype_Companion,- matches,-Base_Archetype,
+            -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck
+          ) %>% 
+          mutate(Date = lubridate::date(Date))%>% 
+          select(-all_of(not_colfuns)) %>% 
+          filter(Week >= (max(Week) - Week_fun)) %>% 
+          filter(Archetype == Archetype_fun) %>%
+          filter(type_of_model == Model) %>% 
+          filter(rank <= max(sort(rank)[1:top_x_rank]))) ==0
+     
+     ){
     Unnest_filter_table <- NULL
     
   }else {
@@ -441,6 +455,7 @@ Best_deck_get_table_function <- function(res_fun_init_main,
                                          Week_fun#,
                                           
                                          ) {
+      
   if (identical(res_fun_init_main , res_fun_init_side)) {
     Df_combine <- rbind(
     unlist_side_or_main(
@@ -963,14 +978,14 @@ res_main_and_side_gt_table_2weeks <- lapply_around_table_list(
 
  
 
-# All Data Model best deck prediction
+
 
 
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
 ```
 
-
+# All Data Model best deck prediction
 
 ```{r print_result_all_data, results='asis'}
 #, out.width="100%"
