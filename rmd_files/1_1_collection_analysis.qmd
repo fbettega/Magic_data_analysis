@@ -495,7 +495,11 @@ base_archetype_not_owned <- rbind(
       n_quant_base_arch/Base_Archetype_count
      # "(",Base_Archetype_count,")")
   ) %>% 
-  distinct() %>% 
+  distinct(
+    CardName,	Base_Archetype,	Quantity,	
+    Base_Archetype_count,	n_quant_base_arch,
+    max_missing_quantity,.keep_all = TRUE
+  ) %>% 
     ungroup() ) %>% 
   select(
     -c(

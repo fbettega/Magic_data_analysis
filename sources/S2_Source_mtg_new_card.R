@@ -1,3 +1,13 @@
+
+################################################################################
+########################### is rendering fun ###################################
+
+is_inside_knitr <-  function() {
+  !is.null(knitr::opts_knit$get("out.format"))
+}
+
+
+
 ################################################################################
 ########################### Pre TT function for archetype classif ##############
 prett_fun_classif <- function(df, colname_deck_list) {
@@ -373,9 +383,6 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     
     
     # groupe eldra avec eldra tron
-    
-    
-    
     Eldrazi = c("Eldrazi","Eldrazi Tron","Breach Eldrazi"),
     ############################ Réfléxion a mener #################################
     # groupe all deck blade a reflechir sur le fait de grouper avec blink
@@ -1595,6 +1602,21 @@ Tournament_agreger <- function(tournament_string){
 }
 
 
+
+
+################################################################################
+################################################################################
+#######################  Simple flaten cor matrix ##############################
+flattenCorrMatrix <- function(cormat, pmat) {
+  ut <- upper.tri(cormat)
+  data.frame(
+    row = rownames(cormat)[row(cormat)[ut]],
+    column = rownames(cormat)[col(cormat)[ut]],
+    cor  = (cormat)[ut]#,
+    # p = pmat[ut]
+  )
+}
+################################################################################
 
 ################################################################################
 ################################################################################

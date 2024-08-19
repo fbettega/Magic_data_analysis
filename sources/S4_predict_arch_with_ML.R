@@ -206,7 +206,7 @@ Voting_df_upper_treshold <- Voting_df %>% filter(value > 0.3)
 
 DF_post_archetype_pred <- df_export %>% 
   left_join(Voting_df_upper_treshold %>% select(id,name), by = "id") %>% 
-  mutate(Archetype = str_replace(if_else(is.na(name),Archetype,name),"\\."," ") ) %>% 
+  mutate(Archetype = str_replace_all(if_else(is.na(name),Archetype,name),"\\."," ") ) %>% 
   select(-name)
 
 

@@ -13,11 +13,11 @@ run_command_from_dir <- function(cmd, dir_cmd) {
 
 tictoc::tic("total")
 git2r::config(
-  global = TRUE, 
+  global = TRUE,
   user.name = "fbettega",
   user.email = "francois.bettega@gmail.com",
   core.longpaths = "TRUE"
-  )
+)
 # deck_list_repo <- git2r::clone(
 #   "https://github.com/Badaro/MTGODecklistCache.git",
 #   "ArchetypeParser/MTGODecklistCache/"
@@ -26,7 +26,7 @@ git2r::config(
 
 deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache/")
 
-Sys.sleep(5400)
+# Sys.sleep(7200)
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 
 
@@ -34,15 +34,15 @@ pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 run_command_from_dir(
   "./MTGOArchetypeParser.App.exe json detect",
   "ArchetypeParser/"
-  )
+)
 
 calledProgram <- new.env()
 
 sys.source(
-  "sources/S3_Archetype_classif_models.R", 
+  "sources/S3_Archetype_classif_models.R",
   envir = calledProgram,
   toplevel.env = calledProgram
-  )
+)
 
 rm(calledProgram)
 
@@ -58,12 +58,14 @@ sys.source(
 rm(calledProgram)
 
 
-quarto::quarto_render("rmd_files/", output_format = "html",as_job = FALSE)
+quarto::quarto_render("rmd_files/", output_format = "html", as_job = FALSE)
 
 
 # quarto::quarto_render("rmd_files/2_presence_archetype.qmd", output_format = "html")
 
 
 tictoc::toc()
-system('shutdown -s')
+# session <- ssh::ssh_connect("francois@176.31.183.129",keyfile = "ssh_key/id_rsa.pub")
 
+
+system("shutdown -s")

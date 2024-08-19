@@ -1000,23 +1000,22 @@ for (i in sort(unique(res_global$Archetype))) {
   pander::pandoc.p("")
 
   if (i %in% names(res_global_gt_table)) {
-    pander::pandoc.p(':::::::::::::: {.columns}
-::: {.column width="50%"}')
+    pander::pandoc.p('::: {.panel-tabset .nav-pills}')
+    pander::pandoc.header("Any", level = 5)
 
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_global_gt_table[[i]]$any))
     print(htmltools::tagList(htmltools::HTML(res_global_gt_table[[i]]$any)))
 
     pander::pandoc.p("")
-    pander::pandoc.p(":::")
-
-    pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
 
+pander::pandoc.header("Count", level = 5)
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_global_gt_table[[i]]$count))
     print(htmltools::tagList(htmltools::HTML(res_global_gt_table[[i]]$count)))
 
-    pander::pandoc.p(":::
-::::::::::::::")
+    pander::pandoc.p(":::")
   }
 
   pander::pandoc.header("Separate model for main and side", level = 3)
@@ -1027,48 +1026,46 @@ for (i in sort(unique(res_global$Archetype))) {
 
 
     pander::pandoc.header("Mainboard", level = 4)
-    pander::pandoc.p(':::::::::::::: {.columns}
-::: {.column width="50%"}')
+    pander::pandoc.p('::: {.panel-tabset .nav-pills}')
 
+    pander::pandoc.header("Any", level = 5)
 
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$any$main))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$any$main)))
 
     pander::pandoc.p("")
-    pander::pandoc.p(":::")
-
-    pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
 
+pander::pandoc.header("Count", level = 5)
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$count$main))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$count$main)))
 
 
-    pander::pandoc.p(":::
-::::::::::::::")
+    pander::pandoc.p(":::")
       pander::pandoc.p("")
 
       pander::pandoc.header("Sideboard", level = 4)
 
-      pander::pandoc.p(':::::::::::::: {.columns}
-::: {.column width="50%"}')
+      pander::pandoc.p('::: {.panel-tabset .nav-pills}')
 
+    pander::pandoc.header("Any", level = 5)
 
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$any$side))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$any$side)))
 
     pander::pandoc.p("")
-    pander::pandoc.p(":::")
-
-    pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
 
+pander::pandoc.header("Count", level = 5)
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table[[i]]$count$side))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table[[i]]$count$side)))
 
 
-    pander::pandoc.p(":::
-::::::::::::::")
+    pander::pandoc.p(":::")
   }
   # adding also empty lines, to be sure that this is valid Markdown
   pander::pandoc.p("")
@@ -1106,20 +1103,21 @@ for (i in sort(unique(res_global$Archetype))) {
   pander::pandoc.p("")
 
   if (i %in% names(res_global_gt_table_2weeks)) {
-    pander::pandoc.p(':::::::::::::: {.columns}
-::: {.column width="50%"}')
+    pander::pandoc.p('::: {.panel-tabset .nav-pills}')
+    pander::pandoc.header("Any", level = 5)
 
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$any))
     print(htmltools::tagList(htmltools::HTML(res_global_gt_table_2weeks[[i]]$any)))
 
     pander::pandoc.p("")
-    pander::pandoc.p(":::")
-    pander::pandoc.p('::: {.column width="50%"}')
+    pander::pandoc.p("")
+
+pander::pandoc.header("Count", level = 5)
     pander::pandoc.p("")
     # print(htmltools::tagList(res_global_gt_table_2weeks[[i]]$count))
     print(htmltools::tagList(htmltools::HTML(res_global_gt_table_2weeks[[i]]$count)))
-    pander::pandoc.p(":::
-::::::::::::::")
+    pander::pandoc.p(":::")
   }
 
   pander::pandoc.header("Separate model for main and side", level = 3)
@@ -1128,43 +1126,38 @@ for (i in sort(unique(res_global$Archetype))) {
 
   if (i %in% names(res_main_and_side_gt_table_2weeks)) {
         pander::pandoc.header("Mainboard", level = 4)
-        pander::pandoc.p(':::::::::::::: {.columns}
-::: {.column width="50%"}')
+        pander::pandoc.p('::: {.panel-tabset .nav-pills}')
 
-
+        pander::pandoc.header("Any", level = 5)
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$any$main))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$any$main)))
 
     pander::pandoc.p("")
-    pander::pandoc.p(":::")
-    pander::pandoc.p('::: {.column width="50%"}')
+    pander::pandoc.p("")
+pander::pandoc.header("Count", level = 5)
     pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$count$main))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$count$main)))
 
 
-    pander::pandoc.p(":::
-::::::::::::::")
+    pander::pandoc.p(":::")
     pander::pandoc.header("Sideboard", level = 4)
     pander::pandoc.p("")
-        pander::pandoc.p(':::::::::::::: {.columns}
-::: {.column width="50%"}')
-
-
+    pander::pandoc.p('::: {.panel-tabset .nav-pills}')
+    pander::pandoc.header("Any", level = 5)
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$any$side))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$any$side)))
 
     pander::pandoc.p("")
-    pander::pandoc.p(":::")
-
-    pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
-
+pander::pandoc.header("Count", level = 5)
+    pander::pandoc.p("")
     # print(htmltools::tagList(res_main_and_side_gt_table_2weeks[[i]]$count$side))
     print(htmltools::tagList(htmltools::HTML(res_main_and_side_gt_table_2weeks[[i]]$count$side)))
 
-    pander::pandoc.p(":::
-::::::::::::::")
+    pander::pandoc.p(":::")
       }
   # adding also empty lines, to be sure that this is valid Markdown
   pander::pandoc.p("")

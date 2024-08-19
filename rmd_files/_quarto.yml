@@ -24,6 +24,8 @@ book:
       - 7_last_weeks_winners.qmd
 format:
   html:
+    include-in-header:
+      - file: github-corner.html
     theme: cosmo
     page-layout: full
     grid:

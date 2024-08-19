@@ -4,9 +4,7 @@ title: "New cards analysis"
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 # Note globale
-
 # probablement reformater le code des CI plus présentations en un fonction renvoyant X colonnes WR upper and lower
-
 # Reflechir a passer en shiny
 #
 # ajouter une colonne nombre de deck
@@ -15,7 +13,7 @@ library("rjson")
 library(kableExtra)
 library(tidyverse)
 library(scryr)
-source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
+source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 refetch_cards_new_set <- FALSE
 ```
@@ -23,10 +21,8 @@ refetch_cards_new_set <- FALSE
 
 
 
-
 ```{r}
 # Fonction that count cards in given arhcetype
-
 Count_cards_in_decklist <- function(df, Name_of_card_of_interest, colname_deck_list) {
   if (colname_deck_list == "Mainboard") {
     expected_min_size <- 60
@@ -277,16 +273,16 @@ Count_and_winrates_cards_in_decklist <- function(df, Name_of_card_of_interest, c
 
 ```{r data_reading }
 df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
-      # include filter bad deck
-  filter(Valide_deck) %>% 
+  # include filter bad deck
+  filter(Valide_deck) %>%
   mutate(
     Deck_winrate = Wins / (Losses + Wins)
   ) %>%
-  group_by(Archetype) %>% 
+  group_by(Archetype) %>%
   mutate(
     Archetype_count = n()
-  ) %>% 
-    ungroup()
+  ) %>%
+  ungroup()
 
 
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
@@ -294,10 +290,10 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
 
 
 ```{r}
-set_code_help_search <- modern_DB_card %>% 
+set_code_help_search <- modern_DB_card %>%
   arrange(desc(released_at)) %>%
-  select(released_at,set) %>% 
-  distinct(set,.keep_all = TRUE)
+  select(released_at, set) %>%
+  distinct(set, .keep_all = TRUE)
 
 ## all code to pull cards new to moder
 # if (refetch_cards_new_set) {
@@ -317,23 +313,23 @@ set_code_help_search <- modern_DB_card %>%
 ```{r set_choose }
 # Meta_of_interest <- c("PostMurdersAtKarlovManor")
 exclude_cards <- c(
-  "Flooded Strand","Polluted Delta",
-  "Wooded Foothills","Bloodstained Mire", 
-  "Windswept Heath", "Flusterstorm" 
+  "Flooded Strand", "Polluted Delta",
+  "Wooded Foothills", "Bloodstained Mire",
+  "Windswept Heath", "Flusterstorm"
 )
 
 
 card_of_interest <- modern_DB_card %>%
   filter(
     set %in% (set_code_help_search$set %>% head(5)),
-     !reprint,
+    !reprint,
     # name %in% cards_in_set_of_interest_name,
     # name %notin% exclude_cards,
     # !str_detect(type_line,"Basic Land — ")
-         ) %>% 
+  ) %>%
   mutate(
-    name = str_remove(name,"\\s? //.+")
-         )
+    name = str_remove(name, "\\s? //.+")
+  )
 ```
 
 
@@ -412,7 +408,6 @@ selection_content[0].innerHTML = content_str;
 
 
 ```{r data_select_with_new_card_main_L}
-
 df_main_unnest <- df_export %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_")
@@ -469,6 +464,7 @@ DT::datatable(
       Mainboard_Count = as.factor(Mainboard_Count)
     ) %>%
     mutate(Only_count = is.na(count_winrate)) %>%
+    arrange(desc(count_winrate)) %>%
     rename_with(
       ~ str_replace(
         str_replace(
@@ -480,9 +476,7 @@ DT::datatable(
         ),
         "CardName", "Card"
       )
-    ) %>% 
-    arrange(desc(count_winrate)
-            ),
+    ) ,
   callback = DT::JS(
     paste0(
       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
@@ -495,14 +489,16 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr",  
-                 searchCols = list(
-                   NULL,NULL,
-                   list(search = '["Any"]' ),
-                   NULL,
-                   NULL,# list(search = '10 ...'),
-                   NULL, NULL, NULL,NULL,NULL, NULL,list(search = '["false"]' )#NULL
-  ), autoWidth = TRUE, pageLength = 25)
+  options = list(
+    dom = "ltipr",
+    searchCols = list(
+      NULL, NULL,
+      list(search = '["Any"]'),
+      NULL,
+      NULL, # list(search = '10 ...'),
+      NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
+    ), autoWidth = TRUE, pageLength = 25
+  )
 )
 ```
 
@@ -524,6 +520,8 @@ DT::datatable(
       Sideboard_Count = as.factor(Sideboard_Count)
     ) %>%
     mutate(Only_count = is.na(count_winrate)) %>%
+    arrange(
+      desc(count_winrate)) %>%
     rename_with(
       ~ str_replace(
         str_replace(
@@ -535,10 +533,8 @@ DT::datatable(
         ),
         "CardName", "Card"
       )
-    ) %>% 
-    arrange(
-      desc(count_winrate)
-            ),
+    ) 
+    ,
   callback = DT::JS(
     paste0(
       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
@@ -551,27 +547,15 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr",  
-                 searchCols = list(
-                   NULL,NULL,
-                   list(search = '["Any"]' ),
-                   NULL,
-                   NULL,# list(search = '10 ...'),
-                   NULL, NULL, NULL,NULL,NULL, NULL,list(search = '["false"]' )#NULL
-  ), autoWidth = TRUE, pageLength = 25)
+  options = list(
+    dom = "ltipr",
+    searchCols = list(
+      NULL, NULL,
+      list(search = '["Any"]'),
+      NULL,
+      NULL, # list(search = '10 ...'),
+      NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
+    ), autoWidth = TRUE, pageLength = 25
+  )
 )
 ```
-
-
-
-
-
-
-
-
-
-
-
-
-
-

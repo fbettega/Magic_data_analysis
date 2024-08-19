@@ -1,6 +1,7 @@
 archive/
 MTG_FB_tools/
 ArchetypeParser/
+ssh_key/
 .Rproj.user
 .Rhistory
 .RData
