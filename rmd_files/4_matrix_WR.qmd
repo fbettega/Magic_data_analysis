@@ -34,7 +34,7 @@ loaded_base_data <- readRDS("../data/data_meta_en_cours.rds")
 
 
 ```{r}
-knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S1_introduction_text.R")
 # Prendre en compte mieux le nombres de deck avec CI pour le best deck
 ```
 

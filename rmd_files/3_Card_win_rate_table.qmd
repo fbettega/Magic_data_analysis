@@ -17,7 +17,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 
 
 ```{r}
-knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 

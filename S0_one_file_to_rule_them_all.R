@@ -64,8 +64,13 @@ quarto::quarto_render("rmd_files/", output_format = "html", as_job = FALSE)
 # quarto::quarto_render("rmd_files/2_presence_archetype.qmd", output_format = "html")
 
 
-tictoc::toc()
-# session <- ssh::ssh_connect("francois@176.31.183.129",keyfile = "ssh_key/id_rsa.pub")
 
 
+if(file.exists("ssh_key/id_rsa")){
+session <- ssh::ssh_connect("francois@176.31.183.129",keyfile = "ssh_key/id_rsa")
+ssh::scp_upload(session,files = list.files("outpout/",full.names = TRUE),to = "/home/francois/docker/magic/magic_modern_meta/data/")
+ssh::ssh_disconnect(session)
+}
 system("shutdown -s")
+
+tictoc::toc()

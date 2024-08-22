@@ -83,7 +83,7 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 ```
 
 ```{r sources_introduction}
-knitr::read_chunk("../sources/S2_Source_mtg_new_card.R")
+knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 ```{r function}
