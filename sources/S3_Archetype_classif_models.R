@@ -177,9 +177,17 @@ df_export_pre_60_filter <- json_parsing %>%
   mutate(Archetype = make.names(Archetype))
 
 
+format_bann_cards <- scryr::scry_cards("banned:modern")
+
+df_export_pre_60_filter_remove_bann <- Ban_patch(
+  df = df_export_pre_60_filter,
+  vec_of_ban_cards = c(format_bann_cards$name,"Nadu, Winged Wisdom","Grief")
+)
+
+
 
 rm(json_parsing)
-Not_60_cards_main <- df_export_pre_60_filter %>%
+Not_60_cards_main <- df_export_pre_60_filter_remove_bann %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_") %>%
   group_by(id) %>%
@@ -190,7 +198,7 @@ Not_60_cards_main <- df_export_pre_60_filter %>%
 
 
 
-df_export <- df_export_pre_60_filter %>%
+df_export <- df_export_pre_60_filter_remove_bann %>%
   left_join(Not_60_cards_main, by = c("id")) %>% 
   mutate(
     Valide_deck = if_else(
@@ -199,11 +207,16 @@ df_export <- df_export_pre_60_filter %>%
     Number_of_main_deck_cards = if_else(
       is.na(Number_of_main_deck_cards),0,
       Number_of_main_deck_cards)    
-         )
+         ) %>%
+  group_by(Archetype) %>%
+  mutate(
+    Archetype_count = n()
+  ) %>%
+  ungroup()
   
   # filter(id %notin% Not_60_cards_main$id)
 
-rm(df_export_pre_60_filter, Not_60_cards_main)
+rm(df_export_pre_60_filter, Not_60_cards_main,df_export_pre_60_filter_remove_bann)
 
 
 
@@ -262,10 +275,11 @@ model_decision_tree_base_c5 <-
   set_mode("classification")
 
 grid_decision_tree_base_c5 <-
-  grid_latin_hypercube(
+  grid_space_filling(
     min_n(),
     size = 25
   )
+
 
 
 

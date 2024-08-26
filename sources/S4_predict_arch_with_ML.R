@@ -212,16 +212,7 @@ DF_post_archetype_pred <- df_export %>%
 
 
 
-df_export_remove_bann <- Ban_patch(
-  df = DF_post_archetype_pred,
-  vec_of_ban_cards = c("Violent Outburst")
-)
-
-
-
-df_export_patch_mtgo <- df_export_remove_bann 
-
-write_rds(df_export_remove_bann, "data/data_meta_en_cours.rds")
+write_rds(DF_post_archetype_pred, "data/data_meta_en_cours.rds")
 }
 
 

@@ -109,7 +109,6 @@ name_list_of_model_with_string <- function(list, string) {
 
 
 
-
 format_model_list <- function(model_list) {
   model_clean <- lapply(model_list, function(x) {
     
@@ -117,7 +116,11 @@ format_model_list <- function(model_list) {
     # print(as.character(x$Model_any$Archetype))
     if(is.null(x$Model_any)){
       Model_any_encours <- NULL
-      }else{
+      } else if(
+        length(x$Model_any$coefficients) == 1
+      ) {
+    Model_any_encours <- NULL
+    } else{
     Model_any_encours <- x$Model_any %>%
       gtsummary::tbl_regression(exponentiate = TRUE) %>%
       gtsummary::bold_labels() %>%
@@ -135,7 +138,11 @@ format_model_list <- function(model_list) {
     }
     if(is.null(x$Model_count)){
       Model_count_encours <- NULL
-      }else{
+    } else if(
+        length(x$Model_count$coefficients) == 1
+      ) {
+    Model_count_encours <- NULL
+    } else{
     Model_count_encours <- x$Model_count %>%
       gtsummary::tbl_regression(exponentiate = TRUE) %>%
       gtsummary::bold_labels() %>%
@@ -393,7 +400,7 @@ res_fun <- lapply(res_model, function (x){
 res_per_arch <- lapply(seq_along(x), function(y){
   model_vif_fun <- x[[y]]
   
-  # print(as.character(x$Model_any$Archetype))
+  print(as.character(x$Model_any$Archetype))
   if  (length(coefficients(model_vif_fun))  < 3){
   res <- data.frame(
     model = names(x[y]),
@@ -884,158 +891,7 @@ groupe_cards_uncommon_data <- group_linear_comb_cards(Model_data_Uncommon_cards)
 ```
 
 
-```{r}
-df_arch_init <- (groupe_cards_uncommon_data  %>%
-  ungroup() %>%
-  pivot_wider(
-    names_from = Mainboard_CardName,
-    values_from = Mainboard_Count,
-     values_fill = "0",
-    id_cols = c(Archetype,id)
-    )  
-  
-  %>%
-  group_split(Archetype))[[18]] %>% 
-  select(where(~n_distinct(.)> 1))
 
-
-
-
-# all_archetype_table_for_all_cards <- lapply(
-#   groupe_cards_uncommon_data  %>%
-#   ungroup() %>%
-#   pivot_wider(
-#     names_from = Mainboard_CardName,
-#     values_from = Mainboard_Count,
-#      values_fill = "0",
-#     id_cols = c(Archetype,id)
-#     )  %>%
-#   group_split(Archetype),
-#   function(x) {
-#     res <- group_variable_function(df_arch_init = x,
-#                                              seuil_common_sup = 0.95)
-#     return(res)
-#   }
-# ) %>%
-#   name_list_of_model_with_string(unique(groupe_cards_uncommon_data$Archetype))
-```
-
-
-```{r temp_test_grp}
-# function()
-# 
-if(!is_inside_knitr()){
-df_base_fun <- groupe_cards_uncommon_data
-
-col_en_cours <- df_base_fun %>%
-    select(ends_with("_CardName")) %>%
-    colnames() %>%
-    str_remove("_CardName")
-
-
-df_to_join <- df_base_fun %>%
-  select(
-    Archetype,id,Archetype_count,
-         all_of(c(paste0(col_en_cours, "_CardName"),
-                  paste0(col_en_cours, "_Count")))
-         ) %>%
-  filter(!str_detect(!!rlang::sym(paste0(col_en_cours, "_CardName"))," land$"),
-         !!rlang::sym(paste0(col_en_cours, "_CardName")) != "Land_tot") %>% 
-  group_by(Archetype, !!rlang::sym(paste0(col_en_cours, "_CardName"))) %>%
-  mutate(
-    total_card = n()
-    ) %>%
-  group_by(Archetype, !!rlang::sym(paste0(col_en_cours, "_CardName")),
-           !!rlang::sym(paste0(col_en_cours, "_Count"))) %>%
-  mutate(
-    count_iteration_card = n()
-    )
-
-
-
-collapse_col_df <- left_join(
- df_to_join,
-  df_to_join,
- by = join_by(id,Archetype,Archetype_count
-              ),
-  relationship = "many-to-many"
-  ) %>%
-  filter(!(
-    !!rlang::sym(paste0(col_en_cours, "_CardName.x")) == !!rlang::sym(paste0(col_en_cours, "_CardName.y")) &
-      !!rlang::sym(paste0(col_en_cours, "_Count.x")) == !!rlang::sym(paste0(col_en_cours, "_Count.y"))
-    )
-    ) %>%
-  # rowwise() %>%
-  # mutate(
-  #   key = paste0(sort(c(
-  #     paste0(!!rlang::sym(paste0(col_en_cours, "_CardName.x")),
-  #            !!rlang::sym(paste0(col_en_cours, "_Count.x"))),
-  #     paste0(!!rlang::sym(paste0(col_en_cours, "_CardName.y")),
-  #            !!rlang::sym(paste0(col_en_cours, "_Count.y")))
-  #     )), collapse="")
-  #   ) %>%
-  #  ungroup() %>%
-  #  distinct(id,Archetype,key,.keep_all = TRUE) %>%
-  #  select(-key) %>%
-    mutate(
-    !!rlang::sym(paste0(col_en_cours, "_CardName")) :=
-      paste0(
-        !!rlang::sym(paste0(col_en_cours, "_CardName.x")),
-        " ; " ,
-        !!rlang::sym(paste0(col_en_cours, "_CardName.y"))
-             ),
-    !!rlang::sym(paste0(col_en_cours, "_Count")) :=
-      paste0(
-        !!rlang::sym(paste0(col_en_cours, "_Count.x")) ,
-        " ; " ,
-        !!rlang::sym(paste0(col_en_cours, "_Count.y"))
-        )
-    )
-}
-
-if(!is_inside_knitr()){
-df_two_way_cards_combination_summary <- collapse_col_df %>%
-  group_by(Archetype,Mainboard_CardName) %>%
-  mutate(
-    n_card_combination =  n()
-  ) %>%
-  ungroup() %>%
-  group_by(Archetype,Mainboard_CardName,Mainboard_Count) %>%
-  mutate(
-    n_card_count_combination = n()
-    ) %>% 
-  ungroup() %>% 
-  select(-id) %>% 
-  distinct() %>%
-  mutate(
-    cover_perc.x = n_card_count_combination/count_iteration_card.x,
-    cover_perc.y = n_card_count_combination/count_iteration_card.y,
-    cover_association.x = n_card_combination/total_card.x,
-    cover_association.y = n_card_combination/total_card.y,
-    remaining.x =  count_iteration_card.x - n_card_count_combination ,
-    remaining.y = count_iteration_card.y - n_card_count_combination,
-    remaining_total.x = total_card.x - n_card_combination,
-    remaining_total.y = total_card.y - n_card_combination
-  ) 
-
-
-
-a <- df_two_way_cards_combination_summary %>% 
-   # filter(Archetype == "RWx aggro") %>% 
-  filter(cover_association.x == 1,
-         cover_perc.x == 1,
-         remaining_total.y >= 50,
-         remaining.y >= 50
-         )  %>%
-  group_by(Archetype,Mainboard_CardName,Mainboard_Count) %>%
-  filter(
-    sum(count_iteration_card.x) == total_card.x
-  ) %>%
-  ungroup() 
-
-  
-}
-```
 
 
 ```{r}
@@ -1068,26 +924,6 @@ groupe_side_cards_uncommon_data <- group_linear_comb_cards(Side_Model_data_Uncom
 ```
 
 
-```{r} 
-all_archetype_table_for_side_cards <- lapply(
-  groupe_side_cards_uncommon_data  %>%
-  ungroup() %>%
-  pivot_wider(
-    names_from = Sideboard_CardName,
-    values_from = Sideboard_Count,
-     values_fill = "0",
-    id_cols = c(Archetype,id)
-    )  %>%
-  group_split(Archetype),
-  function(x) {
-    res <- group_variable_function(df_arch_init = x,
-                                             seuil_common_sup = 0.95)
-    return(res)
-  }
-) %>%
-  name_list_of_model_with_string(unique(groupe_side_cards_uncommon_data$Archetype))
-```
-
 
 
 
@@ -1108,17 +944,18 @@ Side_uncomon_card_format_model <- format_model_list(Side_result_models_Uncommon_
 
 
 ```{r}
-
-vif_deck <- rbind(
-  compute_vif_for_model(result_models_Uncommon_cards_all_arch) %>% 
-    mutate(
-      deck_side = "Main",.before = 1
-      ),
-  compute_vif_for_model(Side_result_models_Uncommon_cards_all_arch) %>% 
-    mutate(
-      deck_side = "Main",.before = 1
-      )
-  )
+# result_models_Uncommon_cards_all_arch[["Amulet Titan"]]$Model_count
+# 
+# vif_deck <- rbind(
+#   compute_vif_for_model(result_models_Uncommon_cards_all_arch) %>%
+#     mutate(
+#       deck_side = "Main",.before = 1
+#       ),
+#   compute_vif_for_model(Side_result_models_Uncommon_cards_all_arch) %>%
+#     mutate(
+#       deck_side = "Main",.before = 1
+#       )
+#   )
 
 
 ```

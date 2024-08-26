@@ -126,14 +126,20 @@ Ban_patch <- function(vec_of_ban_cards, df # ,exact_result = FALSE
   # Create a df of with a list of key by pasting player and archetype use after for remove player in matchup list
   Remove_id_temp <- df %>%
     filter(id %in% Remove_id) %>%
-    select(TournamentFile, Player, ReferenceArchetype_Archetype) %>%
+    select(TournamentFile, Player,
+           Base_Archetype
+           # ReferenceArchetype_Archetype
+           
+           ) %>%
     group_by(TournamentFile) %>%
     summarise(
       remove_matchup = list(
-        paste0(Player, "_", ReferenceArchetype_Archetype)
+        paste0(Player, "_", 
+               Base_Archetype
+               # ReferenceArchetype_Archetype
+               )
       )
     )
-
 
   # Remove remove player from each matchup by unlisting matchup and remove player using Remove_id_temp
   Matchup_issue <- df %>%
@@ -187,7 +193,6 @@ Ban_patch <- function(vec_of_ban_cards, df # ,exact_result = FALSE
     # rename(Matchups = Matchups) %>%
     distinct() %>%
     select(id, Matchups)
-
 
   # ADD new matchup column with a join in order to get null in empty matchups
   Df_final <- df %>%
@@ -491,8 +496,6 @@ Archetype_agreger <- function(Archetype_to_agreg, color_agreg = NULL) {
     
     Creativity = c("Izzet Through Breach"),
     ############################################################################
-    # not  enougth data 
-    Enchantress = c("Enchantress","Enduring Ideal"),
     # `Kiki Jiki` = c("Kiki Jiki", "Kiki Chord"),
     `Creature combo` = c(
       "Soultrader Combo",
