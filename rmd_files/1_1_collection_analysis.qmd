@@ -460,7 +460,6 @@ base_archetype_not_owned_without_any <-
     group_by(Base_Archetype,CardName) %>% 
     mutate(max_missing_quantity = max(missing)) %>% 
     ungroup() %>% 
-    
   group_by(
     Base_Archetype,
     CardName,
@@ -473,12 +472,12 @@ base_archetype_not_owned_without_any <-
      # "(",Base_Archetype_count,")")
   ) %>% 
   distinct() %>% 
-    ungroup() 
+    ungroup()  
 
-
+ 
 base_archetype_not_owned <- rbind(
   base_archetype_not_owned_without_any,
-  not_owned_cards %>%
+not_owned_cards %>%
   select(-c(id,Archetype,Archetype_count,n_quant_arch)) %>% 
     group_by(Base_Archetype,CardName) %>% 
     mutate(max_missing_quantity = max(missing)) %>% 
@@ -489,8 +488,14 @@ base_archetype_not_owned <- rbind(
     CardName,
     Quantity
     ) %>% 
+  distinct(
+    CardName,	Base_Archetype,	Quantity,	
+    Base_Archetype_count,	n_quant_base_arch,
+    max_missing_quantity,.keep_all = TRUE
+  ) %>% 
   mutate(
-    # n_quant_base_arch = sum(n_quant_base_arch),
+    n_quant_base_arch = sum(n_quant_base_arch),
+    missing = max(missing),
     Base_Archetype_count = #paste0(
       n_quant_base_arch/Base_Archetype_count
      # "(",Base_Archetype_count,")")
@@ -500,7 +505,8 @@ base_archetype_not_owned <- rbind(
     Base_Archetype_count,	n_quant_base_arch,
     max_missing_quantity,.keep_all = TRUE
   ) %>% 
-    ungroup() ) %>% 
+    ungroup() 
+ ) %>% 
   select(
     -c(
       Number_of_card_missing_in_deck,

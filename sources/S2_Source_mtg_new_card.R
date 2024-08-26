@@ -263,10 +263,16 @@ selection_content[0].innerHTML = content_str;
 
 format_df_result_card_table <- function(
     df_base_fun, # data frame from xx
-    colname_deck_list, # "Mainboard" or "Sideboard"
     df_Archetyp_fun, # df Used to put corect order for archetype or based archetype
     Based_Archetyp_fun = FALSE # function use deagregeted archetype
     ) {
+  
+  colname_deck_list <- df_base_fun %>% 
+    ungroup() %>% 
+    select(ends_with("_CardName")) %>% 
+    colnames() %>% 
+    str_remove("_CardName")
+  
   if (Based_Archetyp_fun) {
     # juste reordor Based archetype level and make cardname and count factor
     df_temp_fun <- df_base_fun %>%

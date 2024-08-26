@@ -79,7 +79,12 @@ df_base_Archetype <- df_export %>%
 
 
 ```{r}
-Count_and_winrates_cards_in_decklist_total <- function(df, group_var, colname_deck_list) {
+Count_and_winrates_cards_in_decklist_total <- function(df,
+                                                       group_var,
+                                                       colname_deck_list # don't remove use for unnest
+                                                       ) {
+
+    
   if (group_var == "Base_Archetype") {
     select_group_var <- c(group_var, "Archetype")
   } else {
@@ -441,9 +446,8 @@ The cards making up the base of the deck are those who a specif number of copies
 # Create the datatable with hover-over tooltips
 DT::datatable(
   format_df_result_card_table(
-    win_rate_main_board$Card_always_in_deck_final,
-    "Mainboard",
-    df_Archetype
+    df_base_fun = win_rate_main_board$Card_always_in_deck_final,
+   df_Archetyp_fun = df_Archetype
   ),
   filter = "top", rownames = FALSE,
   callback = DT::JS(
@@ -480,7 +484,6 @@ for (var i = 0; i < tips.length; i++) {
 DT::datatable(
   format_df_result_card_table(
     win_rate_main_board$Win_rate_df_final,
-    "Mainboard",
     df_Archetype
   ),
   callback = DT::JS(
@@ -527,7 +530,7 @@ The cards making up the base of the deck are those who a specif number of copies
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board$Card_always_in_deck_final,
-    "Sideboard",
+    # "Sideboard",
     df_Archetype,
   ),
   callback = DT::JS(
@@ -558,7 +561,7 @@ for (var i = 0; i < tips.length; i++) {
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board$Win_rate_df_final,
-    "Sideboard",
+    # "Sideboard",
     df_Archetype,
   ),
   callback = DT::JS(
@@ -623,7 +626,7 @@ The cards making up the base of the deck are those who a specif number of copies
 DT::datatable(
   format_df_result_card_table(
     win_rate_main_board_based_arch$Card_always_in_deck_final,
-    colname_deck_list = "Mainboard",
+    # colname_deck_list = "Mainboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
   ),
@@ -657,7 +660,7 @@ for (var i = 0; i < tips.length; i++) {
 DT::datatable(
   format_df_result_card_table(
     win_rate_main_board_based_arch$Win_rate_df_final,
-    colname_deck_list = "Mainboard",
+    # colname_deck_list = "Mainboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
   ),
@@ -706,7 +709,7 @@ The cards making up the base of the deck are those who a specif number of copies
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board_based_arch$Card_always_in_deck_final,
-    colname_deck_list = "Sideboard",
+    # colname_deck_list = "Sideboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
   ),
@@ -738,13 +741,11 @@ for (var i = 0; i < tips.length; i++) {
 ### Variable Cards sideboard   
 
 
-
-
 ```{r}
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board_based_arch$Win_rate_df_final,
-    colname_deck_list = "Sideboard",
+    # colname_deck_list = "Sideboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
   ),

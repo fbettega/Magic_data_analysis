@@ -163,7 +163,7 @@ format_model_list <- function(model_list) {
 
 
 
-model_unco_cards_fun <- function(df_fun,interaction_term ) {
+model_unco_cards_fun <- function(df_fun ) {
   cols_fun <- df_fun %>% 
     select(ends_with("_CardName")) %>% 
     colnames() %>% 
@@ -200,17 +200,14 @@ model_unco_cards_fun <- function(df_fun,interaction_term ) {
         ) %>%
         select(-Archetype, -Player, -id, -Archetype_count, -Draws) %>%
         mutate(
-          # Choose most common level as references
           across(
             where(is.character),
             ~ fct_infreq(as.factor(.))
           )
         ) %>% 
-        # remove card with only 1+ like basic land fetch ....
         select(where(~n_distinct(.) > 1))
       
       model_unco_tot_fun <- df_fun %>%
-        # select(-Join_main_count) %>%
         filter(Archetype == x) %>%
         ungroup() %>%
         filter(!is.na(!!rlang::sym(paste0(cols_fun, "_CardName")))) %>%
@@ -258,66 +255,20 @@ model_unco_cards_fun <- function(df_fun,interaction_term ) {
         model_res <- NULL
         model_res_any <- NULL
       } else {
-        # print(as.character(x))
-        # if(x == "Necro") browser()
-        # nb_x_var <- ncol(
-        #   model.matrix( ~.,
-        #                 dplyr::select(df_model, -c(Wins, Losses)))[, -1]
-        #                  )
-        # 
-        # 
-        # 
-        # x_mat_count <- model.matrix( ~ #. +.^2
-        #                          (.)^3, dplyr::select(df_model, -c(Wins, Losses)))[, -1]
-        # 
-        # y_count <- cbind(Losses =  df_model$Losses,
-        #                  Wins = df_model$Wins
-        #                  )
-        # 
-        # extract_coef <- function(model){
-        #   as.data.frame(as.matrix(coef(model))) %>% 
-        #     filter(s0 != 0)
-        # }
-        # 
-        # cv_count <- cv.glmnet(
-        #   x = x_mat_count,
-        #   y = y_count,
-        #   family = "binomial",
-        #   penalty.factor = c(rep(0, nb_x_var),
-        #                      rep(1,ncol(x_mat_count)-nb_x_var)
-        #                      ),
-        #   alpha = 1,  
-        #   nfolds = 10
-        #   )
-        # 
-        # model_lasso_count <- glmnet(
-        #   x = x_mat_count,
-        #   y = y_count,
-        #   family = "binomial",
-        #   penalty.factor = c(rep(0, nb_x_var),
-        #                      rep(1,ncol(x_mat_count)-nb_x_var)
-        #   ),
-        #   lambda =  cv_count$lambda.min
-        #   )
-        
-        
         model_res_any <- model_removing_alias_var(
-          df = model_unco_tot_fun,
-          interaction_fun = interaction_term[x]
+          df = model_unco_tot_fun #, interaction_fun = interaction_term[x]
         )
         
         model_res <- model_removing_alias_var(
-          df = df_model,
-          interaction_fun = interaction_term[x]
+          df = df_model#, interaction_fun = interaction_term[x]
         )
-          
         model_res_any$Archetype <- x
         model_res$Archetype <- x
       }
       return(
         list(
           Model_any = model_res_any,
-          Model_count = model_res #,          model_lasso_count = model_lasso_count
+          Model_count = model_res 
         )
       )
     }
@@ -328,65 +279,20 @@ model_unco_cards_fun <- function(df_fun,interaction_term ) {
 }
 
 
-model_removing_alias_var <- function(df,interaction_fun){
- remove_string <-  df %>% 
-                       select(-any_of(c("Wins", "Losses","Number_of_cards"))) %>%
-   pivot_longer(everything()) %>% 
-   distinct(value) %>%
-   mutate(
-     value = as.character(value),
-     a = nchar(value)) %>% 
-   arrange(desc(value)) %>% 
-   pull(value) %>%
-   # str_replace_all("\\-","\\\\-") %>% 
-   # str_replace_all("/","\\/") %>% 
-   paste0(collapse = "|")
- 
- 
-
- 
+model_removing_alias_var <- function(
+    df
+    ){
           formula_model <- as.formula(
           paste0(
-            "cbind(Wins, Losses) ~",
-            paste0(
-              paste0("`", df %>% 
-                       select(-c(Wins, Losses)) %>% 
-                       colnames(),"`"
-                     
-              ),collapse = "+"
-            ),
-            ifelse(unlist(interaction_fun) !="",
-            paste0("+",unlist(interaction_fun)),
-            "")
+            "cbind(Wins, Losses) ~."
           )
         )
-          
-        model_init_base <- glm(formula_model,
-                             data = df,
-                             family = quasibinomial # binomial
-        )
-        
-  ld.vars <- attributes(alias(model_init_base)$Complete)$dimnames[[1]] %>% 
-    str_remove_all(remove_string) #%>% 
-    # str_remove_all("/") %>% 
-    # str_remove_all("-")
-
-  if(length(ld.vars) ==0){
-    res <- model_init_base
-    
-  } else {
-    formula.new <- as.formula(
-    paste(
-        paste(deparse(formula_model), collapse=""), 
-        paste(ld.vars, collapse="-"),
-        sep="-"
-    )
-)
-res <- glm(formula.new,
+ 
+res <- glm(formula_model,
            data = df,
            family = quasibinomial # binomial
 )
-}
+
 #remove the linearly dependent variables variables
 return(res)
 }
@@ -487,7 +393,7 @@ res_fun <- lapply(res_model, function (x){
 res_per_arch <- lapply(seq_along(x), function(y){
   model_vif_fun <- x[[y]]
   
-  print(as.character(x$Model_any$Archetype))
+  # print(as.character(x$Model_any$Archetype))
   if  (length(coefficients(model_vif_fun))  < 3){
   res <- data.frame(
     model = names(x[y]),
@@ -858,20 +764,28 @@ list_of_pairwise_table <- lapply(
   ) %>%
   bind_rows() %>% 
   filter(!(count_card1 == "0" | count_card2 == "0")) %>%
+  # filter(!(count_card1 == "0" & count_card2 == "0")) %>%
   drop_na() %>% 
   rowwise() %>%
   mutate(
     MIN_COL_name = c("card1","card2")[which.min(c_across(c(n_card1,n_card2)))],
     # percent_support = Freq/min(n_card1,n_card2),
+    perc1 = Freq/total_card1,
+    perc2 = Freq/total_card2,
+    test = perc1 + perc2,
+    remaining_card1 = total_card1 - Freq,
+    remaining_card2 = total_card2 - Freq ,
+    max_overlap = max(c(perc1,perc2)),
     percent_support = Freq/min(total_card1 ,total_card2 )
-    ) %>%
-  select(-c(n_card1,n_card2)) %>% 
-  group_by(card1,card2) %>% 
-  summarise(percent_support = max(percent_support),.groups = "drop") %>% 
-  ungroup() %>% 
+    )  %>% 
+#   filter(max_overlap > 0.8) %>%
+#   select(-c(n_card1,n_card2)) %>% 
+  group_by(card1,card2) %>%
+  summarise(percent_support = max(max_overlap),.groups = "drop") %>%
+  ungroup() %>%
     filter(
     percent_support > (seuil_common_sup)) %>%
-  arrange(desc(percent_support)) 
+  arrange(desc(percent_support))
 
 return(list_of_pairwise_table)
 }
@@ -906,6 +820,46 @@ group_variable_function <- function(df_arch_init,seuil_common_sup){
 return(res)
 }
 
+most_common_association <- function(table_res){
+card_to_choose <- table_res
+select_row <- table_res %>% 
+  slice_max(perc, n = 1, with_ties = FALSE)
+while (nrow(card_to_choose) !=0 ) {
+  card_to_choose <- card_to_choose %>% 
+    filter(card1 %notin% c(
+      select_row$card1,
+      select_row$card2
+      ),
+      card2 %notin% c(
+      select_row$card1,
+      select_row$card2
+      )
+      )
+  if(nrow(card_to_choose) != 0){
+    select_row <- rbind(
+      select_row,
+      card_to_choose  %>% 
+  slice_max(perc, n = 1, with_ties = FALSE) 
+        
+      )
+   }
+res <- select_row %>% 
+  select(-c(
+    card2_agreg,
+    card1_agreg,
+    Freq,
+    MIN_COL_name,
+    min_common_support
+    ))   
+}
+}
+
+
+
+
+
+
+
 ```
 
 
@@ -931,59 +885,165 @@ groupe_cards_uncommon_data <- group_linear_comb_cards(Model_data_Uncommon_cards)
 
 
 ```{r}
-# df_arch_init <- df_uncommon_cards_grouping_fun[[23]]
-all_archetype_table_for_all_cards <- lapply(
-  groupe_cards_uncommon_data  %>%
+df_arch_init <- (groupe_cards_uncommon_data  %>%
   ungroup() %>%
   pivot_wider(
     names_from = Mainboard_CardName,
     values_from = Mainboard_Count,
      values_fill = "0",
     id_cols = c(Archetype,id)
-    )  %>%
-  group_split(Archetype),
-  function(x) {
-    res <- group_variable_function(df_arch_init = x,
-                                             seuil_common_sup = 0.95)
-    return(res)
-  }
-) %>%
-  name_list_of_model_with_string(unique(groupe_cards_uncommon_data$Archetype))
+    )  
+  
+  %>%
+  group_split(Archetype))[[18]] %>% 
+  select(where(~n_distinct(.)> 1))
 
+
+
+
+# all_archetype_table_for_all_cards <- lapply(
+#   groupe_cards_uncommon_data  %>%
+#   ungroup() %>%
+#   pivot_wider(
+#     names_from = Mainboard_CardName,
+#     values_from = Mainboard_Count,
+#      values_fill = "0",
+#     id_cols = c(Archetype,id)
+#     )  %>%
+#   group_split(Archetype),
+#   function(x) {
+#     res <- group_variable_function(df_arch_init = x,
+#                                              seuil_common_sup = 0.95)
+#     return(res)
+#   }
+# ) %>%
+#   name_list_of_model_with_string(unique(groupe_cards_uncommon_data$Archetype))
 ```
 
 
+```{r temp_test_grp}
+# function()
+# 
+if(!is_inside_knitr()){
+df_base_fun <- groupe_cards_uncommon_data
+
+col_en_cours <- df_base_fun %>%
+    select(ends_with("_CardName")) %>%
+    colnames() %>%
+    str_remove("_CardName")
+
+
+df_to_join <- df_base_fun %>%
+  select(
+    Archetype,id,Archetype_count,
+         all_of(c(paste0(col_en_cours, "_CardName"),
+                  paste0(col_en_cours, "_Count")))
+         ) %>%
+  filter(!str_detect(!!rlang::sym(paste0(col_en_cours, "_CardName"))," land$"),
+         !!rlang::sym(paste0(col_en_cours, "_CardName")) != "Land_tot") %>% 
+  group_by(Archetype, !!rlang::sym(paste0(col_en_cours, "_CardName"))) %>%
+  mutate(
+    total_card = n()
+    ) %>%
+  group_by(Archetype, !!rlang::sym(paste0(col_en_cours, "_CardName")),
+           !!rlang::sym(paste0(col_en_cours, "_Count"))) %>%
+  mutate(
+    count_iteration_card = n()
+    )
 
 
 
-```{r}
-# groupe_cards_uncommon_data  <- all_archetype_table_for_all_cards %>% 
-#   filter(Mainboard_Count != "0") %>% 
-#   left_join(
-#     (Model_data_Uncommon_cards %>%
-#               select(-c(Mainboard_CardName,Mainboard_Count,-Join_main_count)) %>% 
-#               distinct(id,.keep_all = TRUE)),
-#             by = join_by(
-#    Archetype,id
-#   )
-#   )
+collapse_col_df <- left_join(
+ df_to_join,
+  df_to_join,
+ by = join_by(id,Archetype,Archetype_count
+              ),
+  relationship = "many-to-many"
+  ) %>%
+  filter(!(
+    !!rlang::sym(paste0(col_en_cours, "_CardName.x")) == !!rlang::sym(paste0(col_en_cours, "_CardName.y")) &
+      !!rlang::sym(paste0(col_en_cours, "_Count.x")) == !!rlang::sym(paste0(col_en_cours, "_Count.y"))
+    )
+    ) %>%
+  # rowwise() %>%
+  # mutate(
+  #   key = paste0(sort(c(
+  #     paste0(!!rlang::sym(paste0(col_en_cours, "_CardName.x")),
+  #            !!rlang::sym(paste0(col_en_cours, "_Count.x"))),
+  #     paste0(!!rlang::sym(paste0(col_en_cours, "_CardName.y")),
+  #            !!rlang::sym(paste0(col_en_cours, "_Count.y")))
+  #     )), collapse="")
+  #   ) %>%
+  #  ungroup() %>%
+  #  distinct(id,Archetype,key,.keep_all = TRUE) %>%
+  #  select(-key) %>%
+    mutate(
+    !!rlang::sym(paste0(col_en_cours, "_CardName")) :=
+      paste0(
+        !!rlang::sym(paste0(col_en_cours, "_CardName.x")),
+        " ; " ,
+        !!rlang::sym(paste0(col_en_cours, "_CardName.y"))
+             ),
+    !!rlang::sym(paste0(col_en_cours, "_Count")) :=
+      paste0(
+        !!rlang::sym(paste0(col_en_cours, "_Count.x")) ,
+        " ; " ,
+        !!rlang::sym(paste0(col_en_cours, "_Count.y"))
+        )
+    )
+}
+
+if(!is_inside_knitr()){
+df_two_way_cards_combination_summary <- collapse_col_df %>%
+  group_by(Archetype,Mainboard_CardName) %>%
+  mutate(
+    n_card_combination =  n()
+  ) %>%
+  ungroup() %>%
+  group_by(Archetype,Mainboard_CardName,Mainboard_Count) %>%
+  mutate(
+    n_card_count_combination = n()
+    ) %>% 
+  ungroup() %>% 
+  select(-id) %>% 
+  distinct() %>%
+  mutate(
+    cover_perc.x = n_card_count_combination/count_iteration_card.x,
+    cover_perc.y = n_card_count_combination/count_iteration_card.y,
+    cover_association.x = n_card_combination/total_card.x,
+    cover_association.y = n_card_combination/total_card.y,
+    remaining.x =  count_iteration_card.x - n_card_count_combination ,
+    remaining.y = count_iteration_card.y - n_card_count_combination,
+    remaining_total.x = total_card.x - n_card_combination,
+    remaining_total.y = total_card.y - n_card_combination
+  ) 
 
 
+
+a <- df_two_way_cards_combination_summary %>% 
+   # filter(Archetype == "RWx aggro") %>% 
+  filter(cover_association.x == 1,
+         cover_perc.x == 1,
+         remaining_total.y >= 50,
+         remaining.y >= 50
+         )  %>%
+  group_by(Archetype,Mainboard_CardName,Mainboard_Count) %>%
+  filter(
+    sum(count_iteration_card.x) == total_card.x
+  ) %>%
+  ungroup() 
+
+  
+}
 ```
-
-
-
 
 
 ```{r}
 # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
 result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
-  df_fun = groupe_cards_uncommon_data,
-  # Model_data_Uncommon_cards, 
-  interaction_term = all_archetype_table_for_all_cards
+  df_fun = groupe_cards_uncommon_data
   ) %>%
   name_list_of_model_with_string(unique(groupe_cards_uncommon_data$Archetype))
-
 ```
 
 
@@ -991,9 +1051,6 @@ result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
 uncomon_card_format_model <- format_model_list(result_models_Uncommon_cards_all_arch) %>%
   name_list_of_model_with_string(unique(groupe_cards_uncommon_data$Archetype))
 ```
-
-
-
 
 
 ```{r side_model_unco_cards}
@@ -1006,59 +1063,12 @@ Side_Model_data_Uncommon_cards <-  prepare_df_for_model(
 ```
 
 
-
 ```{r}
-# tictoc::tic("table cards")
-# df_uncommon_side_cards_grouping_fun <- Side_Model_data_Uncommon_cards  %>% 
-#   ungroup() %>%
-#   pivot_wider(
-#     names_from = Sideboard_CardName,
-#     values_from = Sideboard_Count,
-#      values_fill = "0",
-#     id_cols = c(Archetype,id)
-#     )  %>% 
-#   group_split(Archetype)
-# 
-# 
-# all_archetype_table_for_side_all_cards <- lapply(
-#   df_uncommon_side_cards_grouping_fun,
-#   function(x) {
-#     # print(as.character(unique(x$Archetype)))
-#     res_iteration <- group_variable_function(df_arch_init = x,
-# seuil_common_sup = 0.95)
-# 
-#     res <- res_iteration %>% 
-#       pivot_longer(
-#         cols = -c(Archetype,id),
-#         names_to = "Sideboard_CardName",
-#         values_to = "Sideboard_Count"
-#                    )
-#     return(res)
-#   }
-# ) %>% 
-#   bind_rows() 
-
-
-# tictoc::toc()
+groupe_side_cards_uncommon_data <- group_linear_comb_cards(Side_Model_data_Uncommon_cards)
 ```
 
 
-```{r}
-# groupe_side_cards_uncommon_data  <- all_archetype_table_for_side_all_cards %>% 
-#   filter(Sideboard_Count != "0") %>% 
-#   left_join(
-#     (
-#       Side_Model_data_Uncommon_cards %>%
-#               select(-c(Sideboard_CardName,Sideboard_Count,-Join_main_count)) %>% 
-#               distinct(id,.keep_all = TRUE)
-#       ),
-#             by = join_by(
-#    Archetype,id
-#   )
-#   ) 
-
-groupe_side_cards_uncommon_data <- group_linear_comb_cards(Side_Model_data_Uncommon_cards)
-
+```{r} 
 all_archetype_table_for_side_cards <- lapply(
   groupe_side_cards_uncommon_data  %>%
   ungroup() %>%
@@ -1079,15 +1089,14 @@ all_archetype_table_for_side_cards <- lapply(
 ```
 
 
+
+
 ```{r}
 Side_result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
-  groupe_side_cards_uncommon_data,
-  interaction_term = all_archetype_table_for_side_cards
+  groupe_side_cards_uncommon_data
   ) %>%
   name_list_of_model_with_string(unique(groupe_side_cards_uncommon_data$Archetype))
 ```
-
-
 
 
 ```{r format_side_models}
@@ -1110,6 +1119,7 @@ vif_deck <- rbind(
       deck_side = "Main",.before = 1
       )
   )
+
 
 ```
 
