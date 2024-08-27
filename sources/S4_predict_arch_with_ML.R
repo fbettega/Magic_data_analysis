@@ -1,8 +1,8 @@
 library("rjson")
-library(factoextra)
+# library(factoextra)
 # library(distances)
 # library(SSLR)
-library(FactoMineR)
+# library(FactoMineR)
 # prévoir un regroupement automatique au dela de ce que j'ai fait
 library(tidyverse)
 library(tidymodels)

@@ -71,6 +71,6 @@ session <- ssh::ssh_connect("francois@176.31.183.129",keyfile = "ssh_key/id_rsa"
 ssh::scp_upload(session,files = list.files("outpout/",full.names = TRUE),to = "/home/francois/docker/magic/magic_modern_meta/data/")
 ssh::ssh_disconnect(session)
 }
-# system("shutdown -s")
+system("shutdown -s")
 
 tictoc::toc()

@@ -14,261 +14,13 @@ library(kableExtra)
 library(tidyverse)
 library(scryr)
 source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
+
+source("../sources/sources_script_specific/S1new_cards.R", local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 refetch_cards_new_set <- FALSE
 ```
 
 
-
-
-```{r}
-# Fonction that count cards in given arhcetype
-Count_cards_in_decklist <- function(df, Name_of_card_of_interest, colname_deck_list) {
-  if (colname_deck_list == "Mainboard") {
-    expected_min_size <- 60
-  } else {
-    expected_min_size <- 0
-  }
-
-  df_new_card_base <- df %>%
-    unnest_longer(!!colname_deck_list) %>%
-    unnest_wider(!!colname_deck_list, names_sep = "_") %>%
-    group_by(id) %>%
-    # a filtrer mes uniquement pour le main deck
-    mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))) %>%
-    filter(Number_of_cards >= expected_min_size) %>%
-    filter(!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% Name_of_card_of_interest) %>%
-    mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
-      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      fetch = TRUE,
-      Tron = TRUE,
-      snow = TRUE,
-      surveil = TRUE,
-      shock = TRUE
-    )) %>%
-    group_by(id, !!rlang::sym(paste0(colname_deck_list, "_CardName"))) %>%
-    mutate(
-      !!rlang::sym(paste0(colname_deck_list, "_Count")) :=
-        sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))
-    ) %>%
-    distinct()
-
-
-  df_new_card <- df_new_card_base %>%
-    group_by(
-      Archetype,
-      Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      !!rlang::sym(paste0(colname_deck_list, "_Count"))
-    ) %>%
-    summarise(
-      count = n(),
-      .groups = "drop"
-    ) %>%
-    mutate(!!rlang::sym(paste0(colname_deck_list, "_Count")) := as.character(!!rlang::sym(paste0(colname_deck_list, "_Count"))))
-
-
-  df_new_card_total <- df_new_card %>%
-    group_by(
-      Archetype,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName"))
-    ) %>%
-    filter(n() > 1) %>%
-    group_by(
-      Archetype,
-      Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName"))
-    ) %>%
-    summarise(
-      !!rlang::sym(paste0(colname_deck_list, "_Count")) := "Any",
-      count = sum(count),
-      .groups = "drop"
-    ) %>%
-    rbind(df_new_card) %>%
-    arrange(
-      desc(Archetype_count), Archetype, !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      !!rlang::sym(paste0(colname_deck_list, "_Count"))
-    ) %>%
-    select(-Archetype_count)
-
-  return(df_new_card_total)
-}
-```
-
-
-
-
-
-
-```{r}
-# Count_and_winrates_cards_in_decklist(
-#   df_export,
-#   card_of_interest$name, "Mainboard"
-# )
-
-# Fonction that count + win rates cards in given arhcetype
-Count_and_winrates_cards_in_decklist <- function(df, Name_of_card_of_interest, colname_deck_list, filter_archetype_count = 10) {
-  winrate_by_archetype <- df %>%
-    filter(!is.na(Wins)) %>%
-    filter(!is.null(!!colname_deck_list)) %>%
-    filter(Archetype_count > filter_archetype_count) %>%
-    group_by(Archetype) %>%
-    summarise(
-      Wins_total = sum(Wins),
-      Losses_total = sum(Losses),
-      Draws_total = sum(Draws)
-    )
-  # browser()
-
-  if (colname_deck_list == "Mainboard") {
-    expected_min_size <- 60
-  } else {
-    expected_min_size <- 0
-  }
-  df_new_card_base <- df %>%
-    filter(!is.na(Wins)) %>%
-    filter(!is.null(!!colname_deck_list)) %>%
-    filter(Archetype_count > filter_archetype_count) %>%
-    unnest_longer(!!colname_deck_list) %>%
-    unnest_wider(!!colname_deck_list, names_sep = "_") %>%
-    group_by(id) %>%
-    # a filtrer mes uniquement pour le main deck
-    mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))) %>%
-    filter(Number_of_cards >= expected_min_size) %>%
-    filter(!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% Name_of_card_of_interest) %>%
-    mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
-      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      fetch = TRUE,
-      Tron = TRUE,
-      snow = TRUE,
-      surveil = TRUE,
-      shock = TRUE
-    )) %>%
-    group_by(id, !!rlang::sym(paste0(colname_deck_list, "_CardName"))) %>%
-    mutate(
-      !!rlang::sym(paste0(colname_deck_list, "_Count")) :=
-        sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))
-    ) %>%
-    distinct() %>%
-    inner_join(winrate_by_archetype, by = "Archetype")
-
-
-
-
-  df_new_card <- df_new_card_base %>%
-    group_by(
-      Archetype,
-      Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      !!rlang::sym(paste0(colname_deck_list, "_Count")),
-      Wins_total,
-      Losses_total,
-      Draws_total # ,
-      # .drop = FALSE
-    ) %>%
-    summarise(
-      count = n(),
-      Wins_card = sum(Wins),
-      Losses_card = sum(Losses),
-      Draws_card = sum(Draws),
-      .groups = "drop"
-    ) %>%
-    mutate(!!rlang::sym(paste0(colname_deck_list, "_Count")) := as.character(!!rlang::sym(paste0(colname_deck_list, "_Count"))))
-
-
-  df_new_card_total <- df_new_card %>%
-    group_by(
-      Archetype,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName"))
-    ) %>%
-    # je laisse le doublon dans le cas d'une seul carte pour faciliter les filters
-    # filter(n() > 1) %>%
-    group_by(
-      Archetype,
-      Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      Wins_total,
-      Losses_total,
-      Draws_total
-    ) %>%
-    summarise(
-      !!rlang::sym(paste0(colname_deck_list, "_Count")) := "Any",
-      count = sum(count),
-      Wins_card = sum(Wins_card),
-      Losses_card = sum(Losses_card),
-      Draws_card = sum(Draws_card),
-      .groups = "drop"
-    ) %>%
-    rbind(df_new_card) %>%
-    filter((Wins_card + Losses_card) > 10) %>%
-    arrange(
-      desc(Archetype_count), Archetype, !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      !!rlang::sym(paste0(colname_deck_list, "_Count"))
-    ) # %>% select(-Archetype_count)
-
-
-  Win_rate_df <- df_new_card_total %>%
-    group_by(
-      Archetype,
-      Archetype_count,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      !!rlang::sym(paste0(colname_deck_list, "_Count")),
-      count
-    ) %>%
-    summarise(
-      card_win_rate = winrate_1_data(Wins_card, Losses_card),
-      CI_card_win_rate = CI_prop(card_win_rate, (Wins_card + Losses_card)),
-      not_card_win_rate = winrate_2_data(
-        Wins_total, Losses_total,
-        Wins_card, Losses_card
-      ),
-      delta_winrate_card = card_win_rate - not_card_win_rate,
-      CI_delta_winrate_card = CI_2_prop(
-        card_win_rate,
-        not_card_win_rate,
-        (Wins_card + Losses_card),
-        (
-          (Wins_total - Wins_card) + (Losses_total - Losses_card)
-        )
-      ),
-      card_draw_diff = Draw_diff_2_data(
-        Wins_card, Draws_card, Losses_card,
-        Wins_total, Draws_total, Losses_total
-      ),
-      .groups = "drop"
-    )
-
-
-  Win_rate_df_final <- Win_rate_df %>%
-    mutate(
-      Sign_delta_wr = factor(ifelse(
-        (delta_winrate_card + CI_delta_winrate_card) > 0,
-        "+",
-        ifelse(
-          (delta_winrate_card - CI_delta_winrate_card) < 0,
-          "-", "0"
-        )
-      ), levels = c("+", "0", "-")),
-      CI_card_win_rate = formating_CI(card_win_rate, CI_card_win_rate),
-      card_win_rate = round(card_win_rate * 100, 2),
-      CI_delta_winrate_card = formating_CI(delta_winrate_card, CI_delta_winrate_card),
-      delta_winrate_card = round(delta_winrate_card * 100, 2),
-      card_draw_diff = round(card_draw_diff * 100, 2),
-      count_winrate = count
-    ) %>%
-    select(
-      Archetype, count_winrate,
-      !!rlang::sym(paste0(colname_deck_list, "_CardName")),
-      !!rlang::sym(paste0(colname_deck_list, "_Count")),
-      card_win_rate, CI_card_win_rate,
-      delta_winrate_card, CI_delta_winrate_card, Sign_delta_wr,
-      card_draw_diff
-    )
-
-
-  return(Win_rate_df_final)
-}
-```
 
 
 ```{r data_reading }
@@ -422,13 +174,17 @@ df_new_card_main_base <- df_main_unnest %>%
 ```{r}
 win_rate_main_board <- Count_and_winrates_cards_in_decklist(
   df_export,
-  card_of_interest$name, "Mainboard"
+  card_of_interest$name, 
+  "Mainboard"
 )
 
+
 General_presence_mainboard <- Count_cards_in_decklist(
-  df_export, card_of_interest$name, "Mainboard"
+  df_export, card_of_interest$name, 
+  "Mainboard"
 ) %>%
   rename(count_presence = count)
+
 ```
 
 
@@ -499,7 +255,8 @@ for (var i = 0; i < tips.length; i++) {
       NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
   )
-)
+) %>% 
+  DT::formatPercentage(c(6,8,11),digits = 1)
 ```
 
 
@@ -557,5 +314,6 @@ for (var i = 0; i < tips.length; i++) {
       NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
   )
-)
+) %>% 
+  DT::formatPercentage(c(6,8,11),digits = 1)
 ```

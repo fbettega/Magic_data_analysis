@@ -13,8 +13,16 @@
 #   commonElements(l,o)
 # }
 
-
-
+################################################################################
+######################## collapse following number separate by / ###############
+findIntRuns <- function(run) {
+  run <- sort(run)
+  rundiff <- c(1, diff(run))
+  difflist <- split(run, cumsum(rundiff != 1))
+  unlist(lapply(difflist, function(x) {
+    if (length(x) %in% 1:2) as.character(x) else paste0(x[1], "-", x[length(x)])
+  }), use.names = FALSE)
+}
 ################################################################################
 ########################### is rendering fun ###################################
 

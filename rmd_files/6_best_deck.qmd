@@ -69,19 +69,6 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 ```{r function}
-# function from stack overflow taking a sequence of number
-# and grouping contiguous numbers
-# 1,2,3,4 -> 1-4
-findIntRuns <- function(run) {
-  run <- sort(run)
-  rundiff <- c(1, diff(run))
-  difflist <- split(run, cumsum(rundiff != 1))
-  unlist(lapply(difflist, function(x) {
-    if (length(x) %in% 1:2) as.character(x) else paste0(x[1], "-", x[length(x)])
-  }), use.names = FALSE)
-}
-
-
 # simple function extracting name from a specific list of df 
 # and using Archetype column to name the list
 name_list_of_df_with_arch <- function(list) {

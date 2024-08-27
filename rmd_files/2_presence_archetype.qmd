@@ -483,3 +483,231 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
 ```
 
 
+
+
+
+# Number of copy of each cards 
+
+
+
+```{r}
+source("../sources/sources_script_specific/S1new_cards.R", local = TRUE)
+df_export <- loaded_base_data %>%
+  # include filter bad deck
+  filter(Valide_deck) %>%
+  mutate(
+    Deck_winrate = Wins / (Losses + Wins)
+  ) %>%
+  group_by(Archetype) %>%
+  mutate(
+    Archetype_count = n()
+  ) %>%
+  ungroup()
+```
+
+
+
+```{r}
+# bug any don't match count sum
+win_rate_main_board_overall <- Count_and_winrates_cards_in_decklist(
+  df = df_export,
+  colname_deck_list = "Mainboard" , 
+  No_grouping_column = TRUE
+) %>% 
+  rename_all(~str_remove(.,"Mainboard_"))
+
+General_presence_mainboard_overall <- Count_cards_in_decklist(
+   df = df_export,
+  colname_deck_list = "Mainboard" , 
+  No_grouping_column = TRUE
+) %>%
+  rename(count_presence = count) %>% 
+  rename_all(~str_remove(.,"Mainboard_"))
+
+Main_board_total <-   full_join(
+    General_presence_mainboard_overall,
+    win_rate_main_board_overall,
+    by = c("CardName", "Count")
+  ) %>% 
+  mutate(Main_side = "Main",.before = 1)
+```
+
+
+
+```{r}
+win_rate_side_board_overall <- Count_and_winrates_cards_in_decklist(
+   df = df_export,
+  colname_deck_list = "Sideboard" , 
+  No_grouping_column = TRUE
+) %>% 
+  rename_all(~str_remove(.,"Sideboard_"))
+
+General_presence_sideboard_overall <- Count_cards_in_decklist(
+   df = df_export,
+  colname_deck_list = "Sideboard" , 
+  No_grouping_column = TRUE
+) %>%
+  rename(count_presence = count) %>% 
+  rename_all(~str_remove(.,"Sideboard_"))
+
+Side_board_total <-   full_join(
+    General_presence_sideboard_overall,
+    win_rate_side_board_overall,
+    
+    by = c("CardName", "Count")
+  ) %>% 
+  mutate(Main_side = "Side",.before = 1)
+```
+
+
+
+```{r}
+win_rate_total_deck_overall <- Count_and_winrates_cards_in_decklist(
+   df = df_export,
+  colname_deck_list = "All" , 
+  No_grouping_column = TRUE
+) 
+# %>% 
+#   rename_all(~str_remove(.,"Sideboard_"))
+
+General_presence_total_deck_overall <- Count_cards_in_decklist(
+   df = df_export,
+  colname_deck_list = "All" , 
+  No_grouping_column = TRUE
+) %>%
+   rename(count_presence = count) 
+# %>% 
+#   rename_all(~str_remove(.,"Sideboard_"))
+
+total_deck_total <-   full_join(
+    General_presence_total_deck_overall,
+    win_rate_total_deck_overall,
+    
+    by = c("CardName", "Count")
+  ) %>% 
+  mutate(Main_side = "All",.before = 1)
+```
+
+
+```{r}
+tooltips_deck_new_cards <- c(
+  "Main, Side or Both combine",
+  "Card name",
+  "Number of copies of the cards",
+  "Number of decks with the card (exact number of copies)",
+  "Number of decks include in the win rate computation of the card (exact number of copies)",
+  "Win rate of the card",
+  "95 % Confidence intervale of card win rate",
+  'Win rate of the card vs deck with different count for the card.For example, if "Count" = 4, the win rate of 4 copies minus the win rate of 0, 1, 2 or 3 copies.',
+  "95 % Confidence intervale of card win rate vs other",
+  "The confidence interval is different from 0. + means a strictly positive confidence interval - means a strictly negative confidence interval,  0 means a confidence interval covering 0.",
+  "Boolean for card with no possible win rate inclusion (only league)"
+)
+```
+
+
+```{r js_function}
+onfly_filter_js <- c(r"{
+function onlyUnique(value, index, self) {
+return self.indexOf(value) === index;
+};
+var table_header = table.table().header();
+var column_nodes = $(table_header).find('tr:nth-child(2) > td');
+var input_nodes = $(column_nodes).find('input.form-control');
+for (let i = 0; i < input_nodes.length; i++){
+data_type_attr = $(input_nodes[i]).closest('td').attr('data-type');
+if (data_type_attr == 'factor'){
+$(input_nodes[i]).on('input propertychange', function(){
+if (typeof unique_values !== 'undefined'){
+selection_content = $(input_nodes[i]).closest('td').find('div.selectize-dropdown-content');
+var content_str = '';
+for (let j = 0; j < unique_values.length; j++){
+content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
+}
+selection_content[0].innerHTML = content_str;
+}
+})
+}
+}
+column_nodes.on('click', function(){
+setTimeout(function(){
+for (let i = 0; i < column_nodes.length; i++){
+data_type_attr = $(column_nodes[i]).attr('data-type');
+if (data_type_attr == 'factor'){
+selection_div = $(column_nodes[i]).find('div.selectize-input');
+if($(selection_div).hasClass('dropdown-active')){
+values = table.column(i, {pages: 'all', search: 'applied'}).data();
+unique_values = Array.from(values.filter(onlyUnique));
+selection_content = $(column_nodes[i]).find('div.selectize-dropdown-content');
+var content_str = '';
+for (let j = 0; j < unique_values.length; j++){
+content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
+}
+selection_content[0].innerHTML = content_str;
+}
+}
+}
+}, 50);
+})
+}")
+```
+
+
+
+```{r}
+DT::datatable(
+  rbind(
+    total_deck_total,
+    Main_board_total,
+    Side_board_total
+  ) %>%
+    mutate(
+      Main_side = as.factor(Main_side) ,
+      CardName = as.factor(CardName),
+      Count = as.factor(Count)
+    ) %>%
+    mutate(Only_count = is.na(count_winrate)) %>%
+    arrange(desc(count_winrate)) %>%
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) ,
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      onfly_filter_js
+    )
+  ),
+  filter = "top", rownames = FALSE,
+  options = list(
+    dom = "ltipr",
+    searchCols = list(
+      list(search = '["All"]'), NULL,
+      list(search = '["Any"]'),
+      NULL,
+      NULL, # list(search = '10 ...'),
+      NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
+    ), autoWidth = TRUE, pageLength = 25
+  )
+) %>% 
+  DT::formatPercentage(c(6,8,11),digits = 1)
+```
+
+
+
+
+
+

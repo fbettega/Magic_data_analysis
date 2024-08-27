@@ -181,7 +181,7 @@ format_bann_cards <- scryr::scry_cards("banned:modern")
 
 df_export_pre_60_filter_remove_bann <- Ban_patch(
   df = df_export_pre_60_filter,
-  vec_of_ban_cards = c(format_bann_cards$name,"Nadu, Winged Wisdom","Grief")
+  vec_of_ban_cards = c(format_bann_cards$name)
 )
 
 

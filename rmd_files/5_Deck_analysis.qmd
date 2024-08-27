@@ -84,15 +84,6 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 ```{r function}
-findIntRuns <- function(run) {
-  run <- sort(run)
-  rundiff <- c(1, diff(run))
-  difflist <- split(run, cumsum(rundiff != 1))
-  unlist(lapply(difflist, function(x) {
-    if (length(x) %in% 1:2) as.character(x) else paste0(x[1], "-", x[length(x)])
-  }), use.names = FALSE)
-}
-
 name_list_of_df_with_arch <- function(list) {
   names(list) <- lapply(list, function(x) {
     as.character(x$Archetype[1])
