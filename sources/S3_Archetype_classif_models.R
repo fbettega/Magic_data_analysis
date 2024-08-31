@@ -430,6 +430,75 @@ Result_raw_knn <- model_generic_grid_fun(
 
 
 
+# tictoc::tic("test")
+# dist_test <- proxyC::dist(as.matrix(
+#   known_arch %>%
+#     column_to_rownames("id") %>%
+#     select(-Archetype),
+#   method = "fjaccard"
+#                                     )
+#                         )
+# # long_dist_mat <- as.matrix(dist_test) %>% 
+# #   as.data.frame() %>% 
+# #   rownames_to_column() %>% 
+# #   pivot_longer(-rowname) %>% 
+# #   left_join(known_arch %>% 
+# #               select(id,Archetype) ,by = join_by(rowname  == id)) %>% 
+# #   left_join(known_arch %>% 
+# #               select(id,Archetype) ,by = join_by(name  == id)) %>% 
+# #   filter(rowname != name) # %>%   select(-c(rowname,name)) 
+#   
+# tictoc::toc()
+
+
+
+
+
+
+
+# a <- long_dist_mat %>% 
+#   group_by(Archetype.x ,Archetype.y)%>% summarize(
+#     count = n(),
+#     mean = mean(value , na.rm = TRUE), 
+#     sd = sd(value , na.rm = TRUE),
+#     Q1 = quantile(value ,0.25),
+#     Q3 = quantile(value ,0.75),
+#     Q01 = quantile(value ,0.01),
+#     Q99 = quantile(value ,0.99)
+#     ) 
+
+
+# cl <- kmeans(dist_test, 1000, iter.max=20)
+# # clusters <- fastcluster::hclust.vector(dist_test)
+# 
+# bbb <- cl$centers
+# 
+# # res_cluster <- data.frame(
+# #   id = clusters$labels,
+# #   class = cutree(clusters, k = 30)
+# # )
+# 
+# 
+# a <-  FactoMineR::HCPC(
+#   bbb, 
+#   graph = FALSE, 
+#   nb.clust= -1
+#   )
+
+
+# a <- known_arch %>%
+#   select(id,Archetype) %>%
+#   inner_join(
+#     res_cluster,
+#     by = join_by(id)
+#   )
+# 
+# as.data.frame(table(a$Archetype,a$class)) %>%
+# filter(Freq > 0) %>% view()
+
+
+
+# length(unique(a$Archetype))
 
 # # # svm
 # #

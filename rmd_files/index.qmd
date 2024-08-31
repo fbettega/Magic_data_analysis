@@ -19,10 +19,6 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 
-
-
-Code available at [https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result](https://github.com/fbettega/Modern_data_analysis/tree/main/outpout/result)
-
 # Archetype definition
 [Modify version of archetype definition](https://github.com/fbettega/Modern_FB_archetype) initial definition [from Badaro](https://github.com/Badaro/MTGOFormatData)
 

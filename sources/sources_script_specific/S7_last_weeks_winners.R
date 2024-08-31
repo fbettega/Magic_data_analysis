@@ -125,35 +125,3 @@ top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
               top8_table = final_table))
 }
 
-total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
-  
-  
-  Title_df <- Tournament_of_interest_df %>%
-    filter(TournamentFile == x) 
-  
-  Title_str <- paste0(unique(Title_df$Tournament) ," (",format(as.Date(unique(Title_df$Date)), "%d-%m-%Y"), ") Number of player : ", unique(Title_df$number_of_player))
-  
-  vizual_result <- top_8_table_and_plot_prez_generator(
-    df_fun = Tournament_of_interest_df,
-    current_tournament = x
-  )
-  
-  
-  return(list(Title = Title_str,
-              plot = vizual_result))
-}
-) %>% 
-  purrr::set_names(unique(Tournament_of_interest_df$TournamentFile))
-
-
-
-TournamentFile_by_week <- lapply(unique(Tournament_of_interest_df$Week),function(x){
-  
-  Tournament_of_interest_df %>%
-    filter(Week == x) %>% 
-    distinct(TournamentFile) %>% 
-    pull(TournamentFile)
-  
-  
-}) %>%
-  purrr::set_names(unique(Tournament_of_interest_df$Week))
