@@ -329,7 +329,7 @@ model_unco_cards_fun <- function(df_fun) {
         )
 
         
-        if(ncol(df_model) <= 2){
+        if(ncol(df_model) <= 3){
           
           model_res_ridge <- NULL
         } else {
@@ -1042,6 +1042,7 @@ result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
   ) %>%
   name_list_of_model_with_string(unique(groupe_cards_uncommon_data$Archetype))
 
+x <- "Reanimator"
 ```
 
 

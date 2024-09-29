@@ -31,14 +31,15 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
     Archetype_count = n()
   ) %>% 
     ungroup() %>% 
-  filter(Archetype %notin% exclude_archetype)
+  filter(Archetype %notin% exclude_archetype) 
 
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
 
 path_collection <- 
   list.files(
       path = "../data/mtg_data/",pattern = "^archidekt-collection-export-",
-               full.names = TRUE)
+               full.names = TRUE
+      )
 ```
 
 
@@ -338,9 +339,10 @@ htmltools::tagList(
 ```{r}
 Archetype_list <- df_export %>%
   filter(Archetype_count > 20) %>% 
-  arrange(desc(Archetype_count)) %>% 
+  # arrange(desc(Archetype_count)) %>% 
   pull(Archetype) %>%
-  unique() # %>%   sort()
+  unique() %>% 
+  sort()
 
 not_own_car_by_archetype_without_any <- not_owned_cards %>%
   select(

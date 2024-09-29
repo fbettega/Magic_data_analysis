@@ -11,6 +11,46 @@ library(baguette)
 library("xgboost")
 source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 
+################################################################################
+# just a list of magic colors
+color_comb_list <- c(
+  Corlorless = "C",
+  `Mono White` = "W",
+  `Mono Red` = "R",
+  `Mono Blue` = "U",
+  `Mono Black` = "B",
+  `Mono Green` = "G",
+  
+  Boros = "WR",
+  Selesnya = "WG",
+  Dimir = "UB",
+  Gruul = "RG",
+  Rakdos = "BR",
+  Azorius = "WU",
+  Orzhov = "WB",
+  Golgari = "BG",
+  Izzet = "UR",
+  Simic = "UG",
+  
+  Jund = "BRG",
+  Mardu = "WBR",
+  Jeskai = "WUR",
+  Grixis = "UBR",
+  Naya = "WRG",
+  Sultai = "UBG",
+  Abzan = "WBG",
+  Esper = "WUB",
+  Bant = "WUG",
+  Temur = "URG",
+  
+  WUBG = "WUBG", # Not-R
+  WUBR = "WUBR", # Not-G
+  WURG = "WURG", # Not-B
+  WBRG = "WBRG", # Not-U
+  UBRG = "UBRG", # Not-W
+  
+  `5 Color` = "WUBRG"
+)
 
 # install.packages("ranger")
 
@@ -20,7 +60,7 @@ source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 rerun_ml <- TRUE # TRUE FALSE
 rerun_grid_par <- FALSE
-options(future.globals.maxSize= 2097152000)
+options(future.globals.maxSize = 40097152000)
 
 ################################################################################
 ######################## Model  ################################################
@@ -142,7 +182,89 @@ model_generic_grid_fun <- function(data,
 ######################## Model  ################################################
 # With caret ranger rf 4.7 - 4.9 h
 
+
+
+
+fall_back_list <- lapply(
+  list.files(
+    "ArchetypeParser/MTGOFormatData_FB/Formats/Modern/Fallbacks/",
+    full.names = TRUE
+  ),
+  function(x) {
+    base_parsing_res <- fromJSON(
+      file = x
+    ) %>% 
+      purrr::list_modify("CommonCards" = NULL) %>% 
+      compact()
+  }
+) %>% 
+  bind_rows() %>% 
+  mutate(
+    Name = str_remove(Name,"^Generic")
+  )
+
+
+Archetype_parser_list <- lapply(
+  list.files(
+    "ArchetypeParser/MTGOFormatData_FB/Formats/Modern/Archetypes/",
+    full.names = TRUE
+  ),
+  function(x) {
+    base_parsing_res <- fromJSON(
+      file = x
+    ) %>% 
+      purrr::list_modify("Conditions" = NULL) %>% 
+      compact()
+    base_archetype <- base_parsing_res %>% 
+      purrr::list_modify("Variants" = NULL) %>% 
+      compact() %>% 
+      as_tibble() %>% 
+      mutate(
+        file = str_extract(x,"(?<=/)(\\w+)(?=\\.json)"),
+        type = "base",
+        parser_base_arch = Name,
+        .before = 1
+      )
+    if (!is.null(base_parsing_res$Variants) ) {
+      variant_list <- lapply(base_parsing_res$Variants, function(y){
+        y %>% 
+          purrr::list_modify("Conditions" = NULL) %>% 
+          compact() %>% 
+          as_tibble() %>% 
+          mutate(
+            file = str_extract(x,"(?<=/)(\\w+)(?=\\.json)"),
+            type = "variant",
+            parser_base_arch = base_archetype$Name,
+            .before = 1
+          )
+      }) %>% 
+        bind_rows()
+      
+      res <- rbind(base_archetype,variant_list)
+      
+    } else {
+      res <- base_archetype
+    }
+    
+    return(res)
+  }
+) %>% 
+  bind_rows() %>% 
+  mutate(
+    join_name =  str_remove_all(str_remove_all(Name,"\\s+"),"Generic")
+  )
+
+# acdd exeception if fallback name = archetype name 
+if(any(Archetype_parser_list$parser_base_arch %in%  fall_back_list$Name)){
+  stop(
+    paste0("Archetype name in fallback : ", 
+           Archetype_parser_list$base_arch[Archetype_parser_list$parser_base_arch %in%  fall_back_list$Name]))
+}
+
+
+
 json_parsing <- fromJSON(file = "ArchetypeParser/data_FB_test.json")
+
 
 # df_export_pre_60_filter
 df_export_pre_60_filter <- json_parsing %>%
@@ -153,9 +275,33 @@ df_export_pre_60_filter <- json_parsing %>%
     names_sep = "_"
   ) %>%
   mutate(across(c(Wins, Losses, Draws), ~ as.numeric(.))) %>%
-  mutate(matches = Wins + Losses + Draws) %>%
-  mutate(Base_Archetype = Archetype) %>%
-  mutate(Archetype = Archetype_agreger(Base_Archetype, Color)) %>%
+  mutate(
+    matches = Wins + Losses + Draws,
+    join_arch = str_remove_all(Archetype,"\\s+")
+    ) %>%  
+  
+  # handle variation in naming introduce by parser : remove generic and add space
+  left_join(
+    Archetype_parser_list %>% select(Name,join_name,parser_base_arch,type),
+    by = join_by(join_arch == join_name) 
+  ) %>%  
+  select(-join_arch,-Name) %>% 
+  mutate(
+    type = ifelse(Archetype == "Unknown","Unknown",type),
+    type = ifelse(is.na(type),"Fallback",type),
+    parser_base_arch = ifelse(
+      type == "Fallback",
+      trimws(
+        str_remove(
+          Archetype,
+          paste0(names(color_comb_list),collapse = "|")
+          )
+        ),                        
+      parser_base_arch                 ),
+    Base_Archetype = Archetype) %>%
+  # mutate(Archetype = Archetype_agreger(Base_Archetype, Color)) %>%
+  # mutate(Base_Archetype = ReferenceArchetype_Archetype) %>%
+  # mutate(Archetype = ReferenceArchetype_Archetype) %>%
   rownames_to_column(var = "id") %>%
   group_by(Archetype) %>%
   mutate(
@@ -173,19 +319,55 @@ df_export_pre_60_filter <- json_parsing %>%
         )
       )
     )
-  ) %>%
-  mutate(Archetype = make.names(Archetype))
+  ) 
+# %>%
+#   mutate(Archetype = make.names(Archetype))
+
+
+
+
+
+
 
 
 format_bann_cards <- scryr::scry_cards("banned:modern")
 
+
+
 df_export_pre_60_filter_remove_bann <- Ban_patch(
   df = df_export_pre_60_filter,
   vec_of_ban_cards = c(format_bann_cards$name)
-)
+)  %>% 
+  # add rules if a fall back is more than 1% meta it become an archetype
+  mutate(type = ifelse(type == "Fallback" & Archetype_count/nrow(.) > 0.01,"variant",type))
+
+
+################################################################################
 
 
 
+# a <- df_export_pre_60_filter_remove_bann %>%
+#   select(  Archetype,Color,parser_base_arch,type,
+#            Base_Archetype,
+#            Archetype_count) %>% 
+#   distinct(Base_Archetype,.keep_all = TRUE) %>% 
+#   mutate(percent = Archetype_count*100/sum(Archetype_count)) %>% 
+#   group_by(parser_base_arch) %>% 
+#   mutate(n_base_parser = sum(Archetype_count,na.rm = TRUE)) %>% 
+#   ungroup() %>% 
+#   mutate(percent_tot = n_base_parser*100/sum(Archetype_count))
+
+
+
+
+
+
+
+
+
+
+
+################################################################################
 rm(json_parsing)
 Not_60_cards_main <- df_export_pre_60_filter_remove_bann %>%
   unnest_longer(Mainboard) %>%
@@ -213,7 +395,6 @@ df_export <- df_export_pre_60_filter_remove_bann %>%
     Archetype_count = n()
   ) %>%
   ungroup()
-  
   # filter(id %notin% Not_60_cards_main$id)
 
 rm(df_export_pre_60_filter, Not_60_cards_main,df_export_pre_60_filter_remove_bann)
@@ -236,13 +417,14 @@ if (rerun_ml) {
 
 
 
-min_number_of_arch <- 20
+min_number_of_arch <- 50 #20
 
 # grouping conditionnels si low sample sizes a reflechir ex rogue delver faeries
 # peut etre creatures combo
 
 known_arch <- df_export %>%
-  filter(!str_detect(Archetype, "_fallback|Unknown") & Archetype_count >= min_number_of_arch) %>%
+  # filter(!str_detect(Archetype, "_fallback|Unknown") & Archetype_count >= min_number_of_arch) %>%
+  filter( type != "Fallback" & type != "Unknown"  & Archetype_count >= min_number_of_arch) %>%
   prett_fun_classif("Mainboard") %>%
   mutate(
     Archetype = as.factor(Archetype)
@@ -251,7 +433,7 @@ known_arch <- df_export %>%
 
 if (!rerun_ml) {
   previous_data <- readRDS("data/intermediate_result/base_classif_data.rds") %>%
-    filter(!str_detect(Archetype, "_fallback|Unknown") & Archetype_count >= min_number_of_arch) %>%
+    filter( type != "Fallback" & type != "Unknown"  & Archetype_count >= min_number_of_arch) %>%
     prett_fun_classif("Mainboard")
   
   not_train_col <- colnames(known_arch)[colnames(known_arch) %notin% colnames(previous_data)] %>% 
@@ -428,73 +610,6 @@ Result_raw_knn <- model_generic_grid_fun(
 )
 
 
-
-
-# tictoc::tic("test")
-# dist_test <- proxyC::dist(as.matrix(
-#   known_arch %>%
-#     column_to_rownames("id") %>%
-#     select(-Archetype),
-#   method = "fjaccard"
-#                                     )
-#                         )
-# # long_dist_mat <- as.matrix(dist_test) %>% 
-# #   as.data.frame() %>% 
-# #   rownames_to_column() %>% 
-# #   pivot_longer(-rowname) %>% 
-# #   left_join(known_arch %>% 
-# #               select(id,Archetype) ,by = join_by(rowname  == id)) %>% 
-# #   left_join(known_arch %>% 
-# #               select(id,Archetype) ,by = join_by(name  == id)) %>% 
-# #   filter(rowname != name) # %>%   select(-c(rowname,name)) 
-#   
-# tictoc::toc()
-
-
-
-
-
-
-
-# a <- long_dist_mat %>% 
-#   group_by(Archetype.x ,Archetype.y)%>% summarize(
-#     count = n(),
-#     mean = mean(value , na.rm = TRUE), 
-#     sd = sd(value , na.rm = TRUE),
-#     Q1 = quantile(value ,0.25),
-#     Q3 = quantile(value ,0.75),
-#     Q01 = quantile(value ,0.01),
-#     Q99 = quantile(value ,0.99)
-#     ) 
-
-
-# cl <- kmeans(dist_test, 1000, iter.max=20)
-# # clusters <- fastcluster::hclust.vector(dist_test)
-# 
-# bbb <- cl$centers
-# 
-# # res_cluster <- data.frame(
-# #   id = clusters$labels,
-# #   class = cutree(clusters, k = 30)
-# # )
-# 
-# 
-# a <-  FactoMineR::HCPC(
-#   bbb, 
-#   graph = FALSE, 
-#   nb.clust= -1
-#   )
-
-
-# a <- known_arch %>%
-#   select(id,Archetype) %>%
-#   inner_join(
-#     res_cluster,
-#     by = join_by(id)
-#   )
-# 
-# as.data.frame(table(a$Archetype,a$class)) %>%
-# filter(Freq > 0) %>% view()
 
 
 

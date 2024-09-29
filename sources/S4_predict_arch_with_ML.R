@@ -15,13 +15,14 @@ source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 #   (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
 # }
 
+
+
+
 No_pred <- FALSE #TRUE FALSE
 
 ################################################################################
 my_table_from_model <- function(pred_class,pred_proba,data,string){
   # Gestion d'un bug a la con sur le predict
-
-  
   predict_Result <- cbind(data,pred_class ) %>% 
     select(id,Archetype,.pred_class) %>% 
     left_join(
@@ -46,8 +47,6 @@ my_table_from_model <- function(pred_class,pred_proba,data,string){
 
 
 bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
-  
-  
   list_of_table <- lapply(
     seq_along(model_list),
     function(x){
@@ -75,8 +74,6 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
       } 
   )
   
-
-
   Best_pred_using_vote <- 
     cbind(
       id = pred_data$id,
@@ -98,10 +95,6 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
         select(id, Archetype , AnchorUri),
       by = "id"
     )
-  
-  
-  
-  
   
   table_merge <- lapply(
     seq_along(list_of_table),function(x){
@@ -132,6 +125,7 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
 
 # Otion one rf on raw data
 df_export <- read_rds("data/intermediate_result/base_classif_data.rds")
+  
 
 if (No_pred){
   write_rds(df_export, "data/data_meta_en_cours.rds")
@@ -144,22 +138,26 @@ if(file.exists("data/intermediate_result/not_train_col.rds")) {
   exclude_col <- character()
 }
 
-min_number_of_arch <- 20
+# min_number_of_arch <- 20
+min_number_of_arch <- 50
 known_arch <- df_export %>%
-  filter(!str_detect(Archetype, "_fallback|Unknown") & Archetype_count >=  min_number_of_arch) %>%
+  # filter(!str_detect(Archetype, "_fallback|Unknown") & Archetype_count >=  min_number_of_arch) %>%
+  filter( type != "Fallback" & type != "Unknown"  & Archetype_count >= min_number_of_arch)  %>%
   prett_fun_classif("Mainboard") %>% 
   mutate(
     Archetype = as.factor(Archetype)
-    ) %>% select(-any_of(exclude_col))
+    ) %>% 
+  select(-any_of(exclude_col))
 
 
 
 
-fall_back_df_temp <- df_export %>%
-  filter(str_detect(Archetype, "_fallback|Unknown") ##| Archetype_count < min_number_of_arch
-         ) %>%
+fall_back_df_temp <- df_export %>%  
+  filter(Date >= "2024-08-26") %>%
+  # filter(str_detect(Archetype, "_fallback|Unknown") ##| Archetype_count < min_number_of_arch
+  filter( type == "Fallback" | type == "Unknown"  | Archetype_count < min_number_of_arch)  %>%
   prett_fun_classif("Mainboard") %>%
-  ungroup()
+  ungroup() 
 
 colone_not_present_in_fallback <-
   colnames(known_arch)[colnames(known_arch) %notin% colnames(fall_back_df_temp)]
@@ -196,6 +194,8 @@ model_res_table <- bind_proba_with_list_of_model(model_list = list_of_model_for_
   base_data = df_export
   )
 
+
+write_rds(model_res_table,"data/intermediate_result/result_pred.rds")
 Voting_df <- model_res_table$table_vote_pred
 pred_table_df <- model_res_table$table_each_model_pred
 
@@ -204,15 +204,29 @@ pred_table_df <- model_res_table$table_each_model_pred
 Voting_df_upper_treshold <- Voting_df %>% filter(value > 0.3) 
 
 
-DF_post_archetype_pred <- df_export %>% 
-  left_join(Voting_df_upper_treshold %>% select(id,name), by = "id") %>% 
-  mutate(Archetype = str_replace_all(if_else(is.na(name),Archetype,name),"\\."," ") ) %>% 
-  select(-name)
+DF_post_archetype_pred <- df_export %>%  
+  filter(Date >= "2024-08-26") %>% 
+  left_join(
+    Voting_df_upper_treshold %>% 
+      select(id,name),
+    by = "id") %>% 
+  mutate(
+    Archetype = str_replace_all(if_else(is.na(name),Archetype,name),"\\."," ") 
+    ) %>% 
+  select(-name) 
 
+
+sort (table(DF_post_archetype_pred$Archetype))
+  
 
 
 
 write_rds(DF_post_archetype_pred, "data/data_meta_en_cours.rds")
+
+
+
+
+
 }
 
 

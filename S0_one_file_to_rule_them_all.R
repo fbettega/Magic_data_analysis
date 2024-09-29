@@ -18,16 +18,37 @@ git2r::config(
   user.email = "francois.bettega@gmail.com",
   core.longpaths = "TRUE"
 )
+
 # deck_list_repo <- git2r::clone(
 #   "https://github.com/Badaro/MTGODecklistCache.git",
 #   "ArchetypeParser/MTGODecklistCache/"
 #   )
 
+# deck_list_format <- git2r::clone(
+#   "https://github.com/Badaro/MTGOFormatData.git",
+#   "ArchetypeParser/MTGOFormatData/"
+#   )
+
+
+# au moment du switch pour multiple format penser a créer un fichier format : start_date
+
+# rajouter un fichier de qmd de debug associé au collection tracker avec les combinaisons base archetype / archetype et les cartes 
+
+
 
 deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache/")
+deck_list_format <- git2r::repository("ArchetypeParser/MTGOFormatData/")
 
 # Sys.sleep(7200)
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
+pull_format_repo <- git2r::pull(repo = deck_list_format)
+
+calledProgram <- new.env()
+sys.source(
+  "sources/json_modifier.R",
+  envir = calledProgram,
+  toplevel.env = calledProgram
+)
 
 
 
@@ -44,7 +65,7 @@ sys.source(
   toplevel.env = calledProgram
 )
 
-rm(calledProgram)
+
 
 
 calledProgram <- new.env()
@@ -58,11 +79,24 @@ sys.source(
 rm(calledProgram)
 
 
-quarto::quarto_render("rmd_files/", output_format = "html", as_job = FALSE)
+# quarto::quarto_render("rmd_files/", output_format = "html", as_job = FALSE)
 
+if(
+  length(
+    list.files(path = "data/mtg_data/",
+               pattern = "^archidekt-collection-export-.*\\.csv")
+  ) == 1) {
+    quarto::quarto_render("rmd_files/", 
+                          output_format = "html", 
+                          profile = "fb",# c("fb","basic"),
+                          as_job = FALSE)
 
-# quarto::quarto_render("rmd_files/2_presence_archetype.qmd", output_format = "html")
+} 
 
+quarto::quarto_render("rmd_files/",
+                          output_format = "html", 
+                          profile ="basic",
+                          as_job = FALSE)
 
 
 
@@ -71,6 +105,8 @@ session <- ssh::ssh_connect("francois@176.31.183.129",keyfile = "ssh_key/id_rsa"
 ssh::scp_upload(session,files = list.files("outpout/",full.names = TRUE),to = "/home/francois/docker/magic/magic_modern_meta/data/")
 ssh::ssh_disconnect(session)
 }
-# system("shutdown -s")
 
 tictoc::toc()
+
+system("shutdown -s")
+
