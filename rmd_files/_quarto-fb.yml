@@ -1,6 +1,0 @@
-project:
-  output-dir: ../outpout/Pioneer
-book:
-  chapters:
-  - index.qmd
-  - 1_1_collection_analysis.qmd

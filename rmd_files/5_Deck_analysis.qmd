@@ -235,6 +235,7 @@ model_unco_cards_fun <- function(df_fun) {
     str_remove("_CardName")
   # unique(df_fun$Archetype)
   # x <- 'Storm'
+  # x <- "Delver"
   model_unco_fun <- lapply(
     unique(df_fun$Archetype),
     function(x) {
@@ -274,6 +275,8 @@ model_unco_cards_fun <- function(df_fun) {
         ) %>%
         select(where(~ n_distinct(.) > 1))
 
+      
+      
       model_unco_tot_fun <- df_fun %>%
         filter(Archetype == x) %>%
         ungroup() %>%
@@ -354,7 +357,10 @@ model_unco_cards_fun <- function(df_fun) {
               Y = 0,
               .before = 1
             )
-        ) 
+        )  %>%
+        # remove card with only 1+ like basic land fetch ....
+        # here because some rare deck as W 0 and L 0 and can be the only one with distinct value
+        select(where(~ n_distinct(.) > 1))
 
 
         x_mat_model <- model.matrix(

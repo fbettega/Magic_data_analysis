@@ -56,16 +56,16 @@ pull_format_repo <- git2r::pull(repo = deck_list_format)
 
 format_date_en_cours_fulltable <- data.frame(
   format_param = c(
-    "Modern",
-    "Legacy",
+    # "Modern",
+    # "Legacy",
     "Pauper",
     "Pioneer"#,
     # "Standard",
     # "Vintage"
                    ),
   date_cutoff = c(
-    "2024-08-26",
-    "2024-08-26",
+    # "2024-08-26",
+    # "2024-08-26",
     "2024-05-13",
     "2024-08-26"#,
     # "2024-07-30",
@@ -199,6 +199,12 @@ tictoc::toc()
 
 }
 tictoc::toc()
+
+rmarkdown::render(
+  input = "sources/index.Rmd",
+  envir = new.env(),
+  output_dir = "outpout/"
+)
 
 if(file.exists("ssh_key/id_rsa")){
   session <- ssh::ssh_connect("francois@176.31.183.129",keyfile = "ssh_key/id_rsa")

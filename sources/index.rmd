@@ -1,9 +1,22 @@
 ---
-title: "Untitled"
+title: "Hub of  analysis of MTG data"
 author: "F Bettega"
 date: "`r Sys.Date()`"
 output: html_document
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout") })
 ---
 
+You can find quarto book from various magic the gathering format 
 
+
+Code available at [https://github.com/fbettega/Modern_data_analysis/](https://github.com/fbettega/Modern_data_analysis/)
+
+## [Modern](Modern/index.html)  
+
+## [Legacy](Legacy/index.html)  
+
+## [Pauper](Pauper/index.html)  
+
+## [Pioneer](Pioneer/index.html)  
 
