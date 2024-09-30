@@ -10,6 +10,7 @@ library(htmltools)
 
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 source("../sources/sources_script_specific/S3_Card_win_rate_table.R", local = TRUE)
+params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 conflicted::conflicts_prefer(dplyr::filter)
 # All table include tooltip column description
 # Reflechir a carte de side vs maccro archetype
@@ -32,7 +33,7 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```{r data_reading }
 filter_archetype_count <- 10#50
 
-df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
     # include filter bad deck
   filter(Valide_deck) %>% 
   mutate(

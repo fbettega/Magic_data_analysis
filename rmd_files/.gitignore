@@ -2,5 +2,6 @@
 *.rds
 *.md
 *.html
+*.yml
 /.quarto/
 /site_libs/

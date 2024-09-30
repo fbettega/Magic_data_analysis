@@ -14,9 +14,10 @@ library(ggfittext)
 # css: TOC.css
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 source("../sources/sources_script_specific/S4_matrix_WR.R", local = TRUE)
+params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(plotly::layout)
-loaded_base_data <- readRDS("../data/data_meta_en_cours.rds")
+loaded_base_data <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds"))
 # Je ne compte pas faire de matrix pour les SUB archetype pour le moment Car les sample sizes sont trop souvent ridicules a réfléchir
 # Reflechir a inclusion player
 #
@@ -45,7 +46,7 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 df_base <- loaded_base_data %>%
-  filter(Tournament != "Modern League") %>%
+  filter(Tournament != paste0(params$format_param," League")) %>%
   group_by(Archetype) %>%
   mutate(
     Archetype_count = n()

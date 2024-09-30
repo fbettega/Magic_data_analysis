@@ -1,26 +1,34 @@
 project:
   type: book
 book:
-  title: Pioneer data analysis
+  title: "data analysis"
   date: today
 format:
   html:
     include-in-header:
-    - file: github-corner.html
+      - file: github-corner.html
     theme: cosmo
     page-layout: full
     grid:
       sidebar-width: 275px
       body-width: 2050px
       margin-width: 250px
+      # gutter-width: 1.5rem
+    # css: large_plot.css
 knitr:
   opts_chunk:
-    out.width: 100%
+    out.width: "100%"
+    # out.height: "100%"
+    # column: screen
+    # widget.layout.height: "100vh"
     cache: false
     echo: false
     message: false
     warning: false
 fig-responsive: false
 params:
-  date_cut: '2024-08-26'
+  date_cut: 2024-08-26
   format_param: Modern
+#profile:
+#  group: 
+#    - [basic,fb]

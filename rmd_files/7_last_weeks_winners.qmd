@@ -12,14 +12,18 @@ conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 source("../sources/sources_script_specific/S7_last_weeks_winners.R",local = TRUE)
+params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
+    filter(
+        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+    )
 
 # sample size minimum pour etre un groupe
 
 
-df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
       # include filter bad deck
   filter(Valide_deck) %>% 
   mutate(
@@ -29,13 +33,18 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
     Archetype_count = n()
   ) 
 
-big_mtgo_tournament <- c("Modern Challenge 64","Modern Showcase Challenge","Modern Super Qualifier","Modern Showcase Qualifier" )
+big_mtgo_tournament <- str_replace_all(c(
+  "Modern Challenge 64",
+  "Modern Showcase Challenge",
+  "Modern Super Qualifier",
+  "Modern Showcase Qualifier" 
+                         ),"Modern",params$format_param)
 
 ```
 
 ```{r initial_data_loading}
 pre_rename_Tournament_of_interest_df <- df_export %>%
-  filter(Tournament != "Modern League",
+  filter(Tournament != paste0(params$format_param," League"),
          Week	>= max(Week)-last_week_number_7	) %>% 
   group_by(TournamentFile) %>% 
   mutate(number_of_player = n()) %>% 
@@ -81,10 +90,14 @@ rm(pre_rename_Tournament_of_interest_df,rename_tournament)
 
 scheme <- iwanthue(seed = 42, force_init = TRUE)  
 ```
+
+
 ```{r}
+x <- "modern-challenge-64-2024-09-2912692965"
+
 total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
   
-  
+  print(x)
   Title_df <- Tournament_of_interest_df %>%
     filter(TournamentFile == x) 
   

@@ -11,6 +11,7 @@ library(scryr)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 conflicted::conflicts_prefer(dplyr::filter)
+params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 ```
 
 
@@ -20,7 +21,7 @@ exclude_archetype <- c(
    # "Nadu"
   )
 
-df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+df_export <-  readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
       # include filter bad deck
   filter(Valide_deck) %>% 
   mutate(
@@ -33,7 +34,11 @@ df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
     ungroup() %>% 
   filter(Archetype %notin% exclude_archetype) 
 
-modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
+   filter(
+     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+     )
+ 
 
 path_collection <- 
   list.files(

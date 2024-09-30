@@ -11,6 +11,12 @@ library(baguette)
 library("xgboost")
 source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 
+
+
+# format_param <- format_date_en_cours$format_param
+ # date_cut <- format_date_en_cours$date_cutoff
+
+
 ################################################################################
 # just a list of magic colors
 color_comb_list <- c(
@@ -72,6 +78,7 @@ model_generic_grid_fun <- function(data,
                                    grid = NULL,
                                    model_name,
                                    data_name,
+                                   naming_format = format_param,
                                    number_of_core = 1) {
   print(model_name)
   print(Sys.time())
@@ -163,7 +170,8 @@ model_generic_grid_fun <- function(data,
     print(model_name)
     print(time.taken)
 
-    saveRDS(final_model, paste0("data/ml_model/", model_name, "_predict_archetype_", data_name, ".rds"))
+    saveRDS(final_model, paste0("data/ml_model/", model_name,
+                                "_predict_archetype_",naming_format,"_", data_name, ".rds"))
     # stopCluster(cl = cl)
     plan(sequential)
 
@@ -173,7 +181,7 @@ model_generic_grid_fun <- function(data,
     final_model <- readRDS(
       paste0(
         "data/ml_model/", model_name,
-        "_predict_archetype_", data_name, ".rds"
+        "_predict_archetype_",naming_format,"_", data_name, ".rds"
       )
     )
   }
@@ -183,11 +191,15 @@ model_generic_grid_fun <- function(data,
 # With caret ranger rf 4.7 - 4.9 h
 
 
+# browser()
 
-
+if(length(  list.files(
+  paste0("ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"/Fallbacks/"),
+  full.names = TRUE
+)) > 0){
 fall_back_list <- lapply(
   list.files(
-    "ArchetypeParser/MTGOFormatData_FB/Formats/Modern/Fallbacks/",
+    paste0("ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"/Fallbacks/"),
     full.names = TRUE
   ),
   function(x) {
@@ -203,10 +215,11 @@ fall_back_list <- lapply(
     Name = str_remove(Name,"^Generic")
   )
 
+}
 
 Archetype_parser_list <- lapply(
   list.files(
-    "ArchetypeParser/MTGOFormatData_FB/Formats/Modern/Archetypes/",
+    paste0("ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"/Archetypes/"),
     full.names = TRUE
   ),
   function(x) {
@@ -215,12 +228,13 @@ Archetype_parser_list <- lapply(
     ) %>% 
       purrr::list_modify("Conditions" = NULL) %>% 
       compact()
+    
     base_archetype <- base_parsing_res %>% 
       purrr::list_modify("Variants" = NULL) %>% 
       compact() %>% 
       as_tibble() %>% 
       mutate(
-        file = str_extract(x,"(?<=/)(\\w+)(?=\\.json)"),
+        file = str_extract(x,"(?<=Archetypes/)(.+)(?=\\.json)"),
         type = "base",
         parser_base_arch = Name,
         .before = 1
@@ -232,7 +246,7 @@ Archetype_parser_list <- lapply(
           compact() %>% 
           as_tibble() %>% 
           mutate(
-            file = str_extract(x,"(?<=/)(\\w+)(?=\\.json)"),
+            file = str_extract(x,"(?<=Archetypes/)(.+)(?=\\.json)"),
             type = "variant",
             parser_base_arch = base_archetype$Name,
             .before = 1
@@ -252,18 +266,22 @@ Archetype_parser_list <- lapply(
   bind_rows() %>% 
   mutate(
     join_name =  str_remove_all(str_remove_all(Name,"\\s+"),"Generic")
-  )
+  ) 
 
-# acdd exeception if fallback name = archetype name 
-if(any(Archetype_parser_list$parser_base_arch %in%  fall_back_list$Name)){
-  stop(
-    paste0("Archetype name in fallback : ", 
-           Archetype_parser_list$base_arch[Archetype_parser_list$parser_base_arch %in%  fall_back_list$Name]))
-}
 
 
 
-json_parsing <- fromJSON(file = "ArchetypeParser/data_FB_test.json")
+# acdd exeception if fallback name = archetype name 
+# if(any(Archetype_parser_list$parser_base_arch %in%  fall_back_list$Name)){
+#   stop(
+#     paste0("Archetype name in fallback : ", 
+#            Archetype_parser_list$parser_base_arch[Archetype_parser_list$parser_base_arch %in%  fall_back_list$Name])
+#     )
+# }
+
+
+
+json_parsing <- fromJSON(file = paste0("ArchetypeParser/",format_param,"_","data_FB_test.json"))
 
 
 # df_export_pre_60_filter
@@ -330,7 +348,8 @@ df_export_pre_60_filter <- json_parsing %>%
 
 
 
-format_bann_cards <- scryr::scry_cards("banned:modern")
+
+format_bann_cards <- scryr::scry_cards(paste0("banned:",format_param))
 
 
 
@@ -404,13 +423,13 @@ rm(df_export_pre_60_filter, Not_60_cards_main,df_export_pre_60_filter_remove_ban
 
 
 
-saveRDS(df_export, "data/intermediate_result/base_classif_data.rds")  
+saveRDS(df_export, paste0("data/intermediate_result/",format_param,"_base_classif_data.rds"))  
 
 # Otion one rf on raw data
 
 if (rerun_ml) {
-  saveRDS(df_export, "data/intermediate_result/temp_next_time_model_rerun_data.rds")
-  unlink("data/intermediate_result/not_train_col.rds")
+  saveRDS(df_export, paste0("data/intermediate_result/temp_",format_param,"_next_time_model_rerun_data.rds"))
+  unlink(paste0("data/intermediate_result/",format_param,"not_train_col.rds"))
   }
 
 
@@ -432,12 +451,12 @@ known_arch <- df_export %>%
 ################################################################################
 
 if (!rerun_ml) {
-  previous_data <- readRDS("data/intermediate_result/base_classif_data.rds") %>%
+  previous_data <- readRDS(paste0("data/intermediate_result/",format_param,"_base_classif_data.rds"))   %>%
     filter( type != "Fallback" & type != "Unknown"  & Archetype_count >= min_number_of_arch) %>%
     prett_fun_classif("Mainboard")
   
   not_train_col <- colnames(known_arch)[colnames(known_arch) %notin% colnames(previous_data)] %>% 
-    saveRDS("data/intermediate_result/not_train_col.rds")
+    saveRDS(paste0("data/intermediate_result/",format_param,"not_train_col.rds"))
 }
 
 ################################################################################

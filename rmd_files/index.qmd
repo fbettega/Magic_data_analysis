@@ -16,6 +16,7 @@ source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 knitr::read_chunk("../sources/S1_introduction_text.R")
 # a faire
 # Cards by matchup when possible
+params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 ```
 
 
@@ -35,7 +36,7 @@ proportion_format_fun <- function(nb,tot){
 }
 
 
-df_export <- readRDS("../data/data_meta_en_cours.rds")
+df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds"))
 
 Table_with_arch_count_and_sub_count <- df_export %>%
   select(

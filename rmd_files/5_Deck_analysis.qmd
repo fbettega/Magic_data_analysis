@@ -14,10 +14,15 @@ conflicted::conflicts_prefer(dplyr::lag)
 conflicted::conflicts_prefer(dplyr::any_of)
 conflicted::conflicts_prefer(purrr::discard)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
+params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 # knitr::opts_knit$set(output.dir = rprojroot::find_rstudio_root_file())
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("../data/mtg_data/DBcarte_modern.csv")
+# formatmodif
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
+    filter(
+        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+    )
 
 # sample size minimum pour etre un groupe
 
@@ -42,7 +47,7 @@ rm(tmp)
 
 
 
-df_export <- readRDS("../data/data_meta_en_cours.rds") %>%
+df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
       # include filter bad deck
   filter(Valide_deck) %>% 
   mutate(

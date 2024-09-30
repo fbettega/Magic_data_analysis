@@ -46,7 +46,9 @@ my_table_from_model <- function(pred_class,pred_proba,data,string){
 
 
 
-bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
+bind_proba_with_list_of_model <- function(model_list,
+                                          pred_data,base_data,
+                                          naming_format = format_param){
   list_of_table <- lapply(
     seq_along(model_list),
     function(x){
@@ -57,7 +59,7 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
       model <- readRDS(
         paste0(
           "data/ml_model/", model_list[[x]][1],
-          "_predict_archetype_", model_list[[x]][2], ".rds"
+          "_predict_archetype_",naming_format,"_", model_list[[x]][2], ".rds"
         )
       )
       predict_class <- model %>%
@@ -124,16 +126,16 @@ bind_proba_with_list_of_model <- function(model_list,pred_data,base_data){
 
 
 # Otion one rf on raw data
-df_export <- read_rds("data/intermediate_result/base_classif_data.rds")
+df_export <- read_rds( paste0("data/intermediate_result/",format_param,"_base_classif_data.rds"))
   
 
 if (No_pred){
-  write_rds(df_export, "data/data_meta_en_cours.rds")
+  write_rds(df_export, paste0("data/",format_param,"_data_meta_en_cours.rds"))
 }else {
 
-if(file.exists("data/intermediate_result/not_train_col.rds")) {
+if(file.exists(paste0("data/intermediate_result/",format_param,"not_train_col.rds"))) {
   
-  exclude_col <- read_rds("data/intermediate_result/not_train_col.rds")
+  exclude_col <- read_rds(paste0("data/intermediate_result/",format_param,"not_train_col.rds"))
 } else {
   exclude_col <- character()
 }
@@ -153,7 +155,7 @@ known_arch <- df_export %>%
 
 
 fall_back_df_temp <- df_export %>%  
-  filter(Date >= "2024-08-26") %>%
+  filter(Date >= date_cut) %>%
   # filter(str_detect(Archetype, "_fallback|Unknown") ##| Archetype_count < min_number_of_arch
   filter( type == "Fallback" | type == "Unknown"  | Archetype_count < min_number_of_arch)  %>%
   prett_fun_classif("Mainboard") %>%
@@ -195,7 +197,7 @@ model_res_table <- bind_proba_with_list_of_model(model_list = list_of_model_for_
   )
 
 
-write_rds(model_res_table,"data/intermediate_result/result_pred.rds")
+write_rds(model_res_table,paste0("data/intermediate_result/",format_param,"_result_pred.rds"))
 Voting_df <- model_res_table$table_vote_pred
 pred_table_df <- model_res_table$table_each_model_pred
 
@@ -205,7 +207,7 @@ Voting_df_upper_treshold <- Voting_df %>% filter(value > 0.3)
 
 
 DF_post_archetype_pred <- df_export %>%  
-  filter(Date >= "2024-08-26") %>% 
+  filter(Date >= date_cut) %>% 
   left_join(
     Voting_df_upper_treshold %>% 
       select(id,name),
@@ -221,7 +223,7 @@ sort (table(DF_post_archetype_pred$Archetype))
 
 
 
-write_rds(DF_post_archetype_pred, "data/data_meta_en_cours.rds")
+write_rds(DF_post_archetype_pred, paste0("data/",format_param,"_data_meta_en_cours.rds"))
 
 
 
