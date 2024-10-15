@@ -33,12 +33,14 @@ df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.
     Archetype_count = n()
   ) 
 
-big_mtgo_tournament <- str_replace_all(c(
-  "Modern Challenge 64",
-  "Modern Showcase Challenge",
-  "Modern Super Qualifier",
-  "Modern Showcase Qualifier" 
-                         ),"Modern",params$format_param)
+big_mtgo_tournament <- str_replace_all(
+  c(
+    "Modern Challenge 64",
+    "Modern Showcase Challenge",
+    "Modern Super Qualifier",
+    "Modern Showcase Qualifier"
+  ), "Modern", params$format_param
+)
 
 ```
 
@@ -93,11 +95,11 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 
 
 ```{r}
-x <- "modern-challenge-64-2024-09-2912692965"
+# x <- "modern-challenge-64-2024-09-2912692965"
 
 total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
   
-  print(x)
+  # print(x)
   Title_df <- Tournament_of_interest_df %>%
     filter(TournamentFile == x) 
   

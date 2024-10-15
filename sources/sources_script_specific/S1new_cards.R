@@ -196,9 +196,13 @@ Count_and_winrates_cards_in_decklist <- function(df,
       filter(Number_of_cards <= 15) %>% 
       rename_all(~str_remove(.,"Sideboard"))
     
+    # browser()
     
-    
-    df_unnest <- rbind(df_unnest_main,df_unnest_side)
+    df_unnest <- rbind(df_unnest_main,df_unnest_side) 
+    # %>%  
+    #   group_by(id,`_CardName`) %>% 
+    #   mutate(`_Count` = sum(`_Count`)) %>%
+    #   distinct()
     colname_deck_list <- ""
     
   } else {
@@ -286,7 +290,7 @@ Count_and_winrates_cards_in_decklist <- function(df,
     ) } %>%
     summarise(
       !!rlang::sym(paste0(colname_deck_list, "_Count")) := "Any",
-      count = sum(count),
+      count = sum(count,na.rm = TRUE),
       Wins_card = sum(Wins_card),
       Losses_card = sum(Losses_card),
       Draws_card = sum(Draws_card),

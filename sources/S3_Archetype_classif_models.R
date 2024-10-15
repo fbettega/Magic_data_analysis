@@ -288,6 +288,10 @@ json_parsing <- fromJSON(file = paste0("ArchetypeParser/",format_param,"_","data
 df_export_pre_60_filter <- json_parsing %>%
   as_tibble() %>%
   unnest_wider(Data) %>%
+  # temp filter for useless buged tournament 
+  filter(
+    TournamentFile  !=  'adri-birthday-modern-68213-2024-10-03'
+  ) %>% 
   unnest_wider(Archetype) %>%
   unnest_wider(ReferenceArchetype,
     names_sep = "_"
@@ -340,8 +344,6 @@ df_export_pre_60_filter <- json_parsing %>%
   ) 
 # %>%
 #   mutate(Archetype = make.names(Archetype))
-
-
 
 
 

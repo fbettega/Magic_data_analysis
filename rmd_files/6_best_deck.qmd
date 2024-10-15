@@ -12,6 +12,7 @@ conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 conflicted::conflicts_prefer(purrr::discard)
 source("../sources/S2_Source_mtg_new_card.R")
+
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 options(kableExtra.auto_format = FALSE)
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
@@ -143,7 +144,10 @@ model_total_cards_fun <- function(df_fun, cols_fun) {
           values_fill = "0"
         ) %>%
         mutate(id = as.numeric(id)) %>% 
-        select(-Archetype, -Player, -Archetype_count, -Draws) %>% 
+        select(
+          -Archetype, -Player, -Archetype_count,
+               -Draws
+          ) %>% 
         column_to_rownames("id")
     
     
@@ -267,7 +271,8 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
             -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
             -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
             -ReferenceArchetype_Companion,- matches,-Base_Archetype,
-            -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck
+            -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck,
+            -parser_base_arch,-type
           ) %>% 
           mutate(Date = lubridate::date(Date))%>% 
           select(-all_of(not_colfuns)) %>% 
@@ -287,7 +292,8 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
       -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
       -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
       -ReferenceArchetype_Companion,- matches,-Base_Archetype,
-      -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck
+      -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck,
+      -parser_base_arch,-type
     ) %>% 
     mutate(Date = lubridate::date(Date))%>% 
     select(-all_of(not_colfuns)) %>% 
@@ -445,7 +451,6 @@ Best_deck_get_table_function <- function(res_fun_init_main,
                                          Model, 
                                          top_x_rank, 
                                          Week_fun#,
-                                          
                                          ) {
       
   if (identical(res_fun_init_main , res_fun_init_side)) {

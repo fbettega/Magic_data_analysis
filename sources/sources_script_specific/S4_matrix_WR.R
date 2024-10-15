@@ -1,5 +1,5 @@
 plot_win_rate_mat <- function(
-    Df_winrate_format,
+    Df_winrate_format_fun,
     group_column,
     Cut_of_number_of_data = 0,
     simplify_tab_ratio = 0,
@@ -12,30 +12,29 @@ plot_win_rate_mat <- function(
     b = 50, # marge basse (par exemple)
     t = 50 # marge haute (par exemple)
   )
-  
-  
-  Df_winrate_format_filter_base <- Df_winrate_format %>%
+
+  Df_winrate_format_filter_base_fun <- Df_winrate_format_fun %>%
     filter(number_of_games > 0) %>%
     # filtre surement a déplacé pour opti
     filter(Archetype != Matchups_OpponentArchetype) %>%
     filter(!!rlang::sym(paste0("number_of_", group_column)) > Cut_of_number_of_data)
   
   if (only_signif) {
-    Df_winrate_format_filter_base <- Df_winrate_format_filter_base %>%
+    Df_winrate_format_filter_base_fun <- Df_winrate_format_filter_base_fun %>%
       filter(!!rlang::sym(paste0("CI_WR_sign_diff_0_", group_column)))
   }
   
+  # browser()
   
-  
-  Df_winrate_format_filter <- Df_winrate_format_filter_base %>%
+  Df_winrate_format_filter_fun <- Df_winrate_format_filter_base_fun %>%
     group_by(Archetype) %>%
     mutate(
-      ratio_matchup_arch = n() / (length(unique(Df_winrate_format_filter_base$Archetype)) - 1)
+      ratio_matchup_arch = n() / (length(unique(Df_winrate_format_filter_base_fun$Archetype)) - 1)
     ) %>%
     ungroup() %>%
     group_by(Matchups_OpponentArchetype) %>%
     mutate(
-      ratio_matchup_oppoarch = n() / (length(unique(Df_winrate_format_filter_base$Matchups_OpponentArchetype)) - 1)
+      ratio_matchup_oppoarch = n() / (length(unique(Df_winrate_format_filter_base_fun$Matchups_OpponentArchetype)) - 1)
     ) %>%
     ungroup() %>%
     filter(ratio_matchup_arch >= simplify_tab_ratio) %>%
@@ -110,17 +109,17 @@ plot_win_rate_mat <- function(
   
   label_x <- paste0(
     "<span style='font-size:", 17 - size_multiplier, "px;'> <b>",
-    Df_winrate_format_filter %>%
+    Df_winrate_format_filter_fun %>%
       pull(Archetype) %>%
       unique(),
     "</b> </span>",
-    "<br /> n : ", Df_winrate_format_filter %>%
+    "<br /> n : ", Df_winrate_format_filter_fun %>%
       select(Archetype, all_of(paste0("Archetype_presence_", group_column))) %>%
       distinct() %>%
       pull(
         !!rlang::sym(paste0("Archetype_presence_", group_column))
       ),
-    "<br /> ", Df_winrate_format_filter %>%
+    "<br /> ", Df_winrate_format_filter_fun %>%
       pull(
         !!rlang::sym(paste0("Archetype_CI_WR_format_", group_column))
       ) %>%
@@ -130,17 +129,17 @@ plot_win_rate_mat <- function(
   
   label_y <- paste0(
     "<span style='font-size:", 17 - size_multiplier, "px;'> <b>",
-    Df_winrate_format_filter %>%
+    Df_winrate_format_filter_fun %>%
       pull(Archetype) %>%
       unique(),
     "</b> </span>",
-    "<br /> n : ", Df_winrate_format_filter %>%
+    "<br /> n : ", Df_winrate_format_filter_fun %>%
       select(Archetype, all_of(paste0("Archetype_presence_", group_column))) %>%
       distinct() %>%
       pull(
         !!rlang::sym(paste0("Archetype_presence_", group_column))
       ),
-    "<br /> ", Df_winrate_format_filter %>%
+    "<br /> ", Df_winrate_format_filter_fun %>%
       pull(
         !!rlang::sym(paste0("Archetype_CI_WR_format_", group_column))
       ) %>%
@@ -150,10 +149,10 @@ plot_win_rate_mat <- function(
   
   
   
-  if (nrow(Df_winrate_format_filter) > 0){
+  if (nrow(Df_winrate_format_filter_fun) > 0){
     plot_base_en_cours <- 
       ggplot(
-        Df_winrate_format_filter,
+        Df_winrate_format_filter_fun,
         aes(
           Matchups_OpponentArchetype,
           Archetype,
@@ -207,7 +206,7 @@ plot_win_rate_mat <- function(
       ) 
     
     
-    signif_dataframe <- Df_winrate_format_filter %>%
+    signif_dataframe <- Df_winrate_format_filter_fun %>%
       filter(
         !!rlang::sym(paste0("CI_WR_sign_diff_0_", group_column))
       )

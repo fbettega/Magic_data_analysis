@@ -367,7 +367,7 @@ plot_presence_fun(
 ) %>% bslib::card(full_screen = TRUE)
 ```
 
-# CI plot win rates
+# CI plot win rates  
 ```{r}
 df_Ci_by_week <- rbind(
   Presence_df_base,
@@ -383,7 +383,6 @@ df_Ci_by_week <- rbind(
       Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
       ),
     ) %>% 
-  
   distinct(Archetype,Week,.keep_all = TRUE) %>% 
   group_by(Week) %>% 
     mutate(
@@ -427,10 +426,6 @@ df_Ci_by_week2 <- rbind(
                              )
                   )
     ) %>% arrange(Archetype_count)
-
-
-
-
 
 
 df_Ci_by_all_week <- df_Ci_by_week %>% 

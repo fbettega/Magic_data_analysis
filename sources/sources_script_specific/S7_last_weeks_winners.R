@@ -102,7 +102,8 @@ top_8_table_and_plot_prez_generator <- function(df_fun,current_tournament){
     "Place : ", unique(y$Place)," Archetype : ",unique(y$Archetype),"/",unique(y$Base_Archetype), "<br>",
     "[Player : ",unique(y$Player),"](",unique(y$AnchorUri),")")
   )
-  }) %>% purrr::set_names(colnames(list_of_table_to_plot))
+  }) %>%
+    purrr::set_names(colnames(list_of_table_to_plot))
   
   
   

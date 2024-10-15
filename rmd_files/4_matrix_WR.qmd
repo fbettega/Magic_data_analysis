@@ -27,6 +27,7 @@ loaded_base_data <- readRDS(paste0("../data/",params$format_param,"_data_meta_en
 # * Combination
 
 # X et Y en bilattérale
+ratio_plot <- 3
 ```
 
 
@@ -51,14 +52,23 @@ df_base <- loaded_base_data %>%
   mutate(
     Archetype_count = n()
   ) %>%
+  ungroup() %>% 
+  group_by(Base_Archetype) %>%
+  mutate(
+    Base_Archetype_count = n()
+  ) %>% 
+  ungroup() %>%
   arrange(Archetype_count)
-
-
 
 
 Other_Archetype <- df_base %>%
   filter(Archetype_count < Archetype_cut_of_4 | Archetype == "Unknown") %>%
   pull(Archetype) %>%
+  unique()
+
+Other_base_Archetype <- df_base %>%
+  filter(Base_Archetype_count < Archetype_cut_of_4 | Base_Archetype == "Unknown") %>%
+  pull(Base_Archetype) %>%
   unique()
 
 
@@ -67,7 +77,12 @@ df_base_all_data <- df_base %>%
     Archetype = ifelse(Archetype %in% Other_Archetype,
       "Other",
       Archetype
-    )
+    ),
+    Base_Archetype = ifelse(Base_Archetype %in% Other_base_Archetype,
+      "Other",
+      Base_Archetype
+    ),
+    
   ) %>%
   mutate(
     Archetype =
@@ -80,7 +95,6 @@ df_base_all_data <- df_base %>%
       )
     ),
     Base_Archetype =
-
       factor(Base_Archetype,
         level = unique(.$Base_Archetype)
       )
@@ -127,7 +141,14 @@ Df_win_rate_matrix_correct_maccro_archetype_oppo <- Df_win_rate_matrix_simple_un
            "Matchups_Opponent" = "Player"
            )
             ) %>% 
-  rename(Matchups_OpponentArchetype = Archetype)  %>% 
+  rename(
+    Matchups_OpponentArchetype = Archetype,
+    Matchups_OpponentBase_Archetype = Base_Archetype
+         )  %>% 
+  mutate(
+    Matchups_OpponentArchetype = as.character(Matchups_OpponentArchetype),
+    Matchups_OpponentBase_Archetype = as.character(Matchups_OpponentBase_Archetype)
+    ) %>% 
   distinct()
 
 
@@ -139,57 +160,75 @@ Df_win_rate_matrix_correct_maccro_archetype_oppo <- Df_win_rate_matrix_simple_un
 
 Df_win_rate_matrix_base <-  Df_win_rate_matrix_simple_unnest_matchup %>% 
   select(-Matchups_OpponentArchetype) %>% 
-inner_join(Df_win_rate_matrix_correct_maccro_archetype_oppo %>%
-  select(-Base_Archetype),
+inner_join(
+  Df_win_rate_matrix_correct_maccro_archetype_oppo ,
   by = c(
     "TournamentFile",
     "Matchups_Opponent"
            )
   ) %>%
   select(
-    id, Meta, Week, Date, Archetype, Player,
-    Matchups_Opponent, Matchups_OpponentArchetype, Matchups_Wins,
+    id, Meta, Week, Date, Archetype,Base_Archetype, Player,
+    Matchups_Opponent, Matchups_OpponentArchetype,Matchups_OpponentBase_Archetype, Matchups_Wins,
     Matchups_Losses, Matchups_Draws, matches
   ) %>%
   mutate(
-    Matchups_Opponent_basedArchetype = Matchups_OpponentArchetype,
-    Matchups_OpponentArchetype = Archetype_agreger(Matchups_OpponentArchetype),
+    # Matchups_Opponent_basedArchetype = Matchups_OpponentArchetype,
     Matchups_OpponentArchetype = ifelse(Matchups_OpponentArchetype %in% Other_Archetype,
       "Other",
       Matchups_OpponentArchetype
     ),
-    Matchups_OpponentArchetype = factor(Matchups_OpponentArchetype, levels = rev(levels(Archetype)))
+    Matchups_OpponentBase_Archetype = ifelse(Matchups_OpponentBase_Archetype %in% Other_base_Archetype,
+      "Other",
+      Matchups_OpponentBase_Archetype
+    ),
+    Matchups_OpponentArchetype = factor(Matchups_OpponentArchetype, levels = rev(levels(Archetype))),
+    Matchups_OpponentBase_Archetype = factor(Matchups_OpponentBase_Archetype, levels = rev(levels(Base_Archetype))
+                                             )
   )
 
 ```
 
 
 ```{r some_check_chunk}
-if(!all(
-  Df_win_rate_matrix_correct_maccro_archetype_oppo$Matchups_Opponent_basedArchetype == 
-  Df_win_rate_matrix_correct_maccro_archetype_oppo$Base_Archetype)){
-  print("problem in base archetype in matchup") 
-} 
+# if(
+#   !all(
+#   Df_win_rate_matrix_correct_maccro_archetype_oppo$Matchups_Opponent_basedArchetype == 
+#   Df_win_rate_matrix_correct_maccro_archetype_oppo$Base_Archetype
+#   )
+#   ){
+#   print("problem in base archetype in matchup") 
+# } 
 
 
 
 ```
 
 
+
+
 ```{r}
-Df_win_rate_matrix_summarise <- Df_win_rate_matrix_base %>%
+win_rate_matrix_maker <- function(
+    df_fun,
+    Archetype_type #"Archetype" , "Base_Archetype"                            
+){
+  if(Archetype_type == "Archetype"){
+    select_col <- c( "Archetype", "Matchups_OpponentArchetype")
+  } else if(Archetype_type == "Base_Archetype"){
+    select_col <- c( "Base_Archetype", "Matchups_OpponentBase_Archetype")
+  }
+  
+  
+  win_rate_matrix_fun_res <- df_fun %>% 
   select(
-    Archetype, Matchups_OpponentArchetype,
+   all_of(select_col),
     Matchups_Wins, Matchups_Losses
   ) %>%
   mutate(
     Result = Matchups_Wins > Matchups_Losses,
     Draw = Matchups_Wins == Matchups_Losses
   ) %>%
-  group_by(
-    Archetype,
-    Matchups_OpponentArchetype
-  ) %>%
+  group_by(across(all_of(select_col)))  %>%
   summarise(
     number_of_matches = n() - sum(Draw),
     Win_matches = sum(Result),
@@ -230,6 +269,58 @@ Df_win_rate_matrix_summarise <- Df_win_rate_matrix_base %>%
       levels = c("+", "0", "-")
     ),
   )
+  
+  
+  return(win_rate_matrix_fun_res)
+}
+
+
+
+
+CI_plot_prepare_df_fun <- function(df_fun){
+res <- df_fun %>% 
+  group_by(Archetype) %>% 
+  summarise(
+    number_of_matches = sum(number_of_matches),
+    Win_matches = sum(Win_matches),
+    number_of_games = sum(number_of_games),
+    Matchups_Wins = sum(Matchups_Wins),
+    .groups = "keep"
+    ) %>% 
+  mutate(
+        Loss_matches = number_of_matches - Win_matches,
+        Matchups_Loss = number_of_games - Matchups_Wins
+  ) %>% 
+  summarise(
+    Arch_winrate_matches = winrate_1_data(
+      sum(Win_matches, na.rm = TRUE) , sum(Loss_matches, na.rm = TRUE)
+      ),
+    CI_Arch_winrate_matches = CI_prop(
+      Arch_winrate_matches, number_of_matches
+      ),
+    Arch_winrate_games = winrate_1_data(
+      sum(Matchups_Wins, na.rm = TRUE) , sum(Matchups_Loss, na.rm = TRUE)
+      ),
+    CI_Arch_winrate_games = CI_prop(
+      Arch_winrate_games, number_of_games
+      )
+  ) 
+  
+  return(res)
+  }
+```
+
+
+
+
+
+
+
+```{r}
+Df_win_rate_matrix_summarise <- win_rate_matrix_maker(
+    df_fun = Df_win_rate_matrix_base,
+    Archetype_type = "Archetype" #"Archetype" , "Base_Archetype"                            
+)
 
 
 Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>%
@@ -245,58 +336,98 @@ Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>%
   )
 ```
 
-
-
-# Matrice utilisant le nombres de manches
-
-Par exemple un socre de 2-1 compte comme 3 manches
-
-## Total matrix
-
 ```{r}
-plot_win_rate_mat(Df_win_rate_matrix_format, "games", 
-                  size_multiplier =2.8) %>%
-  bslib::card(full_screen = TRUE)
-```
+Df_win_rate_matrix_base_arch_summarise <- win_rate_matrix_maker(
+    df_fun = Df_win_rate_matrix_base,
+    Archetype_type = "Base_Archetype" #"Archetype" , "Base_Archetype"                            
+)
 
-## Only significative CI
 
-```{r}
-plot_win_rate_mat(Df_win_rate_matrix_format, "games",
-  # simplify_tab_ratio = 0.1,
-  only_signif = TRUE, size_multiplier =2.8
-) %>%
-  bslib::card(full_screen = TRUE)
-```
-
-## Only more than 20 matches
-
-```{r}
-plot_win_rate_mat(Df_win_rate_matrix_format, "games",
-  Cut_of_number_of_data = 20,
-  simplify_tab_ratio = 0.5,
-  size_multiplier =2.8
-) %>% bslib::card(full_screen = TRUE)
+Df_win_rate_matrix_base_arch_format <- Df_win_rate_matrix_base_arch_summarise %>%
+  mutate(
+    number_format_games = paste0("n = ", number_of_games, " [", Matchups_Wins, "-", Matchups_Losses, "]"),
+    number_format_matches = paste0("n = ", number_of_matches, " [", Win_matches, "-", (number_of_matches - Win_matches), "]"),
+    CI_WR_format_matches = paste0(round(WR_matches * 100, 1), "%", formating_CI(WR_matches, CI_WR_matches, round_val = 1, limit = c(0, 1))),
+    CI_WR_format_games = paste0(round(WR_games * 100, 1), "%", formating_CI(WR_games, CI_WR_games, round_val = 1, limit = c(0, 1)))
+  ) %>%
+  mutate(
+    CI_WR_sign_diff_0_games = CI_WR_sign_games != "0",
+    CI_WR_sign_diff_0_matches = CI_WR_sign_matches != "0"
+  ) %>% 
+  rename(
+    Archetype = Base_Archetype,
+    Matchups_OpponentArchetype = Matchups_OpponentBase_Archetype
+    
+    )  
+# %>% 
+#   filter(number_of_matches > 5)
+# a <- table(Df_win_rate_matrix_base$Archetype,Df_win_rate_matrix_base$Base_Archetype) %>% 
+#   as.data.frame() %>% 
+#   filter(Freq > 0)
 ```
 
 
 
 
-
-
-# Matrice utilisant le nombres de partie
+# Archetype
+## Matrice utilisant le nombres de partie
 
 Par exemple un socre de 2-1 compte comme 1 partie gagné.
 
-
-## Total matrix  
+::: {.panel-tabset .nav-pills}
+### Total matrix  
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier =2.8)
 ```
 
 
-## Only significative CI
+### CI plot 
+```{r}
+#| column: screen
+Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format)
+(ggplot(data = Archetype_ci_df_plot %>% 
+  mutate(
+           Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
+         )
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate_matches,
+      x = Archetype,
+      text = paste(
+      "Archetype: ", Archetype, "<br>", # Archetype name
+      "Winrate: ", 
+      round(Arch_winrate_matches * 100, 1), " %",
+      "[",round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2),";",
+      round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2),"]", "<br>",
+      sep = ""
+    ),
+      ),
+    position = position_dodge(0.75)
+    )  +
+      geom_errorbar(aes(
+        x = Archetype,
+        ymin = Arch_winrate_matches + CI_Arch_winrate_matches,
+                        ymax = Arch_winrate_matches - CI_Arch_winrate_matches
+        ),
+      position = position_dodge(width = .75), width = .01
+      )  +
+     geom_hline(yintercept = mean(Archetype_ci_df_plot$Arch_winrate_matches), linetype="dashed", color = "red") +
+    geom_hline(
+      yintercept= c(mean(Archetype_ci_df_plot$Arch_winrate_matches - Archetype_ci_df_plot$CI_Arch_winrate_matches),
+                    mean(Archetype_ci_df_plot$Arch_winrate_matches + Archetype_ci_df_plot$CI_Arch_winrate_matches)), 
+      linetype="dashed", color = "blue") +
+  coord_flip()
+  )  %>%
+  ggplotly(
+    tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
+  ) %>% bslib::card(full_screen = TRUE)
+```
+
+
+
+### Only significative CI
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
@@ -306,7 +437,7 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
 ```
 
 
-## Only more than 20 matches
+### Only more than 20 matches
 
 ```{r}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
@@ -317,11 +448,269 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
 ```
 
 
+:::
 
 
 
 
-#  Best deck 
+## Matrice utilisant le nombres de manches
+
+Par exemple un socre de 2-1 compte comme 3 manches
+
+::: {.panel-tabset .nav-pills} 
+
+### Total matrix
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_format, "games", 
+                  size_multiplier =2.8) %>%
+  bslib::card(full_screen = TRUE)
+```
+
+
+
+
+
+### CI plot 
+```{r}
+#| column: screen
+Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format)
+(ggplot(data = Archetype_ci_df_plot %>% 
+  mutate(
+           Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate_games + .$CI_Arch_winrate_games)])
+         )
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate_games,
+      x = Archetype,
+      text = paste(
+      "Archetype: ", Archetype, "<br>", # Archetype name
+      "Winrate: ", 
+      round(Arch_winrate_games * 100, 1), " %",
+      "[",round((Arch_winrate_games + CI_Arch_winrate_games) * 100, 2),";",
+      round((Arch_winrate_games - CI_Arch_winrate_games) * 100, 2),"]", "<br>",
+      sep = ""
+    ),
+      ),
+    position = position_dodge(0.75)
+    )  +
+      geom_errorbar(aes(
+        x = Archetype,
+        ymin = Arch_winrate_games + CI_Arch_winrate_games,
+                        ymax = Arch_winrate_games - CI_Arch_winrate_games
+        ),
+      position = position_dodge(width = .75), width = .01
+      )  +
+     geom_hline(yintercept = mean(Archetype_ci_df_plot$Arch_winrate_matches), linetype="dashed", color = "red") +
+    geom_hline(
+      yintercept= c(mean(Archetype_ci_df_plot$Arch_winrate_games - Archetype_ci_df_plot$CI_Arch_winrate_games),
+                    mean(Archetype_ci_df_plot$Arch_winrate_games + Archetype_ci_df_plot$CI_Arch_winrate_games)), 
+      linetype="dashed", color = "blue") +
+  coord_flip()
+  )  %>%
+  ggplotly(
+    tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
+  ) %>% bslib::card(full_screen = TRUE)
+```
+
+
+
+
+### Only significative CI
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_format, "games",
+  # simplify_tab_ratio = 0.1,
+  only_signif = TRUE, size_multiplier =2.8
+) %>%
+  bslib::card(full_screen = TRUE)
+```
+
+### Only more than 20 matches
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_format, "games",
+  Cut_of_number_of_data = 20,
+  simplify_tab_ratio = 0.5,
+  size_multiplier =2.8
+) %>% bslib::card(full_screen = TRUE)
+```
+
+:::  
+
+
+
+# Base archetype
+## Matrice utilisant le nombres de partie
+
+Par exemple un socre de 2-1 compte comme 1 partie gagné.
+
+::: {.panel-tabset .nav-pills}
+### Total matrix  
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches", size_multiplier =2.8)
+```
+
+
+### CI plot 
+```{r}
+#| column: screen
+base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch_format)
+(ggplot(data = base_Archetype_ci_df_plot %>% 
+  mutate(
+           Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
+         )
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate_matches,
+      x = Archetype,
+      text = paste(
+      "Archetype: ", Archetype, "<br>", # Archetype name
+      "Winrate: ", 
+      round(Arch_winrate_matches * 100, 1), " %",
+      "[",round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2),";",
+      round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2),"]", "<br>",
+      sep = ""
+    ),
+      ),
+    position = position_dodge(0.75)
+    )  +
+      geom_errorbar(aes(
+        x = Archetype,
+        ymin = Arch_winrate_matches + CI_Arch_winrate_matches,
+                        ymax = Arch_winrate_matches - CI_Arch_winrate_matches
+        ),
+      position = position_dodge(width = .75), width = .01
+      )  +
+     geom_hline(yintercept = mean(base_Archetype_ci_df_plot$Arch_winrate_matches), linetype="dashed", color = "red") +
+    geom_hline(
+      yintercept= c(mean(base_Archetype_ci_df_plot$Arch_winrate_matches - base_Archetype_ci_df_plot$CI_Arch_winrate_matches),
+                    mean(base_Archetype_ci_df_plot$Arch_winrate_matches + base_Archetype_ci_df_plot$CI_Arch_winrate_matches)), 
+      linetype="dashed", color = "blue") +
+  coord_flip()
+  )  %>%
+  ggplotly(
+    tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
+  ) %>% bslib::card(full_screen = TRUE)
+```
+
+### Only significative CI
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
+  # simplify_tab_ratio = 0.5,
+  only_signif = TRUE, size_multiplier =2.8
+) %>% bslib::card(full_screen = TRUE)
+```
+
+
+### Only more than 20 matches
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
+  Cut_of_number_of_data = 20,
+  simplify_tab_ratio = 0.5,
+  size_multiplier =2.8
+) %>% bslib::card(full_screen = TRUE)
+```
+
+
+:::
+
+
+
+
+## Matrice utilisant le nombres de manches
+
+Par exemple un socre de 2-1 compte comme 3 manches
+
+::: {.panel-tabset .nav-pills} 
+
+### Total matrix
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "games", 
+                  size_multiplier =2.8) %>%
+  bslib::card(full_screen = TRUE)
+```
+
+
+
+
+### CI plot 
+```{r}
+#| column: screen
+base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch_format)
+(ggplot(data = base_Archetype_ci_df_plot %>% 
+  mutate(
+           Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate_games + .$CI_Arch_winrate_games)])
+         )
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate_games,
+      x = Archetype,
+      text = paste(
+      "Archetype: ", Archetype, "<br>", # Archetype name
+      "Winrate: ", 
+      round(Arch_winrate_games * 100, 1), " %",
+      "[",round((Arch_winrate_games + CI_Arch_winrate_games) * 100, 2),";",
+      round((Arch_winrate_games - CI_Arch_winrate_games) * 100, 2),"]", "<br>",
+      sep = ""
+    ),
+      ),
+    position = position_dodge(0.75)
+    )  +
+      geom_errorbar(aes(
+        x = Archetype,
+        ymin = Arch_winrate_games + CI_Arch_winrate_games,
+                        ymax = Arch_winrate_games - CI_Arch_winrate_games
+        ),
+      position = position_dodge(width = .75), width = .01
+      )  +
+     geom_hline(yintercept = mean(base_Archetype_ci_df_plot$Arch_winrate_matches), linetype="dashed", color = "red") +
+    geom_hline(
+      yintercept= c(mean(base_Archetype_ci_df_plot$Arch_winrate_games - base_Archetype_ci_df_plot$CI_Arch_winrate_games),
+                    mean(base_Archetype_ci_df_plot$Arch_winrate_games + base_Archetype_ci_df_plot$CI_Arch_winrate_games)), 
+      linetype="dashed", color = "blue") +
+  coord_flip()
+  )  %>%
+  ggplotly(
+    tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
+  ) %>% bslib::card(full_screen = TRUE)
+```
+
+
+### Only significative CI
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "games",
+  # simplify_tab_ratio = 0.1,
+  only_signif = TRUE, size_multiplier =2.8
+) %>%
+  bslib::card(full_screen = TRUE)
+```
+
+### Only more than 20 matches
+
+```{r}
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "games",
+  Cut_of_number_of_data = 20,
+  simplify_tab_ratio = 0.5,
+  size_multiplier =2.8
+) %>% bslib::card(full_screen = TRUE)
+```
+
+:::  
+
+
+
+
+
+##  Best deck 
 
 Tentative de multiplier la matrice de win rate (WR ou borne inférieure du CI) par la présence hebdomadaire des decks afin de calculer diviser par le nombre total de decks afin de calculer un expected winrate moyen pour un field donnée. 
 
@@ -466,8 +855,8 @@ plot_archetype_spaghetti <- (
 ```
 
 
-
-
+::: {.panel-tabset .nav-pills}
+## Confidence intervalle lower bound
 
 ```{r}
 #| column: screen
@@ -489,7 +878,7 @@ DT::datatable(
     #   $(header[i]).attr('title', tips[i]);
     # }
     # ",
-    onfly_filter_js
+    return_filter_js()
     # )
   ),
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
@@ -510,7 +899,7 @@ DT::datatable(
 
 
 
-
+## Average Win rate
 
 ```{r}
 #| column: screen
@@ -534,7 +923,7 @@ DT::datatable(
     #   $(header[i]).attr('title', tips[i]);
     # }
     # ",
-    onfly_filter_js
+    return_filter_js()
     # )
   ),
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
@@ -552,4 +941,4 @@ DT::datatable(
   )
 ```
 
-
+:::

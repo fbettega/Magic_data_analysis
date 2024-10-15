@@ -4,3 +4,5 @@ book:
   chapters:
     - index.qmd
     - 1_1_collection_analysis.qmd
+    - 1_2_debug_archetype.qmd
+

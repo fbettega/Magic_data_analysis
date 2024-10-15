@@ -108,51 +108,6 @@ tooltips_deck_variable_arch <- c(
 ```
 
 
-```{r js_function}
-onfly_filter_js <- c(r"{
-function onlyUnique(value, index, self) {
-return self.indexOf(value) === index;
-};
-var table_header = table.table().header();
-var column_nodes = $(table_header).find('tr:nth-child(2) > td');
-var input_nodes = $(column_nodes).find('input.form-control');
-for (let i = 0; i < input_nodes.length; i++){
-data_type_attr = $(input_nodes[i]).closest('td').attr('data-type');
-if (data_type_attr == 'factor'){
-$(input_nodes[i]).on('input propertychange', function(){
-if (typeof unique_values !== 'undefined'){
-selection_content = $(input_nodes[i]).closest('td').find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
-}
-selection_content[0].innerHTML = content_str;
-}
-})
-}
-}
-column_nodes.on('click', function(){
-setTimeout(function(){
-for (let i = 0; i < column_nodes.length; i++){
-data_type_attr = $(column_nodes[i]).attr('data-type');
-if (data_type_attr == 'factor'){
-selection_div = $(column_nodes[i]).find('div.selectize-input');
-if($(selection_div).hasClass('dropdown-active')){
-values = table.column(i, {pages: 'all', search: 'applied'}).data();
-unique_values = Array.from(values.filter(onlyUnique));
-selection_content = $(column_nodes[i]).find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
-}
-selection_content[0].innerHTML = content_str;
-}
-}
-}
-}, 50);
-})
-}")
-```
 
 
 
@@ -202,7 +157,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
@@ -238,7 +193,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
@@ -285,7 +240,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
@@ -316,7 +271,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
@@ -385,7 +340,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
@@ -419,7 +374,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
@@ -468,7 +423,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
@@ -504,7 +459,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,

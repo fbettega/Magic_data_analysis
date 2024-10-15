@@ -13,8 +13,9 @@ library("rjson")
 library(kableExtra)
 library(tidyverse)
 library(scryr)
-source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
 
+
+source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
 source("../sources/sources_script_specific/S1new_cards.R", local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
@@ -41,7 +42,7 @@ df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.
 
 
 # formatmodif
-modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
    filter(
      !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
      )
@@ -112,69 +113,8 @@ tooltips_deck_new_cards <- c(
 ```
 
 
-```{r js_function}
-onfly_filter_js <- c(r"{
-function onlyUnique(value, index, self) {
-return self.indexOf(value) === index;
-};
-var table_header = table.table().header();
-var column_nodes = $(table_header).find('tr:nth-child(2) > td');
-var input_nodes = $(column_nodes).find('input.form-control');
-for (let i = 0; i < input_nodes.length; i++){
-data_type_attr = $(input_nodes[i]).closest('td').attr('data-type');
-if (data_type_attr == 'factor'){
-$(input_nodes[i]).on('input propertychange', function(){
-if (typeof unique_values !== 'undefined'){
-selection_content = $(input_nodes[i]).closest('td').find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
-}
-selection_content[0].innerHTML = content_str;
-}
-})
-}
-}
-column_nodes.on('click', function(){
-setTimeout(function(){
-for (let i = 0; i < column_nodes.length; i++){
-data_type_attr = $(column_nodes[i]).attr('data-type');
-if (data_type_attr == 'factor'){
-selection_div = $(column_nodes[i]).find('div.selectize-input');
-if($(selection_div).hasClass('dropdown-active')){
-values = table.column(i, {pages: 'all', search: 'applied'}).data();
-unique_values = Array.from(values.filter(onlyUnique));
-selection_content = $(column_nodes[i]).find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
-}
-selection_content[0].innerHTML = content_str;
-}
-}
-}
-}, 50);
-})
-}")
-```
 
 
-
-
-
-
-
-
-
-
-```{r data_select_with_new_card_main_L}
-df_main_unnest <- df_export %>%
-  unnest_longer(Mainboard) %>%
-  unnest_wider(Mainboard, names_sep = "_")
-
-df_new_card_main_base <- df_main_unnest %>%
-  filter(Mainboard_CardName %in% card_of_interest$name)
-```
 
 
 
@@ -210,6 +150,96 @@ General_presence_sideboard <- Count_cards_in_decklist(
 
 
 
+```{r}
+win_rate_main_total <- Count_and_winrates_cards_in_decklist(
+  df_export %>% 
+    mutate(
+      Archetype = "All",
+      Archetype_count = 100
+      ),
+  card_of_interest$name, 
+  "All"
+)
+
+General_presence_total <- Count_cards_in_decklist(
+  df_export %>% 
+    mutate(Archetype = "All"), 
+  card_of_interest$name,
+  "All"
+) %>%
+  rename(count_presence = count) %>% 
+  group_by(Archetype, CardName, Count) %>% 
+  # a verif
+  summarise(count_presence = sum(count_presence),.groups = "drop")
+
+```
+
+
+# Total cards
+```{r}
+DT::datatable(
+  full_join(
+    win_rate_main_total,
+    General_presence_total,
+    by = c("Archetype", "CardName", "Count")
+  ) %>%
+  inner_join(
+    card_of_interest %>% 
+      select(name,set),
+    by = join_by(
+      CardName == name
+    )
+  ) %>%
+    relocate(set,.after = CardName) %>% 
+    mutate(
+      count_presence = ifelse(
+        is.na(count_presence),count_winrate,count_presence),
+      set = as.factor(set),
+      CardName = as.factor(CardName),
+      Count = as.factor(Count)
+    ) %>%
+    relocate(count_presence,.after = count_winrate) %>% 
+    mutate(Only_count = is.na(count_winrate)) %>%
+    arrange(desc(count_winrate)) %>%
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+    select(-Archetype),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  filter = "top", rownames = FALSE,
+  options = list(
+    dom = "ltipr",
+    searchCols = list(
+      NULL, NULL,NULL,NULL,
+      list(search = '["Any"]'),
+       # list(search = '10 ...'),
+      NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
+    ), autoWidth = TRUE, pageLength = 25
+  )
+ ) %>%  
+  DT::formatPercentage(c(6,8,11),digits = 1)
+```
+
+
 
 # Mainboard_card
 ```{r}
@@ -219,11 +249,22 @@ DT::datatable(
     win_rate_main_board,
     by = c("Archetype", "Mainboard_CardName", "Mainboard_Count")
   ) %>%
+  inner_join(
+    card_of_interest %>% 
+      select(name,set),
+    by = join_by(
+      Mainboard_CardName == name
+    )
+  ) %>%
+    relocate(set,.after = Mainboard_CardName) %>% 
     mutate(
+      count_presence = ifelse(
+        is.na(count_presence),count_winrate,count_presence),
       Archetype = factor(
         Archetype,
         levels = unique(General_presence_mainboard$Archetype)
       ),
+      set = as.factor(set),
       Mainboard_CardName = as.factor(Mainboard_CardName),
       Mainboard_Count = as.factor(Mainboard_Count)
     ) %>%
@@ -249,14 +290,14 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
   options = list(
     dom = "ltipr",
     searchCols = list(
-      NULL, NULL,
+      NULL, NULL, NULL,
       list(search = '["Any"]'),
       NULL,
       NULL, # list(search = '10 ...'),
@@ -264,7 +305,7 @@ for (var i = 0; i < tips.length; i++) {
     ), autoWidth = TRUE, pageLength = 25
   )
 ) %>% 
-  DT::formatPercentage(c(6,8,11),digits = 1)
+  DT::formatPercentage(c(7,9,12),digits = 1)
 ```
 
 
@@ -277,10 +318,21 @@ DT::datatable(
     win_rate_side_board,
     by = c("Archetype", "Sideboard_CardName", "Sideboard_Count")
   ) %>%
+  inner_join(
+    card_of_interest %>% 
+      select(name,set),
+    by = join_by(
+      Sideboard_CardName == name
+    )
+  ) %>%
+    relocate(set,.after = Sideboard_CardName) %>%
     mutate(
+      count_presence = ifelse(
+        is.na(count_presence),count_winrate,count_presence),
       Archetype = factor(Archetype,
         levels = unique(General_presence_sideboard$Archetype)
       ),
+      set = as.factor(set),
       Sideboard_CardName = as.factor(Sideboard_CardName),
       Sideboard_Count = as.factor(Sideboard_Count)
     ) %>%
@@ -308,14 +360,14 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
   options = list(
     dom = "ltipr",
     searchCols = list(
-      NULL, NULL,
+      NULL, NULL, NULL,
       list(search = '["Any"]'),
       NULL,
       NULL, # list(search = '10 ...'),
@@ -323,5 +375,5 @@ for (var i = 0; i < tips.length; i++) {
     ), autoWidth = TRUE, pageLength = 25
   )
 ) %>% 
-  DT::formatPercentage(c(6,8,11),digits = 1)
+  DT::formatPercentage(c(7,9,12),digits = 1)
 ```

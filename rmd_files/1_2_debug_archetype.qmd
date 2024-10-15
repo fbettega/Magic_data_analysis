@@ -1,0 +1,203 @@
+---
+title: "Collection Tracker"
+---
+
+```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
+library(binom)
+library("rjson")
+library(kableExtra)
+library(tidyverse)
+library(scryr)
+source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
+
+conflicted::conflicts_prefer(dplyr::filter)
+params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
+```
+
+
+```{r data_reading }
+df_export <-  readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
+      # include filter bad deck
+  filter(Valide_deck) %>% 
+  mutate(
+    Deck_winrate = Wins / (Losses + Wins)
+  ) %>%
+  group_by(Archetype) %>% 
+  mutate(
+    Archetype_count = n()
+  ) %>% 
+    ungroup() 
+
+```
+
+
+
+
+
+```{r}
+merge_df_side_main <- 
+  rbind(
+  df_export %>%
+  unnest_longer(Mainboard) %>%
+  unnest_wider(Mainboard, names_sep = "_")  %>%
+  select(Mainboard_Count,Mainboard_CardName,Archetype,Base_Archetype,id) %>%
+  rename(Count = 1 , CardName = 2)   %>%
+  mutate(main_side = "Main"),
+  df_export %>%
+  unnest_longer(Sideboard) %>%
+  unnest_wider(Sideboard, names_sep = "_") %>%
+  select(Sideboard_Count,Sideboard_CardName,Archetype,Base_Archetype,id) %>%
+  rename(Count = 1 , CardName = 2) %>%
+  mutate(main_side = "Side")
+  ) 
+
+Deck_list_cards_count <- 
+  rbind(
+    merge_df_side_main,
+  merge_df_side_main %>% 
+    mutate(main_side = "Any") %>% 
+  group_by(
+    id,
+    main_side,
+    CardName,
+    Archetype,
+    Base_Archetype
+    ) %>% 
+  summarise(Count = sum(Count),.groups = "drop") 
+  ) %>% 
+  group_by( 
+    Archetype,
+    Base_Archetype
+    ) %>% 
+  mutate(Archetype_count = n_distinct(id)) %>% 
+  group_by(
+    main_side,
+    CardName,
+    Count,
+    Archetype,
+    Base_Archetype,
+    Archetype_count
+    ) %>% 
+  summarise(N = n(),.groups = "drop") 
+
+
+Deck_list_cards_count_with_any <- rbind(
+  Deck_list_cards_count,
+  Deck_list_cards_count %>% 
+    mutate(Count = "Any") %>% 
+  group_by(
+    main_side,
+    CardName,
+    Count,
+    Archetype,
+    Base_Archetype,
+    Archetype_count
+    ) %>% 
+  summarise(N = sum(N),.groups = "drop") 
+  ) %>% 
+  mutate(
+    percent_presence = N/Archetype_count
+  ) %>% 
+  arrange(desc(Archetype_count)) %>% 
+  mutate(across(where(is.character),as.factor))
+# rm(Deck_list_cards_count)
+```
+
+
+
+# Cards in Archetype based arch combination  
+
+
+```{r}
+htmltools::tagList(
+      DT::datatable( 
+        Deck_list_cards_count_with_any,
+        colnames = str_replace_all(colnames(Deck_list_cards_count_with_any), "_", " "),
+             callback = DT::JS(
+      return_filter_js()
+    ),     
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+  dom = "ltipr",
+    searchCols = list(
+    list(search = '["Any"]' ),
+    NULL,
+    list(search = '["Any"]' ),
+    NULL,NULL,NULL,NULL,NULL
+  ),
+  autoWidth = TRUE,
+  pageLength = 25)
+  )  %>% 
+  DT::formatPercentage(c("percent_presence"),digits = 1)
+  )
+```
+
+
+# Prediction and deck list
+
+```{r}
+Base_prediction_df <- read_rds(
+  paste0("../data/intermediate_result/",params$format_param,"_result_pred.rds")
+  )
+
+model_pred <- left_join(
+  inner_join(
+    Base_prediction_df$table_each_model_pred %>%
+      rename(Archetype = Archetype.x) %>%
+      select(-Archetype.y) %>% select(-AnchorUri),
+    vote_pred <- Base_prediction_df$table_vote_pred %>%
+      select(-Archetype) %>%
+      rename(
+        Voting_Arch = name,
+        Voting_result = value
+      ),
+    by = join_by(id)
+  ),
+  df_export %>%
+    select(id, ReferenceArchetype_Archetype, parser_base_arch, Base_Archetype, Color),
+  by = join_by(id)
+) %>% 
+  select(-id) %>% 
+  relocate(
+    ReferenceArchetype_Archetype, parser_base_arch,
+    Base_Archetype, Color,Voting_Arch,Voting_result,
+    .after = Archetype
+           )  %>% 
+  rename(Reference_Archetype = ReferenceArchetype_Archetype) %>% 
+  mutate(across(where(is.character),as.factor)) %>% 
+  mutate(AnchorUri = as.character(AnchorUri)) %>% 
+  mutate(Archetype = paste0(
+    '<a href=\"',AnchorUri,'">',as.character(Archetype),'</a>'
+    )
+    ) %>% 
+  select(-AnchorUri) %>% 
+  arrange(desc(Voting_result))
+
+
+```
+
+```{r}
+htmltools::tagList(
+      DT::datatable( 
+        model_pred,
+        colnames = str_replace_all(colnames(model_pred), "_", " "),
+             callback = DT::JS(
+      return_filter_js()
+    ),     
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+  dom = "ltipr",
+    searchCols = list(
+    NULL,NULL,NULL,NULL,NULL,NULL,
+    list(search = '... 0.3')
+  ),
+  autoWidth = TRUE,
+  pageLength = 25),
+  escape=FALSE
+  )  %>% 
+  DT::formatPercentage(c("Voting_result","regression_proba","rando_forest_proba","knn_proba","decision_tree_c5_proba","xgboost_proba"),digits = 1)
+  )
+```
+

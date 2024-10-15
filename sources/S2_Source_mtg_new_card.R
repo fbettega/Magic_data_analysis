@@ -1,11 +1,3 @@
-
-
-
-
-
-
-
-
 ################################################################################
 ######################## group common elements in list #########################
 # commonElements <-  function(l,o=list(l[[1]])){
@@ -37,8 +29,6 @@ findIntRuns <- function(run) {
 is_inside_knitr <-  function() {
   !is.null(knitr::opts_knit$get("out.format"))
 }
-
-
 
 ################################################################################
 ########################### Pre TT function for archetype classif ##############
@@ -229,50 +219,52 @@ Ban_patch <- function(vec_of_ban_cards, df # ,exact_result = FALSE
 
 
 ################# Json function to auto update filter ##########################
-
-onfly_filter_js <- c(r"{
-function onlyUnique(value, index, self) {
-return self.indexOf(value) === index;
-};
-var table_header = table.table().header();
-var column_nodes = $(table_header).find('tr:nth-child(2) > td');
-var input_nodes = $(column_nodes).find('input.form-control');
-for (let i = 0; i < input_nodes.length; i++){
-data_type_attr = $(input_nodes[i]).closest('td').attr('data-type');
-if (data_type_attr == 'factor'){
-$(input_nodes[i]).on('input propertychange', function(){
-if (typeof unique_values !== 'undefined'){
-selection_content = $(input_nodes[i]).closest('td').find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
+return_filter_js <- function() {
+    onfly_filter_js <- c(r"{
+    function onlyUnique(value, index, self) {
+    return self.indexOf(value) === index;
+    };
+    var table_header = table.table().header();
+    var column_nodes = $(table_header).find('tr:nth-child(2) > td');
+    var input_nodes = $(column_nodes).find('input.form-control');
+    for (let i = 0; i < input_nodes.length; i++){
+    data_type_attr = $(input_nodes[i]).closest('td').attr('data-type');
+    if (data_type_attr == 'factor'){
+    $(input_nodes[i]).on('input propertychange', function(){
+    if (typeof unique_values !== 'undefined'){
+    selection_content = $(input_nodes[i]).closest('td').find('div.selectize-dropdown-content');
+    var content_str = '';
+    for (let j = 0; j < unique_values.length; j++){
+    content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
+    }
+    selection_content[0].innerHTML = content_str;
+    }
+    })
+    }
+    }
+    column_nodes.on('click', function(){
+    setTimeout(function(){
+    for (let i = 0; i < column_nodes.length; i++){
+    data_type_attr = $(column_nodes[i]).attr('data-type');
+    if (data_type_attr == 'factor'){
+    selection_div = $(column_nodes[i]).find('div.selectize-input');
+    if($(selection_div).hasClass('dropdown-active')){
+    values = table.column(i, {pages: 'all', search: 'applied'}).data();
+    unique_values = Array.from(values.filter(onlyUnique));
+    selection_content = $(column_nodes[i]).find('div.selectize-dropdown-content');
+    var content_str = '';
+    for (let j = 0; j < unique_values.length; j++){
+    content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
+    }
+    selection_content[0].innerHTML = content_str;
+    }
+    }
+    }
+    }, 50);
+    })
+    }")
+    return(onfly_filter_js)
 }
-selection_content[0].innerHTML = content_str;
-}
-})
-}
-}
-column_nodes.on('click', function(){
-setTimeout(function(){
-for (let i = 0; i < column_nodes.length; i++){
-data_type_attr = $(column_nodes[i]).attr('data-type');
-if (data_type_attr == 'factor'){
-selection_div = $(column_nodes[i]).find('div.selectize-input');
-if($(selection_div).hasClass('dropdown-active')){
-values = table.column(i, {pages: 'all', search: 'applied'}).data();
-unique_values = Array.from(values.filter(onlyUnique));
-selection_content = $(column_nodes[i]).find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
-}
-selection_content[0].innerHTML = content_str;
-}
-}
-}
-}, 50);
-})
-}")
 ################################################################################
 
 
@@ -616,6 +608,14 @@ Card_agregueur <- function(
     fast_land = FALSE,
     bounce_land = FALSE,
     horizon_land = FALSE,
+    gates_land = FALSE,
+    dual_arto_land =FALSE,
+    Mono_colo_arto_land =FALSE,
+    pain_land  =FALSE,
+    reveal_land =FALSE,
+    pathway_land =FALSE,
+    unlucky_land= FALSE,
+    real_dual= FALSE,
     slow_land = FALSE,
     check_land = FALSE,
     basic_land = FALSE) {
@@ -634,6 +634,14 @@ Card_agregueur <- function(
     bounce_land = TRUE
     horizon_land = TRUE
     slow_land = TRUE
+    gates_land = TRUE
+    dual_arto_land =TRUE
+    Mono_colo_arto_land =TRUE
+    pain_land  =TRUE
+    reveal_land =TRUE
+    pathway_land =TRUE
+    unlucky_land= TRUE
+    real_dual= TRUE
     check_land = TRUE
     basic_land = TRUE
   }
@@ -645,6 +653,119 @@ Card_agregueur <- function(
   )
 
   Tron_land <- c("Urza's Mine", "Urza's Power Plant", "Urza's Tower")
+
+  
+  real_dual_list <- c(
+    "Tundra",
+    "Underground Sea",
+    "Badlands",
+    "Taiga",
+    "Savannah", 
+    "Scrubland",
+    "Volcanic Island",
+    "Bayou",
+    "Plateau",
+    "Tropical Island"
+  )
+  
+  unlucky_land_list  <- c(
+    "Abandoned Campground",
+    "Murky Sewer",
+    "Razortrap Gorge",
+  "Bleeding Woods",
+  "Etched Cornfield",
+  "Neglected Manor",
+  "Peculiar Lighthouse" ,
+ "Strangled Cemetery",
+  "Raucous Carnival" ,
+  "Lakeside Shack"
+ ) 
+  
+  pathway_land_list   <- c(  
+  "Barkchannel Pathway // Tidechannel Pathway",
+  "Barkchannel Pathway",
+  "Blightstep Pathway // Searstep Pathway",
+"Blightstep Pathway",
+  "Branchloft Pathway // Boulderloft Pathway",
+"Branchloft Pathway",
+  "Brightclimb Pathway // Grimclimb Pathway",
+"Brightclimb Pathway",
+  "Clearwater Pathway // Murkwater Pathway",
+"Clearwater Pathway",
+  "Cragcrown Pathway // Timbercrown Pathway",
+"Cragcrown Pathway",
+  "Darkbore Pathway // Slitherbore Pathway",
+"Darkbore Pathway",
+  "Hengegate Pathway // Mistgate Pathway",
+"Hengegate Pathway",
+  "Needleverge Pathway // Pillarverge Pathway",
+"Needleverge Pathway",
+  "Riverglide Pathway // Lavaglide Pathway",
+"Riverglide Pathway " 
+  )
+  
+  
+  reveal_land_list   <- c(   
+  "Port Town" ,
+  "Choked Estuary" ,
+  "Foreboding Ruins" ,
+  "Game Trail" ,
+  "Fortified Village",
+  "Shineshadow Snarl",
+  "Frostboil Snarl",
+  "Necroblossom Snarl",
+  "Furycalm Snarl",
+  "Vineglimmer Snarl" 
+  )
+  
+  pain_land_list   <- c(  
+    "Adarkar Wastes",
+    "Underground River",
+    "Sulfurous Springs",
+    "Karplusan Forest",
+    "Brushland",
+    "Caves of Koilos" ,
+    "Shivan Reef" ,
+    "Llanowar Wastes" ,
+    "Battlefield Forge" ,
+    "Yavimaya Coast"
+  )
+  
+Mono_colo_arto_land_list  <- c(
+  "Ancient Den" ,
+  "Seat of the Synod" ,
+  "Vault of Whispers" ,
+  "Great Furnace",
+  "Tree of Tales"
+  
+)
+  
+dual_arto_land_list  <- c(
+  "Razortide Bridge" ,
+  "Mistvault Bridge" ,
+  "Drossforge Bridge" ,
+  "Slagwoods Bridge" ,
+  "Thornglint Bridge" ,
+  "Goldmire Bridge" ,
+  "Silverbluff Bridge",
+  "Darkmoss Bridge",
+  "Rustvale Bridge",
+  "Tanglepool Bridge" 
+)
+  
+gates_land_list <- c(
+  "Azorius Guildgate" ,
+  "Dimir Guildgate",
+  "Rakdos Guildgate",
+  "Gruul Guildgate",
+  "Selesnya Guildgate" ,
+  "Orzhov Guildgate",
+  "Izzet Guildgate",
+  "Golgari Guildgate" ,
+  "Boros Guildgate" ,
+  "Simic Guildgate"
+)
+
 
 
   surveil_land <- c(
@@ -834,6 +955,46 @@ Card_agregueur <- function(
     )
   }
   
+  if (gates_land) {
+    base_string <- ifelse(base_string %in% gates_land_list,
+                          "Gates land", base_string
+    )
+  }
+  if (dual_arto_land) {
+    base_string <- ifelse(base_string %in% dual_arto_land_list,
+                          "Dual arto land", base_string
+    )
+  }
+  if (Mono_colo_arto_land) {
+    base_string <- ifelse(base_string %in% Mono_colo_arto_land_list,
+                          "Mono arto land", base_string
+    )
+  }
+  if (pain_land) {
+    base_string <- ifelse(base_string %in% pain_land_list,
+                          "Pain land", base_string
+    )
+  }
+  if (reveal_land) {
+    base_string <- ifelse(base_string %in% reveal_land_list,
+                          "Reveal land", base_string
+    )
+  }
+  if (pathway_land) {
+    base_string <- ifelse(base_string %in% pathway_land_list,
+                          "Pathway land", base_string
+    )
+  }
+  if (unlucky_land) {
+    base_string <- ifelse(base_string %in% unlucky_land_list,
+                          "Unlucky land", base_string
+    )
+  }
+  if (real_dual) {
+    base_string <- ifelse(base_string %in% real_dual_list,
+                          "Dual land", base_string
+    )
+  }
   if (slow_land) {
     base_string <- ifelse(base_string %in% slow_land_list,
                           "Slow land", base_string
