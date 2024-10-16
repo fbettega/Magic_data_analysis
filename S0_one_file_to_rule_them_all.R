@@ -188,12 +188,12 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   # # debug purpose
-  quarto::quarto_render(
-    "rmd_files/7_last_weeks_winners.qmd",
-    output_format = "html",
-    profile = "basic",
-    as_job = FALSE
-  )
+  # quarto::quarto_render(
+  #   "rmd_files/7_last_weeks_winners.qmd",
+  #   output_format = "html",
+  #   profile = "basic",
+  #   as_job = FALSE
+  # )
 
 
   unlink(
@@ -244,4 +244,4 @@ log_df <- log_df_fun(
 )
 
 tictoc::tic.clearlog()
-# system("shutdown -s")
+system("shutdown -s")
