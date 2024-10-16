@@ -59,6 +59,7 @@ modify_archetype_res <- lapply(
         simplify = FALSE
       ),
       error = function(e) {
+        print(paste0('correction in : ', x))
         writeLines(
           readLines(
             x,

@@ -152,34 +152,52 @@ for (i in seq_along(TournamentFile_by_week)){
   pander::pandoc.header(paste0("Week : ",names(TournamentFile_by_week)[i]), level = 1)
   pander::pandoc.p("")
   pander::pandoc.p("")
-# res_function <- lapply(seq_along(total_result), function(u){
+res_function <- lapply(seq_along(total_result), function(u){
 
-for (u in seq_along(total_result)){
+# for (u in seq_along(total_result)){
 if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
-      pander::pandoc.header(paste0("Week : ",names(total_result)[u]), level = 2)
+      pander::pandoc.header(total_result[[u]]$Title,
+                            level = 2)
       pander::pandoc.p("")
       pander::pandoc.p("")
-      pander::pandoc.header(total_result[[u]]$Title, level = 3)
+      pander::pandoc.p("::: {.panel-tabset .nav-pills}")
       pander::pandoc.p("")
       pander::pandoc.p("")
+       
+      # pander::pandoc.header(total_result[[u]]$Title, level = 3)
+      # pander::pandoc.p("")
+      # pander::pandoc.p("")
       pander::pandoc.header("Presence plot", level = 3)
       pander::pandoc.p("")
       pander::pandoc.p("")
-       print(
+      print(
       htmltools::tagList(
-        # as_widget(
+        # as.widget(
+      # cat(
+      #   knitr::knit_print(
         total_result[[u]]$plot$plot_prez
-        # )
-        )
-       )
+         )
+         )
+       # )
       pander::pandoc.p("")
       pander::pandoc.p("")
       pander::pandoc.header("Top 8 list", level = 3)
       print(htmltools::tagList(total_result[[u]]$plot$top8_table))
       pander::pandoc.p("")
       pander::pandoc.p("")
+      pander::pandoc.p(":::")
+      pander::pandoc.p("")
+      pander::pandoc.p("")
       }
   }
+)
   }
-# )
+
 ```
+
+
+
+
+
+
+

@@ -432,7 +432,8 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
          filter(Week == "all") %>% 
          mutate(
            Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate + .$CI_Arch_winrate)])
-         )
+         ) %>% 
+  arrange(Archetype)
 ```
 
 
@@ -471,6 +472,30 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
       yintercept= c(mean(df_Ci_by_all_week$Arch_winrate - df_Ci_by_all_week$CI_Arch_winrate),
                     mean(df_Ci_by_all_week$Arch_winrate + df_Ci_by_all_week$CI_Arch_winrate)), 
       linetype="dashed", color = "blue") +
+    scale_x_discrete(
+        label = paste0(
+            "<span style='font-size:", 17 , "px;'> <b>",
+            df_Ci_by_all_week %>%
+                pull(Archetype) %>%
+                unique(),
+            "</b> </span>",
+            "<br /> n : ", df_Ci_by_all_week %>%
+                pull(
+                    Archetype_count   
+                ),
+            "<br /> ", df_Ci_by_all_week %>%
+                mutate(temp_ci = paste0(
+                    round(Arch_winrate * 100, 1), " %",
+                    "[", round((Arch_winrate + CI_Arch_winrate) * 100, 2), ";",
+                    round((Arch_winrate - CI_Arch_winrate) * 100, 2), "]")
+                ) %>% 
+                pull(
+                    temp_ci
+                )
+            
+        ),
+        # guide = guide_axis(n.dodge=3)
+    ) +
   coord_flip()
   )  %>%
   ggplotly(

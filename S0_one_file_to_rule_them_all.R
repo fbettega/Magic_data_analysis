@@ -1,25 +1,28 @@
-run_command_from_dir <- function(cmd, dir_cmd) {
-  # Current working directory
-  cur <- getwd()
-  # On exit, come back
-  on.exit(setwd(cur))
-  # Change directory
-  setwd(dir_cmd)
-  # Run the command
-  system(cmd)
-  # Return
-  NULL
-}
-
-define_env <- function(
-    df_format_date) {
-  env_fun <- new.env()
-  env_fun$format_param <- df_format_date$format_param
-  env_fun$date_cut <- df_format_date$date_cutoff
-  return(env_fun)
-}
-
 library(yaml)
+source("sources/S0_source_init.R")
+
+
+
+
+format_date_en_cours_fulltable <- data.frame(
+  format_param = c(
+    "Modern",
+    "Legacy",
+    "Pauper",
+    "Pioneer",
+    # "Standard",
+    "Vintage"
+  ),
+  date_cutoff = c(
+    "2024-08-26",
+    "2024-08-26",
+    "2024-05-13",
+    "2024-08-26",
+    # "2024-07-30",
+    "2024-08-26"
+  )
+)
+
 
 
 log_df <- read.csv("other_file/log_run.csv")
@@ -56,24 +59,6 @@ deck_list_format <- git2r::repository("ArchetypeParser/MTGOFormatData/")
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
 
-format_date_en_cours_fulltable <- data.frame(
-  format_param = c(
-    "Modern",
-    "Legacy",
-    "Pauper",
-    "Pioneer",
-    # "Standard",
-    "Vintage"
-  ),
-  date_cutoff = c(
-    "2024-08-26",
-    "2024-08-26",
-    "2024-05-13",
-    "2024-08-26",
-    # "2024-07-30",
-    "2024-08-26"
-  )
-)
 
 # log_df <- data.frame(
 #   date_run = as.character(as.Date(Sys.time())),
@@ -85,10 +70,18 @@ format_date_en_cours_fulltable <- data.frame(
 
 
 
+
+
 for (i in 1:nrow(format_date_en_cours_fulltable)) {
   format_date_en_cours <- format_date_en_cours_fulltable[i, ]
-
   print(format_date_en_cours$format_param)
+  readr::write_rds(
+    format_date_en_cours, 
+    "data/intermediate_result/temp_format_encours_for_param.rds"
+  )
+  
+  
+  
   tictoc::tic(paste0(format_date_en_cours$format_param))
 
   calledProgram <- define_env(format_date_en_cours)
@@ -105,64 +98,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
       recursive = TRUE
       )
   }
-
-
-  quarto_fun_basic <- read_yaml("other_file/_quarto-basic.yml")
-  quarto_fun_basic$project$`output-dir` <- paste0(
-    quarto_fun_basic$project$`output-dir`,
-    "/", format_date_en_cours$format_param
-    )
-  quarto_fun_basic$book$chapters[[2]]$chapters <- as.list(
-    quarto_fun_basic$book$chapters[[2]]$chapters
-    )
-
-  quarto_fun_fb <- read_yaml("other_file/_quarto-fb.yml")
-  quarto_fun_fb$project$`output-dir` <- paste0(
-    quarto_fun_fb$project$`output-dir`,
-    "/", format_date_en_cours$format_param
-    )
-
-
-
-  quarto_fun <- read_yaml("other_file/_quarto.yml")
-  quarto_fun$book$title <- paste0(
-    format_date_en_cours$format_param,
-    " ", quarto_fun$book$title
-    )
-  # quarto_fun$params$date_cut <- format_date_en_cours$date_cutoff
-  # quarto_fun$params$format_param <-   format_date_en_cours$format_param
-
-
-  write_yaml(quarto_fun_basic, "rmd_files/_quarto-basic.yml",
-    fileEncoding = "UTF-8",
-    handlers = list(
-      logical = function(x) {
-        result <- ifelse(x, "true", "false")
-        class(result) <- "verbatim"
-        return(result)
-      }
-    )
-  )
-  write_yaml(quarto_fun_fb, "rmd_files/_quarto-fb.yml",
-    fileEncoding = "UTF-8",
-    handlers = list(
-      logical = function(x) {
-        result <- ifelse(x, "true", "false")
-        class(result) <- "verbatim"
-        return(result)
-      }
-    )
-  )
-  write_yaml(quarto_fun, "rmd_files/_quarto.yml",
-    fileEncoding = "UTF-8",
-    handlers = list(
-      logical = function(x) {
-        result <- ifelse(x, "true", "false")
-        class(result) <- "verbatim"
-        return(result)
-      }
-    )
-  )
+  eddit_yaml(format_date_en_cours)
 
 
   tictoc::tic(paste0("Archetype parser : ", format_date_en_cours$format_param))
@@ -172,16 +108,15 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   tictoc::toc(log = TRUE, quiet = TRUE)
-  log_df <- rbind(
-    log_df,
-    data.frame(
-      date_run = as.character(as.Date(Sys.time())),
-      format = format_date_en_cours$format_param,
-      log_txt = paste0(tictoc::tic.log(format = TRUE))
-    )
+  
+  log_df <- log_df_fun(
+    log_df_fun = log_df,
+    format_fun = format_date_en_cours$format_param,
+    tictoc_res = paste0(tictoc::tic.log(format = TRUE))
   )
+    
   tictoc::tic.clearlog()
-  write.csv(log_df, "other_file/log_run.csv", row.names = FALSE)
+
 
 
   tictoc::tic(paste0("Archetype parser : ", format_date_en_cours$format_param))
@@ -192,13 +127,13 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     toplevel.env = calledProgram
   )
   tictoc::toc(log = TRUE, quiet = TRUE)
-  log_df <- rbind(log_df, data.frame(
-    date_run = as.character(as.Date(Sys.time())),
-    format = format_date_en_cours$format_param,
-    log_txt = paste0(tictoc::tic.log(format = TRUE))
-  ))
+  log_df <- log_df_fun(
+    log_df_fun = log_df,
+    format_fun = format_date_en_cours$format_param,
+    tictoc_res = paste0(tictoc::tic.log(format = TRUE))
+  )
+  
   tictoc::tic.clearlog()
-  write.csv(log_df, "other_file/log_run.csv", row.names = FALSE)
 
   tictoc::tic(paste0("Archetype parser : ", format_date_en_cours$format_param))
   calledProgram <- define_env(format_date_en_cours)
@@ -210,20 +145,17 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
   rm(calledProgram)
   tictoc::toc(log = TRUE, quiet = TRUE)
-  log_df <- rbind(log_df, data.frame(
-    date_run = as.character(as.Date(Sys.time())),
-    format = format_date_en_cours$format_param,
-    log_txt = paste0(tictoc::tic.log(format = TRUE))
-  ))
+  log_df <- log_df_fun(
+    log_df_fun = log_df,
+    format_fun = format_date_en_cours$format_param,
+    tictoc_res = paste0(tictoc::tic.log(format = TRUE))
+  )
+  
   tictoc::tic.clearlog()
-  write.csv(log_df, "other_file/log_run.csv", row.names = FALSE)
 
 
   # quarto::quarto_render("rmd_files/", output_format = "html", as_job = FALSE)
-  readr::write_rds(
-    format_date_en_cours, 
-    "data/intermediate_result/temp_format_encours_for_param.rds"
-    )
+  
 
   if (
     length(
@@ -239,6 +171,8 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
       as_job = FALSE
     )
   }
+  
+  
 
   quarto::quarto_render(
     "rmd_files/",
@@ -248,12 +182,12 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   # # debug purpose
-  quarto::quarto_render(
-    "rmd_files/4_matrix_WR.qmd",
-    output_format = "html",
-    profile = "basic",
-    as_job = FALSE
-  )
+  # quarto::quarto_render(
+  #   "rmd_files/7_last_weeks_winners.qmd",
+  #   output_format = "html",
+  #   profile = "basic",
+  #   as_job = FALSE
+  # )
 
 
   unlink(
@@ -264,13 +198,13 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     )
   )
   tictoc::toc(log = TRUE, quiet = TRUE)
-  log_df <- rbind(log_df, data.frame(
-    date_run = as.character(as.Date(Sys.time())),
-    format = format_date_en_cours$format_param,
-    log_txt = paste0(tictoc::tic.log(format = TRUE))
-  ))
+  log_df <- log_df_fun(
+    log_df_fun = log_df,
+    format_fun = format_date_en_cours$format_param,
+    tictoc_res = paste0(tictoc::tic.log(format = TRUE))
+  )
+  
   tictoc::tic.clearlog()
-  write.csv(log_df, "other_file/log_run.csv", row.names = FALSE)
 }
 
 
@@ -279,6 +213,10 @@ rmarkdown::render(
   envir = new.env(),
   output_dir = "outpout/"
 )
+
+
+
+
 
 if (file.exists("ssh_key/id_rsa")) {
   session <- ssh::ssh_connect(
@@ -293,11 +231,11 @@ if (file.exists("ssh_key/id_rsa")) {
 }
 
 tictoc::toc(log = TRUE, quiet = TRUE)
-log_df <- rbind(log_df, data.frame(
-  date_run = as.character(as.Date(Sys.time())),
-  format = format_date_en_cours$format_param,
-  log_txt = paste0(tictoc::tic.log(format = TRUE))
-))
+log_df <- log_df_fun(
+  log_df_fun = log_df,
+  format_fun = format_date_en_cours$format_param,
+  tictoc_res = paste0(tictoc::tic.log(format = TRUE))
+)
+
 tictoc::tic.clearlog()
-write.csv(log_df, "other_file/log_run.csv", row.names = FALSE)
 system("shutdown -s")
