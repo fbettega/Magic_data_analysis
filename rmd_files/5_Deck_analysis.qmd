@@ -627,7 +627,7 @@ df_Archetype_long <- df_export %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_") %>%
   # mutate(Mainboard_CardName = Card_agregueur(Mainboard_CardName)) %>%
-  select(id, Player, Wins, Losses, Draws, Archetype, Mainboard_Count, Mainboard_CardName) %>%
+  select(id, Player, Wins, Losses, Draws, Archetype,Color, Mainboard_Count, Mainboard_CardName) %>%
   group_by(id) %>%
   mutate(Number_of_cards = sum(Mainboard_Count)) %>%
   filter(Number_of_cards >= 60) %>%
@@ -648,17 +648,18 @@ Df_archetype_cards_land_name_agreg <- rbind(
       Mainboard_CardName =
         Card_agregueur(
           Mainboard_CardName,
-          fetch = TRUE,
-          Tron = TRUE,
-          snow = TRUE,
-          surveil = TRUE,
-          shock = TRUE,
-          triome = TRUE,
-          filter_land = TRUE,
-          fast_land = TRUE,
-          bounce_land = TRUE,
-          horizon_land = TRUE,
-          basic_land = TRUE
+          ALL_mod = TRUE
+          # fetch = TRUE,
+          # Tron = TRUE,
+          # snow = TRUE,
+          # surveil = TRUE,
+          # shock = TRUE,
+          # triome = TRUE,
+          # filter_land = TRUE,
+          # fast_land = TRUE,
+          # bounce_land = TRUE,
+          # horizon_land = TRUE,
+          # basic_land = TRUE
         )
     ) %>%
     ungroup() %>%
@@ -733,7 +734,7 @@ df_side_Archetype_long <- df_export %>%
   arrange(desc(Archetype_count)) %>%
   unnest_longer(Sideboard) %>%
   unnest_wider(Sideboard, names_sep = "_") %>%
-  select(id, Player, Wins, Losses, Draws, Archetype, Sideboard_CardName, Sideboard_Count) %>%
+  select(id, Player, Wins, Losses, Draws, Archetype,Color, Sideboard_CardName, Sideboard_Count) %>%
   mutate(
     Archetype =
       factor(Archetype,
@@ -1053,8 +1054,9 @@ result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
   ) %>%
   name_list_of_model_with_string(unique(groupe_cards_uncommon_data$Archetype))
 
-x <- "Reanimator"
+# x <- "Reanimator"
 ```
+
 
 
 ```{r format_main_models}
@@ -1111,8 +1113,6 @@ Side_uncomon_card_format_model <- format_model_list(Side_result_models_Uncommon_
 #       deck_side = "Main",.before = 1
 #       )
 #   )
-
-
 ```
 
 
@@ -1130,8 +1130,11 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
   pander::pandoc.header("Base Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
+  pander::pandoc.p(paste0("Number of deck : ",Df_archetype_cards_land_name_agreg %>% 
+  ungroup() %>%
+  distinct(Archetype,Archetype_count) %>% 
+  filter(Archetype == i) %>% pull(Archetype_count)))
   pander::pandoc.p("")
-
     flextable::flextable_to_rmd(
       flextable::flextable(
         Base_cards_and_base_count[[i]] %>%
@@ -1197,6 +1200,10 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
   pander::pandoc.header("Base Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
+  pander::pandoc.p(paste0("Number of deck : ",Df_archetype_cards_land_name_agreg %>% 
+  ungroup() %>%
+  distinct(Archetype,Archetype_count) %>% 
+  filter(Archetype == i) %>% pull(Archetype_count)))
   pander::pandoc.p("")
    flextable::flextable_to_rmd(
       flextable::flextable(

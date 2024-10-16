@@ -149,6 +149,8 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
       count
     ) %>%
     summarise(
+      Wins_card = Wins_card,
+      Losses_card = Losses_card,
       card_WR = winrate_1_data(Wins_card, Losses_card),
       CI_card_WR = CI_prop(card_WR, (Wins_card + Losses_card)),
       not_card_WR = winrate_2_data(
@@ -210,6 +212,8 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
     select(
       all_of(select_group_var),
       count_WR, Count_WR_percent,
+      Wins_card,
+      Losses_card,
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       !!rlang::sym(paste0(colname_deck_list, "_Count")),
       card_WR, CI_card_WR,
@@ -232,6 +236,8 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
       # !!rlang::sym(paste0(colname_deck_list,"_Count"))
     ) %>%
     summarise(
+      Wins_card = sum(Wins_card),
+      Losses_card = sum(Losses_card),
       !!rlang::sym(paste0("Most_present_", colname_deck_list, "_Count")) := as.numeric(last(!!rlang::sym(paste0(colname_deck_list, "_Count")), count)),
       N_most_prez = max(count),
       most_prez_perc = N_most_prez / unique(Archetype_count),

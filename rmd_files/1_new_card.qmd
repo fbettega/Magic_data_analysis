@@ -231,12 +231,13 @@ for (var i = 0; i < tips.length; i++) {
     searchCols = list(
       NULL, NULL,NULL,NULL,
       list(search = '["Any"]'),
+      NULL,NULL,
        # list(search = '10 ...'),
       NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
   )
  ) %>%  
-  DT::formatPercentage(c(6,8,11),digits = 1)
+  DT::formatPercentage(c(8,10,13),digits = 1)
 ```
 
 
@@ -299,13 +300,13 @@ for (var i = 0; i < tips.length; i++) {
     searchCols = list(
       NULL, NULL, NULL,
       list(search = '["Any"]'),
-      NULL,
+      NULL,NULL, NULL,
       NULL, # list(search = '10 ...'),
       NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
   )
 ) %>% 
-  DT::formatPercentage(c(7,9,12),digits = 1)
+  DT::formatPercentage(c(9,11,14),digits = 1)
 ```
 
 
@@ -369,11 +370,11 @@ for (var i = 0; i < tips.length; i++) {
     searchCols = list(
       NULL, NULL, NULL,
       list(search = '["Any"]'),
-      NULL,
+      NULL,NULL, NULL,
       NULL, # list(search = '10 ...'),
       NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
   )
 ) %>% 
-  DT::formatPercentage(c(7,9,12),digits = 1)
+  DT::formatPercentage(c(9,11,14),digits = 1)
 ```

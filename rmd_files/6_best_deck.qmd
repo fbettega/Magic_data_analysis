@@ -535,7 +535,10 @@ df_Archetype_long <- df_export %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_") %>%
   # mutate(Mainboard_CardName = Card_agregueur(Mainboard_CardName)) %>%
-  select(id, Player, Wins, Losses, Draws, Archetype, Mainboard_Count, Mainboard_CardName) %>%
+  select(
+    id, Player, Wins, Losses, Draws, Archetype, Color,
+    Mainboard_Count, Mainboard_CardName
+         ) %>%
   group_by(id) %>%
   mutate(Number_of_cards = sum(Mainboard_Count)) %>%
   filter(Number_of_cards >= 60) %>%
@@ -581,7 +584,20 @@ Df_archetype_cards_land_name_agreg <- rbind(
     mutate(Archetype_count = n_distinct(id)) %>%
     ungroup() %>%
     distinct()
+  # ,
+  # df_Archetype_long %>% 
+  #   mutate(
+  #     Mainboard_CardName = Color,
+  #     Mainboard_Count = 1) %>%
+  #   group_by(Archetype) %>%
+  #   mutate(Archetype_count = n_distinct(id)) %>%
+  #   ungroup() %>% 
+  #   # select(id,Color) %>% 
+  #   distinct() 
+    
+  
 ) %>%
+  # select(-Color) %>% 
   arrange(desc(Archetype_count), id)
 
 
@@ -615,7 +631,8 @@ df_side_Archetype_long <- df_export %>%
   arrange(desc(Archetype_count)) %>%
   unnest_longer(Sideboard) %>%
   unnest_wider(Sideboard, names_sep = "_") %>%
-  select(id, Player, Wins, Losses, Draws, Archetype, Sideboard_CardName, Sideboard_Count) %>%
+  select(id, Player, Wins, Losses, Draws, Archetype,Color,
+         Sideboard_CardName, Sideboard_Count) %>%
   mutate(
     Archetype =
       factor(Archetype,

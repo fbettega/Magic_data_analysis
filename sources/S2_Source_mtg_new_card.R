@@ -286,6 +286,8 @@ format_df_result_card_table <- function(
     colnames() %>% 
     str_remove("_CardName")
   
+  
+  
   if (Based_Archetyp_fun) {
     # juste reordor Based archetype level and make cardname and count factor
     df_temp_fun <- df_base_fun %>%
@@ -701,7 +703,8 @@ Card_agregueur <- function(
   "Needleverge Pathway // Pillarverge Pathway",
 "Needleverge Pathway",
   "Riverglide Pathway // Lavaglide Pathway",
-"Riverglide Pathway " 
+"Riverglide Pathway" 
+
   )
   
   
@@ -900,15 +903,37 @@ gates_land_list <- c(
 
   base_string <- trimws(string)
 
-  if (fetch) {
-    base_string <- ifelse(tolower(base_string) %in% fetech_list,
-      "Fetch land", base_string
+  
+  
+  modify_land <- function(
+    base_string_fun = base_string,
+    list_name_fun,
+    name_fun
+  ){
+    ifelse(tolower(trimws(base_string_fun)) %in% tolower(trimws(list_name_fun)),
+           name_fun, base_string
     )
   }
-  if (Tron) {
-    base_string <- ifelse(base_string %in% Tron_land,
-      "Tron land", base_string
+  
+  if (fetch) {
+    base_string <- modify_land(
+    base_string_fun = base_string,
+    fetech_list,
+    "Fetch land"
     )
+    #   ifelse(tolower(base_string) %in% fetech_list,
+    #   "Fetch land", base_string
+    # )
+  }
+  if (Tron) {
+    base_string <- modify_land(
+      base_string_fun = base_string,
+      Tron_land,
+      "Tron land"
+    )
+    #   ifelse(base_string %in% Tron_land,
+    #   "Tron land", base_string
+    # )
   }
   if (snow) {
     base_string <- str_remove(
@@ -917,101 +942,210 @@ gates_land_list <- c(
     )
   }
   if (surveil) {
-    base_string <- ifelse(base_string %in% surveil_land,
-      "Surveil land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        surveil_land,
+        "Surveil land"
+      )
+    #   ifelse(base_string %in% surveil_land,
+    #   "Surveil land", base_string
+    # )
   }
   if (shock) {
-    base_string <- ifelse(base_string %in% shock_land,
-      "Shock land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        shock_land,
+        "Shock land"
+      ) 
+      
+    #   ifelse(base_string %in% shock_land,
+    #   "Shock land", base_string
+    # )
   }
   if (triome) {
-    base_string <- ifelse(base_string %in% Triome_land,
-      "Triome land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        Triome_land,
+        "Triome land"
+      ) 
+    #   ifelse(base_string %in% Triome_land,
+    #   "Triome land", base_string
+    # )
   }
   if (filter_land) {
-    base_string <- ifelse(base_string %in% filter_land_list,
-      "Filtre land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        filter_land_list,
+        "Filtre land"
+      ) 
+    #   ifelse(base_string %in% filter_land_list,
+    #   "Filtre land", base_string
+    # )
   }
 
   if (fast_land) {
-    base_string <- ifelse(base_string %in% fast_land_list,
-      "Fast land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        fast_land_list,
+        "Fast land"
+      ) 
+    #   ifelse(base_string %in% fast_land_list,
+    #   "Fast land", base_string
+    # )
   }
 
   if (bounce_land) {
-    base_string <- ifelse(base_string %in% bounce_land_list,
-      "Bounce land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        bounce_land_list,
+        "Bounce land"
+      ) 
+    #   ifelse(base_string %in% bounce_land_list,
+    #   "Bounce land", base_string
+    # )
   }
 
   if (horizon_land) {
-    base_string <- ifelse(base_string %in% horizon_land_list,
-      "Horizon land", base_string
-    )
+    base_string <-
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        horizon_land_list,
+        "Horizon land"
+      ) 
+    #   ifelse(base_string %in% horizon_land_list,
+    #   "Horizon land", base_string
+    # )
   }
   
   if (gates_land) {
-    base_string <- ifelse(base_string %in% gates_land_list,
-                          "Gates land", base_string
-    )
+    base_string <-
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        gates_land_list,
+        "Gates land"
+      ) 
+    #   ifelse(base_string %in% gates_land_list,
+    #                       "Gates land", base_string
+    # )
   }
   if (dual_arto_land) {
-    base_string <- ifelse(base_string %in% dual_arto_land_list,
-                          "Dual arto land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        dual_arto_land_list,
+        "Dual arto land"
+      ) 
+    #   ifelse(base_string %in% dual_arto_land_list,
+    #                       "Dual arto land", base_string
+    # )
   }
   if (Mono_colo_arto_land) {
-    base_string <- ifelse(base_string %in% Mono_colo_arto_land_list,
-                          "Mono arto land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        Mono_colo_arto_land_list,
+        "Mono arto land"
+      ) 
+    #   ifelse(base_string %in% Mono_colo_arto_land_list,
+    #                       "Mono arto land", base_string
+    # )
   }
   if (pain_land) {
-    base_string <- ifelse(base_string %in% pain_land_list,
-                          "Pain land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        pain_land_list,
+        "Pain land"
+      ) 
+    #   ifelse(base_string %in% pain_land_list,
+    #                       "Pain land", base_string
+    # )
   }
   if (reveal_land) {
-    base_string <- ifelse(base_string %in% reveal_land_list,
-                          "Reveal land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        reveal_land_list,
+        "Reveal land"
+      ) 
+    #   ifelse(base_string %in% reveal_land_list,
+    #                       "Reveal land", base_string
+    # )
   }
   if (pathway_land) {
-    base_string <- ifelse(base_string %in% pathway_land_list,
-                          "Pathway land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        pathway_land_list,
+        "Pathway land"
+      ) 
+    #   ifelse(base_string %in% pathway_land_list,
+    #                       "Pathway land", base_string
+    # )
   }
   if (unlucky_land) {
-    base_string <- ifelse(base_string %in% unlucky_land_list,
-                          "Unlucky land", base_string
-    )
+    base_string <-
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        unlucky_land_list,
+        "Unlucky land"
+      ) 
+    #   ifelse(base_string %in% unlucky_land_list,
+    #                       "Unlucky land", base_string
+    # )
   }
   if (real_dual) {
-    base_string <- ifelse(base_string %in% real_dual_list,
-                          "Dual land", base_string
-    )
+    base_string <-
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        real_dual_list,
+        "Dual land"
+      ) 
+    #   ifelse(base_string %in% real_dual_list,
+    #                       "Dual land", base_string
+    # )
   }
   if (slow_land) {
-    base_string <- ifelse(base_string %in% slow_land_list,
-                          "Slow land", base_string
-    )
+    base_string <-
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        slow_land_list,
+        "Slow land"
+      ) 
+    #   ifelse(base_string %in% slow_land_list,
+    #                       "Slow land", base_string
+    # )
   }
   
   if (check_land) {
-    base_string <- ifelse(base_string %in% check_land_list,
-                          "Check land", base_string
-    )
+    base_string <- 
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        check_land_list,
+        "Check land"
+      ) 
+    #   ifelse(base_string %in% check_land_list,
+    #                       "Check land", base_string
+    # )
   }
   
   # A laisser après snow qui permet de regrouper les snow land avec les basic au besoin
   if (basic_land) {
-    base_string <- ifelse(base_string %in% basic_land_list,
-      "Basic land", base_string
-    )
+    base_string <-
+      base_string <- modify_land(
+        base_string_fun = base_string,
+        basic_land_list,
+        "Basic land"
+      ) 
+    #   ifelse(base_string %in% basic_land_list,
+    #   "Basic land", base_string
+    # )
   }
 
   return(base_string)

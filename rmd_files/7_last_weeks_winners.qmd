@@ -144,11 +144,34 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 
+
+```{r}
+
+
+
+
+# htmlwidgets::saveWidget(
+#   total_result[[u]]$plot$plot_prez, 
+#   paste0("../data/intermediate_result/temp_html_outpout/",
+#          i,
+#          TournamentFile_by_week[[i]][u],".html"),
+# selfcontained = TRUE)
+
+
+
+```
+
+
+
+
+
+
 ```{r,  results='asis'}
 # this week
 # last week
 # two weeks ago
-for (i in seq_along(TournamentFile_by_week)){
+print_res_winning_deck <- lapply(seq_along(TournamentFile_by_week),function(i){
+# for (i in seq_along(TournamentFile_by_week)){
   pander::pandoc.header(paste0("Week : ",names(TournamentFile_by_week)[i]), level = 1)
   pander::pandoc.p("")
   pander::pandoc.p("")
@@ -156,6 +179,7 @@ res_function <- lapply(seq_along(total_result), function(u){
 
 # for (u in seq_along(total_result)){
 if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
+  
       pander::pandoc.header(total_result[[u]]$Title,
                             level = 2)
       pander::pandoc.p("")
@@ -170,14 +194,35 @@ if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
       pander::pandoc.header("Presence plot", level = 3)
       pander::pandoc.p("")
       pander::pandoc.p("")
-      print(
-      htmltools::tagList(
-        # as.widget(
-      # cat(
-      #   knitr::knit_print(
-        total_result[[u]]$plot$plot_prez
-         )
-         )
+      # print(
+      # htmltools::tagList(
+      #   # as.widget(
+      # # cat(
+      # #   knitr::knit_print(
+      #   total_result[[u]]$plot$plot_prez
+      #    )
+      #    )
+
+      
+      
+# solution to force inclusion of plotly in loop but lead to really large files
+      htmlwidgets::saveWidget(
+  total_result[[u]]$plot$plot_prez,
+  paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
+         i,
+         TournamentFile_by_week[[i]][u],".html"),
+selfcontained = TRUE)
+
+       print(
+        htmltools::includeHTML(
+          paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
+         i,
+         TournamentFile_by_week[[i]][u],".html"))
+        )
+#       
+      
+      
+      
        # )
       pander::pandoc.p("")
       pander::pandoc.p("")
@@ -191,8 +236,13 @@ if(names(total_result)[u] %in% TournamentFile_by_week[[i]]){
       }
   }
 )
-  }
+})
 
+  unlink(
+    list.files("../data/intermediate_result/temp_html_outpout/temp7plot/",
+               full.names = TRUE
+               ),recursive = TRUE
+  )
 ```
 
 

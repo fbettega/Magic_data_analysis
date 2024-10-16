@@ -322,6 +322,8 @@ Count_and_winrates_cards_in_decklist <- function(df,
                      count
     ) } %>%
     summarise(
+      Wins_card = Wins_card,
+      Losses_card = Losses_card,
       card_win_rate = winrate_1_data(Wins_card, Losses_card),
       CI_card_win_rate = CI_prop(card_win_rate, (Wins_card + Losses_card)),
       not_card_win_rate = winrate_2_data(
@@ -366,6 +368,7 @@ Count_and_winrates_cards_in_decklist <- function(df,
       any_of("Archetype"), count_winrate,
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       !!rlang::sym(paste0(colname_deck_list, "_Count")),
+      Wins_card,Losses_card,
       card_win_rate, CI_card_win_rate,
       delta_winrate_card, CI_delta_winrate_card, Sign_delta_wr,
       card_draw_diff

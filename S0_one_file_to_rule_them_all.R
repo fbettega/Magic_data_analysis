@@ -25,7 +25,12 @@ format_date_en_cours_fulltable <- data.frame(
 
 
 
-log_df <- read.csv("other_file/log_run.csv")
+
+log_df <- data.frame(
+  date_run = character(),
+  format = character(),
+  log_txt = character()
+)#read.csv("other_file/log_run.csv")
 
 tictoc::tic("total")
 git2r::config(
@@ -84,11 +89,11 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   
   tictoc::tic(paste0(format_date_en_cours$format_param))
 
-  calledProgram <- define_env(format_date_en_cours)
+
   sys.source(
     "sources/json_modifier.R",
-    envir = calledProgram,
-    toplevel.env = calledProgram
+    envir = define_env(format_date_en_cours),
+    toplevel.env = define_env(format_date_en_cours)
   )
 
 
@@ -98,6 +103,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
       recursive = TRUE
       )
   }
+  
   eddit_yaml(format_date_en_cours)
 
 
@@ -120,11 +126,11 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
 
   tictoc::tic(paste0("Archetype parser : ", format_date_en_cours$format_param))
-  calledProgram <- define_env(format_date_en_cours)
+
   sys.source(
     "sources/S3_Archetype_classif_models.R",
-    envir = calledProgram,
-    toplevel.env = calledProgram
+    envir = define_env(format_date_en_cours),
+    toplevel.env = define_env(format_date_en_cours)
   )
   tictoc::toc(log = TRUE, quiet = TRUE)
   log_df <- log_df_fun(
@@ -136,14 +142,14 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   tictoc::tic.clearlog()
 
   tictoc::tic(paste0("Archetype parser : ", format_date_en_cours$format_param))
-  calledProgram <- define_env(format_date_en_cours)
+  # calledProgram <- define_env(format_date_en_cours)
   sys.source(
     "sources/S4_predict_arch_with_ML.R",
-    envir = calledProgram,
+    envir = define_env(format_date_en_cours),
     # keep.source = FALSE,
-    toplevel.env = calledProgram
+    toplevel.env = define_env(format_date_en_cours)
   )
-  rm(calledProgram)
+  # rm(calledProgram)
   tictoc::toc(log = TRUE, quiet = TRUE)
   log_df <- log_df_fun(
     log_df_fun = log_df,
@@ -182,12 +188,12 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   # # debug purpose
-  # quarto::quarto_render(
-  #   "rmd_files/7_last_weeks_winners.qmd",
-  #   output_format = "html",
-  #   profile = "basic",
-  #   as_job = FALSE
-  # )
+  quarto::quarto_render(
+    "rmd_files/7_last_weeks_winners.qmd",
+    output_format = "html",
+    profile = "basic",
+    as_job = FALSE
+  )
 
 
   unlink(
@@ -238,4 +244,4 @@ log_df <- log_df_fun(
 )
 
 tictoc::tic.clearlog()
-system("shutdown -s")
+# system("shutdown -s")
