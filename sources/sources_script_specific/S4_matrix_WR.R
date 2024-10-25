@@ -1,3 +1,154 @@
+
+
+
+################################################################################
+
+
+################################################################################
+######  Function that plot presence of archetype used in 2 and 7  ##############
+
+plot_presence_modify_for_matchup_matrix_fun <- function(
+    df_base ,
+    color_scheme ,
+    plot_scaling = 2.25
+    
+) {
+  # browser()
+  
+
+
+  
+  
+# Debug 
+# any(
+# is.na(
+#   full_join(  df_base %>%
+#     group_by(Player) %>%
+#     summarise(n = n()),
+#   df_base %>%
+#     group_by(Matchups_Opponent ) %>%
+#     summarise(n = n()) %>%
+#     rename(Player = Matchups_Opponent),
+#   by = join_by(Player, n))
+#   )
+#   )
+#   
+  
+  df_plot_presence <- df_base %>% 
+    mutate(
+      win = as.numeric(Matchups_Wins > Matchups_Losses),
+      loose = as.numeric(Matchups_Wins < Matchups_Losses)
+      ) %>% 
+    group_by(id,Archetype ,Base_Archetype ,Player) %>% 
+    summarise(
+      win = sum(win),
+      loose = sum(loose),.groups = "drop"
+    ) %>% 
+    group_by(Archetype) %>% 
+    mutate(
+      Archetype_count = n(),
+      Archetype_matches = sum(win + loose)
+    ) %>% 
+    ungroup() %>% 
+    group_by(Base_Archetype) %>% 
+    mutate(
+      Base_Archetype_count = n(),
+      Base_Archetype_matches = sum(win + loose)
+    ) %>% 
+    ungroup()
+  
+  
+
+    Plot_presence <- (
+      ggplot(
+        df_plot_presence,
+        aes(
+          x = Archetype,
+          y = prop.table(stat(count)),
+          fill = Base_Archetype,
+          label = scales::percent(prop.table(stat(count))),
+          # Delta_rank = Delta_rank,
+          # Delta_percent_arch = Delta_percent_arch,
+          text = paste(
+            "Archetype: ", Archetype, "<br>", # Archetype name
+            "Base Archetype: ", Base_Archetype, "<br>", # Base Archetype name
+            "Archetype n : ", "n = ", Archetype_count, " (Matches : ",Archetype_matches,")", "<br>",
+            # "Archetype Win rate: ", Arch_winrate_format, " ", " (", Delta_Arch_win_rate, ")", "<br>",
+            # "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", " (", Delta_based_Arch_win_rate, ")", "<br>",
+            # "Delta Archetype percent: ", Delta_percent_arch, " %", "<br>",
+            "Base Archetype count: ", Base_Archetype_count, " (Matches : ",Base_Archetype_matches, ")", "<br>",
+            sep = ""
+          )
+        )
+      ) +
+        geom_bar() +
+        geom_text(
+          aes(
+            label = paste0(
+              round(prop.table(stat(count)) * 100, 1),
+              " % "
+            ),
+            y = prop.table(stat(count)) + 0.008,
+            group = 1
+          ),
+          stat = "count",
+          position = position_dodge2(width = 0.9),
+          size = 5
+        ) +
+        # geom_text(
+        #   aes(
+        #     label = paste0(Delta_rank," ",Delta_percent_arch," %"),
+        #     y = ,
+        #     group = 1
+        #       ),
+        #   stat = "identity",
+        #   position = position_dodge2(width = 0.9),
+        #   size = 3
+        #   ) +
+        scale_y_continuous(labels = scales::percent) +
+        coord_flip() +
+        theme(
+          legend.position = "none",
+          axis.title.x = element_blank()
+        ) +
+        scale_fill_manual(
+          values = color_scheme[
+            levels(
+              as.factor(df_base$Base_Archetype)
+            ) %in%
+              levels(df_plot_presence$Base_Archetype)
+          ]
+        )
+     )  %>%
+      ggplotly(
+        tooltip = c("text"), height = (480 * plot_scaling), width = (820 * plot_scaling)
+      )
+  
+  
+  # Truc compliqué pour enlever l'overlay du texte
+  Plot_presence$x$data[[which(
+    sapply(Plot_presence$x$data, function(x) {
+      x$mode == "text"
+    }) == TRUE
+  )]]$hoverinfo <- "none"
+  
+  return(Plot_presence)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 plot_win_rate_mat <- function(
     Df_winrate_format_fun,
     group_column,

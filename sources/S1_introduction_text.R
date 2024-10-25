@@ -1,10 +1,42 @@
+
+
+
+################################################################################
+################################################################################
+#######################  Intro of script 2  ####################################
+## ---- Introduction_chunk_1_newcards
+
+Introduction_char_vec_par_1_1 <-
+  "This chapter focuses on the cards that have recently entered the format (the latest 5 sets). The aim is to present the number of times they have been included in decks and their winrates. 
+The file is split into 3 parts: \n\n  
+- A first part aggregating all the cards whether they are maindeck or sideboard and whatever the archetypes.\n
+- The second part is stratified by archetype and shows the presence and winrate of new cards when they are present in the main deck. \n
+- The third part is stratified by archetype and shows the presence and winrate of new cards when they are present in the sideboard.\n
+\n\n
+For parts 2 and 3, the win rates of the cards are only described in situations with a number of wins and losses (excluding 5-0 leagues), but the presence of a card also includes 5-0 leagues.
+\n"
+
+pander::pandoc.p(Introduction_char_vec_par_1_1)
+pander::pandoc.p("")
+pander::pandoc.p("")
+
+
+
+
+
+
+
+
+
+
 ################################################################################
 ################################################################################
 #######################  Intro of script 2  ####################################
 ## ---- Introduction_chunk_2_Deck_analysis
 
 Introduction_char_vec_par_2_1 <-
-  "File in 2 parts :\n
+  "This chapter shows the representation of differences over time. Leagues are excluded from this analysis.\n\n
+  File in 3 parts :\n
 The first shows the presence curves over time for each archetype or archetype base. Archetypes with too low a presence are deactivated by default but can be reactivated by clicking on the desired decks. \n
 The second part shows the presence barchart of the different archetypes and base archetypes for different time intervals: \n\n
 - all data\n
@@ -15,8 +47,11 @@ Additional information is available in tooltip (for Archetype and base archetype
 - Number of copies of the deck\n
 - The delta in percent compared to the upper time interval\n
 - Deck rank and its evolution compared to the previous time interval\n
-- Win rates and confidence interval\n"
-
+- Win rates and confidence interval\n
+The confidence interval graphs show the averages and 95% confidence intervals (calculated using the Agresti-Coull method). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.
+In particular, the publication of the top32 only for results from MTGO led to an overestimation of the winrates, the winrates were centred.\n\n
+The presence of different cards in the format. Leagues are includes in this part. \n\n
+"
 pander::pandoc.p(Introduction_char_vec_par_2_1)
 pander::pandoc.p("")
 pander::pandoc.p("")
@@ -53,15 +88,14 @@ pander::pandoc.p("")
 
 
 Introduction_char_vec_par_4_1 <- paste0(
-  "In order to be included, an archetype must be represented more than ", Archetype_cut_of_4, " times in the dataset.\n
-The file is split into 3 parts, the first 2 being : \n\n
-- The first, to increase the sample size, considers each round separately (for example, a 2-1 score counts as 3 rounds).\n
-- The second considers the matches as a whole (for example, a 2-1 score counts as 1 game won).\n
+  "This chapter focuses on the data for which we know the result of each match and the Archetype of the opponent.\n
+  In order to be included, an archetype must be represented more than ", Archetype_cut_of_4, " times in the dataset.\n
+- Matrix considers the matches as a whole (for example, a 2-1 score counts as 1 game won).\n
 
 They are built on the following model (additionnal information in matrix tooltip): \n\n
 - A complete matrix with all the information.\n
+- The confidence interval graphs show the averages and 95% confidence intervals (calculated using the Agresti-Coull method). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.\n
 - A matrix presenting only the matchups with a confidence interval of less than 50%.\n
-- A matrix presenting only matchups with a sample size greater than 20.\n
 The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time.\n
 In order to determine an expected number of victories 2 criteria are used the average winrate and the lower bounds of the confidence interval.**Please note that this part is still under construction as some decks with too few matchups are included**.\n"
 )
@@ -94,14 +128,15 @@ Introduction_char_vec_par_5_2 <-
     "**Templates are created separately for the maindeck and the sideboard according to the following scheme :**\n\n",
     "- **Base Cards** cards systematically present in decks with an almost fixed number of copies less than ", min_sample_size_5,
     " decks that do not have the most common number of copies. \n",
-    "- **Base Cards Variable count**, these are the cards that are systematically or almost systematically (number of deck with 0 copie <",
-    min_sample_size_5,
     " decks with zero copies are grouped with the majority class)  contained in the decks, for which the number of copies varies, quasibinomial regression models are created using the wins and losses of each deck : \n
 \t- Comparing for each card presence *Most common count* vs absence *Other*\n
 \t- Comparing each card count with a sufficient sample size *Most common count* vs *1* vs *3-4* for example\n
 - **Uncommon Cards**, These cards are not always included in decks, quasibinomial regression models are created using the wins and losses of each deck : \n
 \t- Comparing for each card presence *+1* vs absence *0*\n
-\t- Comparing each card count with a sufficient sample size *0* vs *1* vs *3-4* for example.\n"
+\t- Comparing each card count with a sufficient sample size *0* vs *1* vs *3-4* for example.\n
+\t- In an attempt to take account of potential collinearity between the variables, a penalised ridge regression model was also implemented for the counts of cards.\n    
+    "
+
   )
 pander::pandoc.p(Introduction_char_vec_par_5_1)
 pander::pandoc.p("")

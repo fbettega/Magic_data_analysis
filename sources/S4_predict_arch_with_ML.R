@@ -155,7 +155,8 @@ known_arch <- df_export %>%
 
 
 fall_back_df_temp <- df_export %>%  
-  filter(Date >= date_cut) %>%
+  filter(Date >= as.Date(date_cut,tryFormats = c("%Y-%m-%d", "%d/%m/%Y"))
+         ) %>%
   # filter(str_detect(Archetype, "_fallback|Unknown") ##| Archetype_count < min_number_of_arch
   filter( type == "Fallback" | type == "Unknown"  | Archetype_count < min_number_of_arch)  %>%
   prett_fun_classif("Mainboard") %>%
@@ -207,7 +208,9 @@ Voting_df_upper_treshold <- Voting_df %>% filter(value > 0.3)
 
 
 DF_post_archetype_pred <- df_export %>%  
-  filter(Date >= date_cut) %>% 
+  filter(
+    Date >= as.Date(date_cut,tryFormats = c("%Y-%m-%d", "%d/%m/%Y"))
+         ) %>% 
   left_join(
     Voting_df_upper_treshold %>% 
       select(id,name),

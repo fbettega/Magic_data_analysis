@@ -28,7 +28,7 @@ settings_parser <- fromJSON(
 settings_parser$Format <- format_param
 settings_parser$ReferenceFormat <- format_param
 
-min_date <- min(as.Date(Sys.time()) %m-% months(5), date_cut)
+min_date <- min(as.Date(Sys.time()) %m-% months(6), as.Date(date_cut,tryFormats = c("%Y-%m-%d", "%d/%m/%Y")))
 
 settings_parser$startdate <- as.character(min_date)
 settings_parser$outputfile <- paste0(format_param, "_", settings_parser$outputfile)

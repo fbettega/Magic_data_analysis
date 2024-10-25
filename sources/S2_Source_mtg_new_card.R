@@ -100,7 +100,6 @@ sanitize_string <- function(text) {
 
 ####################### Patch foireux pour ban #################################
 
-
 # Take simple df from json curated and search for a vector of ban cards
 Search_for_ban_cards <- function(vec_of_ban_cards, df, colname_deck_list) {
   main_remove_id <- df %>%
@@ -108,7 +107,9 @@ Search_for_ban_cards <- function(vec_of_ban_cards, df, colname_deck_list) {
     unnest_wider(!!colname_deck_list,
       names_sep = "_"
     ) %>%
-    filter(!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% vec_of_ban_cards) %>%
+    # add filter for deck with more than 30 copies of single cards
+    filter(!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% vec_of_ban_cards | 
+             !!rlang::sym(paste0(colname_deck_list, "_Count")) >= 30) %>%
     distinct(id) %>%
     unlist()
   return(main_remove_id)

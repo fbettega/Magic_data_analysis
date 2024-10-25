@@ -97,7 +97,8 @@ Count_cards_in_decklist <- function(df, Name_of_card_of_interest = NULL, colname
       Archetype,
       !!rlang::sym(paste0(colname_deck_list, "_CardName"))
     ) } %>%
-    filter(n() > 1) %>%
+    # je laisse any meme s'il n'y a qu'un seul compte pour faciliter le filtrage
+    # filter(n() > 1) %>%
     {if(No_grouping_column) group_by(
       .,
       !!rlang::sym(paste0(colname_deck_list, "_CardName"))

@@ -236,6 +236,7 @@ model_unco_cards_fun <- function(df_fun) {
   # unique(df_fun$Archetype)
   # x <- 'Storm'
   # x <- "Delver"
+  # x <- "Tron : Eldrazi Tron"
   model_unco_fun <- lapply(
     unique(df_fun$Archetype),
     function(x) {
@@ -247,7 +248,8 @@ model_unco_cards_fun <- function(df_fun) {
         ungroup() %>%
         filter(!is.na(!!rlang::sym(paste0(cols_fun, "_CardName")))) %>%
         rowwise() %>%
-        mutate(!!rlang::sym(paste0(cols_fun, "_Count")) :=
+        mutate(
+          !!rlang::sym(paste0(cols_fun, "_Count")) :=
           ifelse(
             str_detect(!!rlang::sym(paste0(cols_fun, "_Count")), " ; "),
             !!rlang::sym(paste0(cols_fun, "_Count")),
@@ -259,7 +261,13 @@ model_unco_cards_fun <- function(df_fun) {
               ),
               collapse = "/"
             )
-          )) %>%
+          )
+          ) %>%
+        ungroup() %>%
+        group_by(Color) %>% 
+        mutate(
+          Color = ifelse(n() < min_sample_size_5,"Other", Color) 
+          ) %>% 
         ungroup() %>%
         pivot_wider(
           names_from = !!rlang::sym(paste0(cols_fun, "_CardName")),
@@ -366,7 +374,10 @@ model_unco_cards_fun <- function(df_fun) {
         x_mat_model <- model.matrix(
           ~., # (.)^2,
           dplyr::select(df_mod, -c(Y))
-        )[, -1]
+        )[, -1] %>%
+          as_tibble() %>% 
+        select(where(~ n_distinct(.) > 1)) %>% 
+          as.matrix()
 
         y_count <- df_mod$Y
 
@@ -614,6 +625,7 @@ return(res_fun)
 ```{r agreg_land_name}
 df_Archetype_long <- df_export %>%
   filter(!is.na(Wins)) %>%
+  filter(Losses + Wins > 0) %>% 
   rowwise() %>%
   filter(!is.null(Mainboard)) %>%
   filter(!is.null(Sideboard)) %>%
@@ -649,17 +661,6 @@ Df_archetype_cards_land_name_agreg <- rbind(
         Card_agregueur(
           Mainboard_CardName,
           ALL_mod = TRUE
-          # fetch = TRUE,
-          # Tron = TRUE,
-          # snow = TRUE,
-          # surveil = TRUE,
-          # shock = TRUE,
-          # triome = TRUE,
-          # filter_land = TRUE,
-          # fast_land = TRUE,
-          # bounce_land = TRUE,
-          # horizon_land = TRUE,
-          # basic_land = TRUE
         )
     ) %>%
     ungroup() %>%
@@ -1066,6 +1067,8 @@ uncomon_card_format_model <- format_model_list(result_models_Uncommon_cards_all_
 ```
 
 
+
+
 ```{r side_model_unco_cards}
 Side_Model_data_Uncommon_cards <-  prepare_df_for_model(
   df_fun = Side_Uncommon_cards,
@@ -1086,7 +1089,7 @@ groupe_side_cards_uncommon_data <- group_linear_comb_cards(Side_Model_data_Uncom
 
 ```{r}
 Side_result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
-  groupe_side_cards_uncommon_data
+  df_fun = groupe_side_cards_uncommon_data
   ) %>%
   name_list_of_model_with_string(unique(groupe_side_cards_uncommon_data$Archetype))
 ```
@@ -1116,9 +1119,32 @@ Side_uncomon_card_format_model <- format_model_list(Side_result_models_Uncommon_
 ```
 
 
+```{r print_number_df}
+Df_base_number_to_print <- Df_archetype_cards_land_name_agreg %>% 
+  ungroup() %>%
+  distinct(id,.keep_all = TRUE) %>% 
+  group_by(Archetype,Archetype_count) %>% 
+  summarise(
+    Wins = sum(Wins),
+    Losses = sum(Losses),.groups = "drop"
+  )
+```
+
+
+
+
 ```{r print_result, results='asis', out.width="100%"}
 if(is_inside_knitr()){
 for (i in sort(levels(df_Archetype_long$Archetype))) {
+  
+  temp_df_to_print <- Df_base_number_to_print %>%
+    filter(Archetype == i)
+  
+  
+  print_count_string <- paste0("Number of deck : ",temp_df_to_print %>% 
+                            pull(Archetype_count), " for ",temp_df_to_print$Wins, " wins over ",temp_df_to_print$Wins + temp_df_to_print$Losses, " rounds"
+  )
+  
   # Inserts Month titles
   pander::pandoc.header(i, level = 1)
   # Section contents
@@ -1130,10 +1156,8 @@ for (i in sort(levels(df_Archetype_long$Archetype))) {
   pander::pandoc.header("Base Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
-  pander::pandoc.p(paste0("Number of deck : ",Df_archetype_cards_land_name_agreg %>% 
-  ungroup() %>%
-  distinct(Archetype,Archetype_count) %>% 
-  filter(Archetype == i) %>% pull(Archetype_count)))
+  pander::pandoc.p(print_count_string)
+  
   pander::pandoc.p("")
     flextable::flextable_to_rmd(
       flextable::flextable(
@@ -1200,10 +1224,7 @@ if (!is.null(uncomon_card_format_model[[i]]$Model_any)) {
   pander::pandoc.header("Base Cards", level = 3)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
-  pander::pandoc.p(paste0("Number of deck : ",Df_archetype_cards_land_name_agreg %>% 
-  ungroup() %>%
-  distinct(Archetype,Archetype_count) %>% 
-  filter(Archetype == i) %>% pull(Archetype_count)))
+  pander::pandoc.p(print_count_string)
   pander::pandoc.p("")
    flextable::flextable_to_rmd(
       flextable::flextable(

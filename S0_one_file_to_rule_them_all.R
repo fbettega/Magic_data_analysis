@@ -4,33 +4,9 @@ source("sources/S0_source_init.R")
 
 
 
-format_date_en_cours_fulltable <- data.frame(
-  format_param = c(
-    "Modern",
-    "Legacy",
-    "Pauper",
-    "Pioneer",
-    # "Standard",
-    "Vintage"
-  ),
-  date_cutoff = c(
-    "2024-08-26",
-    "2024-08-26",
-    "2024-05-13",
-    "2024-08-26",
-    # "2024-07-30",
-    "2024-08-26"
-  )
-)
+format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
+log_df <- read.csv("other_file/log_run.csv")
 
-
-
-
-log_df <- data.frame(
-  date_run = character(),
-  format = character(),
-  log_txt = character()
-)#read.csv("other_file/log_run.csv")
 
 tictoc::tic("total")
 git2r::config(
@@ -42,7 +18,7 @@ git2r::config(
 
 # deck_list_repo <- git2r::clone(
 #   "https://github.com/Badaro/MTGODecklistCache.git",
-#   "ArchetypeParser/MTGODecklistCache/"
+#   "ArchetypeParser/MTGODecklistCache_B/"
 #   )
 
 # deck_list_format <- git2r::clone(
@@ -50,19 +26,59 @@ git2r::config(
 #   "ArchetypeParser/MTGOFormatData/"
 #   )
 
+# # jillac fork with more data to test
+# deck_list_repo <- git2r::clone(
+#   "https://github.com/Jiliac/MTGODecklistCache.git",
+#   "ArchetypeParser/MTGODecklistCache_J/"
+#   )
+
+
+
 
 # au moment du switch pour multiple format penser a créer un fichier format : start_date
 
 # rajouter un fichier de qmd de debug associé au collection tracker avec les combinaisons base archetype / archetype et les cartes
+# MTGODecklistCache
 
-
-
-deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache/")
+deck_list_repo_base <-  git2r::repository("ArchetypeParser/MTGODecklistCache_B/")
+deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache_J/")
 deck_list_format <- git2r::repository("ArchetypeParser/MTGOFormatData/")
 
 # Sys.sleep(7200)
+pull_deck_list_repo_base <- git2r::pull(repo = deck_list_repo_base)
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
+
+
+
+# my.file.copy_file <- function(from, to, ...) {
+#   lapply(seq_along(from), function(x){
+#     
+#     if (!dir.exists(dirname(to[x])))  dir.create(dirname(to[x]), recursive = TRUE) 
+#     file.copy(from = from[x],  to = to[x], ...)
+#   }
+#   )
+# }
+# merge_repo <- function(){
+# 
+# 
+# badaro_files <- list.files("ArchetypeParser/MTGODecklistCache_B/",#full.names = TRUE, 
+#                            recursive = TRUE)
+# Jiliac_files <- list.files("ArchetypeParser/MTGODecklistCache_J/",#full.names = TRUE,
+#                            recursive = TRUE)
+# 
+# if(length(badaro_files[!(badaro_files %in% Jiliac_files)]) > 0){
+# files_to_copy <- paste0("ArchetypeParser/MTGODecklistCache_B/",badaro_files[!(badaro_files %in% Jiliac_files)])
+# destination <- stringr::str_replace_all(files_to_copy,"MTGODecklistCache_B","MTGODecklistCache_J")
+# 
+# print(paste0("Try to copy ",length(files_to_copy)," files"))
+# 
+# my.file.copy_file(files_to_copy,destination)
+# } else {
+# print("No files to copy ")
+# }
+# }
+# merge_repo()
 
 
 # log_df <- data.frame(
@@ -84,9 +100,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     format_date_en_cours, 
     "data/intermediate_result/temp_format_encours_for_param.rds"
   )
-  
-  
-  
+
   tictoc::tic(paste0(format_date_en_cours$format_param))
 
 
@@ -189,7 +203,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
   # # debug purpose
   # quarto::quarto_render(
-  #   "rmd_files/7_last_weeks_winners.qmd",
+  #   "rmd_files/4_matrix_WR.qmd",
   #   output_format = "html",
   #   profile = "basic",
   #   as_job = FALSE

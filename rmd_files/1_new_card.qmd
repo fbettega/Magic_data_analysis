@@ -101,6 +101,8 @@ tooltips_deck_new_cards <- c(
   "Deck Archetype agregated",
   "Card name",
   "Number of copies of the cards",
+  "Number of wins",
+  "Number of looses",
   "Number of decks with the card (exact number of copies)",
   "Number of decks include in the win rate computation of the card (exact number of copies)",
   "Win rate of the card",
@@ -114,6 +116,16 @@ tooltips_deck_new_cards <- c(
 
 
 
+
+```{r}
+knitr::read_chunk("../sources/S1_introduction_text.R")
+```
+
+
+
+```{r, Introduction_chunk_1_newcards, results='asis'}
+
+```
 
 
 
@@ -176,6 +188,10 @@ General_presence_total <- Count_cards_in_decklist(
 
 
 # Total cards
+
+Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
+Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
+
 ```{r}
 DT::datatable(
   full_join(
@@ -198,8 +214,15 @@ DT::datatable(
       CardName = as.factor(CardName),
       Count = as.factor(Count)
     ) %>%
-    relocate(count_presence,.after = count_winrate) %>% 
-    mutate(Only_count = is.na(count_winrate)) %>%
+     relocate(count_winrate,.after = Count) %>% 
+    relocate(count_presence,.before =  count_winrate) %>% 
+    mutate(Only_count = is.na(count_winrate)) %>% 
+    select(
+      -delta_winrate_card,
+      -CI_delta_winrate_card,
+      -Sign_delta_wr,
+      -card_draw_diff
+      ) %>% 
     arrange(desc(count_winrate)) %>%
     rename_with(
       ~ str_replace(
@@ -229,20 +252,27 @@ for (var i = 0; i < tips.length; i++) {
   options = list(
     dom = "ltipr",
     searchCols = list(
-      NULL, NULL,NULL,NULL,
+      NULL, NULL,
       list(search = '["Any"]'),
-      NULL,NULL,
+      NULL,NULL,NULL,NULL,
        # list(search = '10 ...'),
-      NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
+      NULL, NULL, #NULL, NULL, NULL, NULL, 
+      list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
   )
  ) %>%  
-  DT::formatPercentage(c(8,10,13),digits = 1)
+  DT::formatPercentage(c(8#,10,13
+                         ),digits = 1)
 ```
 
 
 
 # Mainboard_card
+
+Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
+Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
+
+
 ```{r}
 DT::datatable(
   full_join(
@@ -311,7 +341,12 @@ for (var i = 0; i < tips.length; i++) {
 
 
 
-# sideboard_card
+# sideboard_card  
+
+Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
+Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
+
+
 ```{r}
 DT::datatable(
   full_join(

@@ -129,12 +129,11 @@ spaghetti_plot_df <- Presence_df_base %>%
         level = unique(.$Archetype)
       ),
     Base_Archetype =
-
       factor(str_remove(Base_Archetype, " _fallback"),
         level = unique(str_remove(.$Base_Archetype, " _fallback"))
       )
   ) %>%
-  select(Week, Meta, Archetype, Base_Archetype) %>%
+  select(Date,Week, Meta, Archetype, Base_Archetype) %>%
   # add_count(Week,Archetype,
   #           name = "Count_arch") %>%
   group_by(Week, Archetype) %>%
@@ -150,7 +149,10 @@ spaghetti_plot_df <- Presence_df_base %>%
   mutate(Count_base_arch = n()) %>%
   ungroup() %>%
   mutate(Base_Archetype_percent = (Count_base_arch / Week_deck_number)) %>%
-  distinct()
+  distinct() %>% 
+  group_by(Week) %>% 
+    mutate(Date = min(as_date(Date))) %>% 
+  ungroup()
 
 
 
@@ -179,23 +181,30 @@ Low_base_Arch_spaghetti <- as.character(
   )
 
 ratio_plot <- 3
+
 ```
 
 
 
 # Presence over Time 
 
+
+
 ## Archetype 
+
+Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`  for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
+
+
 ```{r}
 #| column: screen
 plot_archetype_spaghetti <- (ggplot(
-  spaghetti_plot_df,
+  spaghetti_plot_df ,
   aes(
     x = Week,
     y = Archetype_percent,
     color = Archetype,
     text = paste(
-      "Archetype: ", Archetype, "<br>", # Archetype name
+      "Archetype: ", Archetype," (", Count_arch,")","<br>", # Archetype name
       "Archetype percent: ", round(Archetype_percent * 100, 2), " %", "<br>",
       sep = ""
     ),
@@ -205,7 +214,13 @@ plot_archetype_spaghetti <- (ggplot(
   geom_line() +
   geom_point() +
   scale_x_continuous("Week",
-    breaks = unique(spaghetti_plot_df$Week)
+    breaks = unique(spaghetti_plot_df$Week),
+    labels = paste0(
+      "Week : ", unique(spaghetti_plot_df$Week), "<br>",
+        unique(spaghetti_plot_df$Date), "<br>",
+        "N total deck : ", unique(spaghetti_plot_df$Week_deck_number)
+                    
+                    )
   ) +
   scale_color_manual(
     values = colors_scales_presence[1:length(
@@ -237,6 +252,7 @@ plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 
 
 ## Base Archetype
+Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)` for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
 
 ```{r}
 #| column: screen
@@ -247,7 +263,7 @@ plot_base_archetype_spaghetti <- (ggplot(
     y = Base_Archetype_percent,
     color = Base_Archetype,
     text = paste(
-      "Archetype: ", Base_Archetype, "<br>", # Archetype name
+      "Archetype: ", Base_Archetype," (", Count_base_arch,")", "<br>", # Archetype name
       "Archetype percent: ", round(Base_Archetype_percent * 100, 2), " %", "<br>",
       sep = ""
     ),
@@ -257,7 +273,13 @@ plot_base_archetype_spaghetti <- (ggplot(
   geom_line() +
   geom_point() +
   scale_x_continuous("Week",
-    breaks = unique(spaghetti_plot_df$Week)
+    breaks = unique(spaghetti_plot_df$Week),
+    labels = paste0(
+      "Week : ", unique(spaghetti_plot_df$Week), "<br>",
+        unique(spaghetti_plot_df$Date), "<br>",
+        "N total deck : ", unique(spaghetti_plot_df$Week_deck_number)
+                    
+                    )
   ) +
   scale_color_manual(
     values = colors_scales_presence[1:length(
@@ -294,7 +316,8 @@ plot_base_archetype_spaghetti %>%
 
 * All data : `r format(as.Date(min(Presence_df_base$Date)), "%d-%m-%Y")` to `r format(as.Date(max(Presence_df_base$Date)), format = "%d/%m/%Y")`. 
 * Duration `r round(max(difftime(Sys.Date(),Presence_df_base$Date,units = "weeks")),0)` weeks.
-* Include meta : `r unique(Presence_df_base_all_data$Meta)`.
+* Include meta : `r unique(Presence_df_base_all_data$Meta)`.  
+* Total number of deck : `r nrow(Presence_df_base)`.  
 
 
 
@@ -315,7 +338,7 @@ plot_presence_fun(
 * 1 Month data : `r format(as.Date(min(one_month_inline$Date)), "%d-%m-%Y")` to `r format(as.Date(max(one_month_inline$Date)), "%d-%m-%Y")`.
 * Duration `r round(max(difftime(Sys.Date(),one_month_inline$Date,units = "days")),0)` days.
 * Include meta : `r unique(one_month_inline$Meta)`.
-
+* Total number of deck : `r nrow(one_month_inline)`.  
 
 ```{r}
 #| column: screen
@@ -335,6 +358,8 @@ plot_presence_fun(
 * 2 Weeks data : `r format(as.Date(min(two_week_inline$Date)), "%d-%m-%Y")` to `r format(as.Date(max(two_week_inline$Date)), "%d-%m-%Y")`.
 * Duration `r round(max(difftime(Sys.Date(),two_week_inline$Date,units = "days")),0)` days.
 * Include meta : `r unique(two_week_inline$Meta)`.
+* Total number of deck : `r nrow(two_week_inline)`.  
+
 
 
 ```{r}
@@ -354,6 +379,8 @@ plot_presence_fun(
 * 1 Weeks data : `r format(as.Date(min(one_week_inline$Date)), "%d-%m-%Y")` to `r format(as.Date(max(one_week_inline$Date)), "%d-%m-%Y")`.
 * Duration `r round(max(difftime(Sys.Date(),one_week_inline$Date,units = "days")),0)` days.
 * Include meta : `r unique(one_week_inline$Meta)`.
+* Total number of deck : `r nrow(one_week_inline)`.  
+
 
 
 ```{r}
@@ -523,10 +550,20 @@ df_export <- loaded_base_data %>%
   mutate(
     Archetype_count = n()
   ) %>%
-  ungroup()
+  ungroup() %>% 
+  mutate(
+    n_deck = n_distinct(id),
+    n_winrates = sum(!is.na(Wins))
+    )
+
 ```
 
 
+The aim is to evaluate the most popular cards in the format. This table shows the presence of each card either on the mainboard or on the sideboard, or both.
+
+
+Number of total deck for presence : `r unique(df_export$n_deck)`  
+Number of deck with winrates : `r unique(df_export$n_winrates)`  
 
 ```{r}
 # bug any don't match count sum
@@ -574,7 +611,6 @@ General_presence_sideboard_overall <- Count_cards_in_decklist(
 Side_board_total <-   full_join(
     General_presence_sideboard_overall,
     win_rate_side_board_overall,
-    
     by = c("CardName", "Count")
   ) %>% 
   mutate(Main_side = "Side",.before = 1)
@@ -591,8 +627,9 @@ win_rate_total_deck_overall <- Count_and_winrates_cards_in_decklist(
 # %>% 
 #   rename_all(~str_remove(.,"Sideboard_"))
 
+
 General_presence_total_deck_overall <- Count_cards_in_decklist(
-   df = df_export,
+  df = df_export,
   colname_deck_list = "All" , 
   No_grouping_column = TRUE
 ) %>%
@@ -603,7 +640,6 @@ General_presence_total_deck_overall <- Count_cards_in_decklist(
 total_deck_total <-   full_join(
     General_presence_total_deck_overall,
     win_rate_total_deck_overall,
-    
     by = c("CardName", "Count")
   ) %>% 
   mutate(Main_side = "All",.before = 1)
@@ -617,61 +653,14 @@ tooltips_deck_new_cards <- c(
   "Number of copies of the cards",
   "Number of decks with the card (exact number of copies)",
   "Number of decks include in the win rate computation of the card (exact number of copies)",
+  "Number of wins",
+  "Number of looses",
   "Win rate of the card",
   "95 % Confidence intervale of card win rate",
-  'Win rate of the card vs deck with different count for the card.For example, if "Count" = 4, the win rate of 4 copies minus the win rate of 0, 1, 2 or 3 copies.',
-  "95 % Confidence intervale of card win rate vs other",
-  "The confidence interval is different from 0. + means a strictly positive confidence interval - means a strictly negative confidence interval,  0 means a confidence interval covering 0.",
   "Boolean for card with no possible win rate inclusion (only league)"
 )
 ```
 
-
-```{r js_function}
-onfly_filter_js <- c(r"{
-function onlyUnique(value, index, self) {
-return self.indexOf(value) === index;
-};
-var table_header = table.table().header();
-var column_nodes = $(table_header).find('tr:nth-child(2) > td');
-var input_nodes = $(column_nodes).find('input.form-control');
-for (let i = 0; i < input_nodes.length; i++){
-data_type_attr = $(input_nodes[i]).closest('td').attr('data-type');
-if (data_type_attr == 'factor'){
-$(input_nodes[i]).on('input propertychange', function(){
-if (typeof unique_values !== 'undefined'){
-selection_content = $(input_nodes[i]).closest('td').find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
-}
-selection_content[0].innerHTML = content_str;
-}
-})
-}
-}
-column_nodes.on('click', function(){
-setTimeout(function(){
-for (let i = 0; i < column_nodes.length; i++){
-data_type_attr = $(column_nodes[i]).attr('data-type');
-if (data_type_attr == 'factor'){
-selection_div = $(column_nodes[i]).find('div.selectize-input');
-if($(selection_div).hasClass('dropdown-active')){
-values = table.column(i, {pages: 'all', search: 'applied'}).data();
-unique_values = Array.from(values.filter(onlyUnique));
-selection_content = $(column_nodes[i]).find('div.selectize-dropdown-content');
-var content_str = '';
-for (let j = 0; j < unique_values.length; j++){
-content_str = content_str.concat('<div data-value="', unique_values[j],'" data-selectable="" class="option">', unique_values[j], '</div>')
-}
-selection_content[0].innerHTML = content_str;
-}
-}
-}
-}, 50);
-})
-}")
-```
 
 
 
@@ -682,13 +671,27 @@ DT::datatable(
     Main_board_total,
     Side_board_total
   ) %>%
+  mutate(
+    count_presence_percent = count_presence/unique(df_export$n_deck),
+    .after = count_presence
+  )  %>%
+  mutate(
+    count_winrate_percent = count_winrate/unique(df_export$n_winrates),
+    .after = count_winrate
+  ) %>% 
     mutate(
       Main_side = as.factor(Main_side) ,
       CardName = as.factor(CardName),
       Count = as.factor(Count)
     ) %>%
     mutate(Only_count = is.na(count_winrate)) %>%
-    arrange(desc(count_winrate)) %>%
+    arrange(desc(count_winrate)) %>% 
+    select(
+      -delta_winrate_card,
+      -CI_delta_winrate_card,
+      -Sign_delta_wr,
+      -card_draw_diff
+      ) %>% 
     rename_with(
       ~ str_replace(
         str_replace(
@@ -709,7 +712,7 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      onfly_filter_js
+      return_filter_js()
     )
   ),
   filter = "top", rownames = FALSE,
@@ -718,13 +721,15 @@ for (var i = 0; i < tips.length; i++) {
     searchCols = list(
       list(search = '["All"]'), NULL,
       list(search = '["Any"]'),
-      NULL,
+      NULL,NULL,NULL,NULL, NULL,
       NULL, # list(search = '10 ...'),
-      NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
+      NULL, NULL,# NULL, NULL, NULL, NULL,
+      list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
   )
 ) %>% 
-  DT::formatPercentage(c(6,8,11),digits = 1)
+  DT::formatPercentage(c(5,7,10#,10,13
+                         ),digits = 1)
 ```
 
 

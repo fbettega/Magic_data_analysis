@@ -27,6 +27,7 @@ params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.r
 **Acknowledgements**
 Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.
 Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.
+Thanks to [Jiliac](https://github.com/Jiliac) for integrating Qonfused data and maintaining Format data.  
 
 ```{r}
 proportion_format_fun <- function(nb,tot){
@@ -104,9 +105,14 @@ Tournament with matchup
 # Principal chapter
 ## New card
 
-Contains an analysis of the cards limited to certain recent sets to assess the impact of the new cards on each archetypes.
 
-## Presence archetype
+```{r, Introduction_chunk_1_newcards, results='asis'}
+
+```
+
+
+## Metagame 
+### Presence archetype
 
 <!---
 potentiellement selecteur de deck sous contrainte en script annexe
@@ -116,32 +122,40 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 ```
 
-## Top 8 deck
+
+### Matrix WR
+```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
+
+```
+
+
+
+## Deck winrate
+
+
+### Card win rate table  
+```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
+
+```
+
+
+### Cards WR models
+```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
+
+```
+
+
+## Best performing deck
+
+
+### Top 8 deck
 
 ```{r, Introduction_chunk_7_top8, results='asis'}
 
 ```
 
 
-
-
-## Card win rate table
-```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
-
-```
-
-## Cards WR models
-```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
-
-```
-
-## Matrix WR
-```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
-
-```
-
-
-## Best deck analysis
+### Best deck analysis
 
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
@@ -149,6 +163,27 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 
 # Archetype aggregation  
+
+
+
+For the grouping of decks, the analyses are mainly centred around 2 concepts: archetype and base archetype. Base archetypes are very close to the archetypes returned by the XXX parser. The archetypes are a personal construction to try to solve two problems:  
+
+
+- giving more flexibility to predict certain decks considered unknown by the parser
+- Group together decks with a small number of players that would be very close to a deck with a larger number of players.
+
+
+
+5 models were trained on decks with a defined archetype over the last 6 months, or over the entire period of interest if it was longer than 6 months, with cross-validation on 5 folds. The hyper parameters of each model were chosen from a grid search. 
+
+- C5 decision tree
+- Random forest
+- Elastic net regression
+- KNN
+- Xgboost 
+
+Then the ‘unknown’ decks or decks with an archetype with low sample size were predicted by each model returns a probability that the deck belongs to each training archetype. The results were aggregated by averaging the probability returned by each model that a deck belonged to one of the training archetypes. For decks with an average probability greater than 0.3, they were integrated into the most likely archetype on average according to the models.
+
 
 
 ```{r results='asis'}

@@ -281,7 +281,8 @@ Archetype_parser_list <- lapply(
 
 
 
-json_parsing <- fromJSON(file = paste0("ArchetypeParser/",format_param,"_","data_FB_test.json"))
+json_parsing <- fromJSON(file = paste0("ArchetypeParser/",format_param,"_","data_FB_test.json")
+                         )
 
 
 # df_export_pre_60_filter
@@ -289,9 +290,9 @@ df_export_pre_60_filter <- json_parsing %>%
   as_tibble() %>%
   unnest_wider(Data) %>%
   # temp filter for useless buged tournament 
-  filter(
-    TournamentFile  !=  'adri-birthday-modern-68213-2024-10-03'
-  ) %>% 
+  # filter(
+  #   TournamentFile  !=  'adri-birthday-modern-68213-2024-10-03'
+  # ) %>% 
   unnest_wider(Archetype) %>%
   unnest_wider(ReferenceArchetype,
     names_sep = "_"
@@ -351,7 +352,10 @@ df_export_pre_60_filter <- json_parsing %>%
 
 
 
-format_bann_cards <- scryr::scry_cards(paste0("banned:",format_param))
+format_bann_cards <- tryCatch(scryr::scry_cards(paste0("banned:",format_param)),
+                              error = function(e) {
+                                data.frame(name = "No card bann in format")
+                              })
 
 
 
