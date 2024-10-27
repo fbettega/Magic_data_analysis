@@ -221,12 +221,12 @@ DF_post_archetype_pred <- df_export %>%
   select(-name) 
 
 
-sort (table(DF_post_archetype_pred$Archetype))
+sort(table(DF_post_archetype_pred$Archetype))
   
 
 
 
-write_rds(DF_post_archetype_pred, paste0("data/",format_param,"_data_meta_en_cours.rds"))
+write_rds(DF_post_archetype_pred, paste0("data/",format_param,"pre_proximity.rds"))
 
 
 

@@ -6,3 +6,6 @@ git merge jiliac/master
 
 # normalement devrait fonctionner
 git pull upstream/main
+
+# fonctionne pour pull 
+git pull jiliac master

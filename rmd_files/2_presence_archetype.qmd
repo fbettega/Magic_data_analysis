@@ -12,7 +12,7 @@ library(plotly)
 # devtools::install_github("hoesler/rwantshue")
 library("rwantshue")
 library(htmltools)
-
+conflicted::conflicts_prefer(purrr::discard)
 # css: TOC.css
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
@@ -47,11 +47,20 @@ Presence_df_base_no_filter <- loaded_base_data %>%
     Archetype_count = n()
   ) %>%
   ungroup() %>% 
+  group_by(Base_Archetype) %>%
+  mutate(
+    Base_Archetype_count = n()
+  ) %>%
+  ungroup() %>%
   arrange(Archetype_count)
 
 
 filter_archetype_count <- min(50, 
- sum(unique(Presence_df_base_no_filter$Archetype_count))/100 )
+ sum(
+      Presence_df_base_no_filter %>% 
+       distinct(Archetype,.keep_all = TRUE) %>%
+       pull(Archetype_count)
+     )/100 )
 
 Presence_df_base <- Presence_df_base_no_filter %>%  
   ungroup() %>% 
@@ -395,6 +404,9 @@ plot_presence_fun(
 ```
 
 # CI plot win rates  
+
+::: {.panel-tabset .nav-pills} 
+## Archetype  
 ```{r}
 df_Ci_by_week <- rbind(
   Presence_df_base,
@@ -533,6 +545,171 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
 
 
 
+## Base archetype
+```{r}
+filter_base_archetype_count <- min(50, 
+ sum(
+   Presence_df_base_no_filter %>% 
+       distinct(Base_Archetype,.keep_all = TRUE) %>%
+       pull(Base_Archetype_count)
+     )/100 )
+
+
+Presence_base_arch_df_base <- Presence_df_base_no_filter %>%  
+  ungroup() %>% 
+  mutate(Base_Archetype = if_else(
+    Base_Archetype_count > filter_base_archetype_count,
+                             Base_Archetype,"other")
+    ) %>%  
+  group_by(Base_Archetype) %>%
+  mutate(
+    Base_Archetype_count = n()
+  ) %>%
+  ungroup() %>% 
+  mutate(
+    Global_winrate =
+      winrate_1_data(
+        sum(Wins,na.rm = TRUE),
+        sum(Losses,na.rm = TRUE)
+        )
+    )
+```
+
+```{r}
+df_base_arch_Ci_by_week <- rbind(
+  Presence_base_arch_df_base,
+  Presence_base_arch_df_base %>% 
+    mutate(Week = 0)
+  ) %>%
+    group_by(Base_Archetype,Week) %>% 
+  mutate( 
+    Arch_winrate = winrate_1_data(
+      sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)
+      ),
+    CI_Arch_winrate = CI_prop(
+      Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
+      ),
+    ) %>% 
+  distinct(Base_Archetype,Week,.keep_all = TRUE) %>% 
+  group_by(Week) %>% 
+    mutate(
+      Global_winrate = mean(Arch_winrate),
+      Arch_winrate = Arch_winrate - Global_winrate) %>% 
+  ungroup() %>%
+  select(
+    Base_Archetype,#Base_Archetype,
+    Week,Base_Archetype_count,
+    Arch_winrate,CI_Arch_winrate #, Base_Arch_winrate,CI_Base_Arch_winrate
+    ) %>% 
+  mutate(
+    Week = factor(ifelse(Week == 0,"all",Week),
+                  levels = c("all",as.character(seq(1,max(Presence_base_arch_df_base$Week)
+                                                    ))
+                             )
+                  )
+    ) %>% arrange(Base_Archetype_count)
+
+df_base_arch_Ci_by_week2 <- rbind(
+  Presence_base_arch_df_base,
+  Presence_base_arch_df_base %>% 
+    mutate(Week = 0)
+  ) %>%
+    group_by(Base_Archetype,Base_Archetype_count,Week,Global_winrate) %>% 
+  summarise( 
+    Arch_winrate = winrate_1_data(
+      sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)
+      ),
+    CI_Arch_winrate = CI_prop(
+      Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
+      ),
+    .groups = "drop"
+    ) %>%  
+  mutate( Arch_winrate = Arch_winrate - Global_winrate) %>% 
+  distinct() %>% 
+  mutate(
+    Week = factor(ifelse(Week == 0,"all",Week),
+                  levels = c("all",as.character(seq(1,max(Presence_base_arch_df_base$Week)
+                                                    ))
+                             )
+                  )
+    ) %>% arrange(Base_Archetype_count)
+
+
+df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>% 
+         filter(Week == "all") %>% 
+         mutate(
+           Base_Archetype = factor(Base_Archetype, levels = .$Base_Archetype[order(.$Arch_winrate + .$CI_Arch_winrate)])
+         ) %>% 
+  arrange(Base_Archetype)
+```
+
+
+
+
+
+```{r}
+#| column: screen
+
+(ggplot(data = df_base_arch_Ci_by_all_week
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate,
+      x = Base_Archetype,
+      text = paste(
+      "Archetype: ", Base_Archetype, "<br>", # Archetype name
+      "Winrate: ", 
+      round(Arch_winrate * 100, 1), " %",
+      "[",round((Arch_winrate + CI_Arch_winrate) * 100, 2),";",
+      round((Arch_winrate - CI_Arch_winrate) * 100, 2),"]", "<br>",
+      sep = ""
+    ),
+      ),
+    position = position_dodge(0.75)
+    )  +
+      geom_errorbar(aes(
+        x = Base_Archetype,
+        ymin = Arch_winrate + CI_Arch_winrate,
+                        ymax = Arch_winrate - CI_Arch_winrate
+        ),
+      position = position_dodge(width = .75), width = .01
+      )  +
+     geom_hline(yintercept = mean(df_base_arch_Ci_by_all_week$Arch_winrate), linetype="dashed", color = "red") +
+    geom_hline(
+      yintercept= c(mean(df_base_arch_Ci_by_all_week$Arch_winrate - df_base_arch_Ci_by_all_week$CI_Arch_winrate),
+                    mean(df_base_arch_Ci_by_all_week$Arch_winrate + df_base_arch_Ci_by_all_week$CI_Arch_winrate)), 
+      linetype="dashed", color = "blue") +
+    scale_x_discrete(
+        label = paste0(
+            "<span style='font-size:", 17 , "px;'> <b>",
+            df_base_arch_Ci_by_all_week %>%
+                pull(Base_Archetype) %>%
+                unique(),
+            "</b> </span>",
+            "<br /> n : ", df_base_arch_Ci_by_all_week %>%
+                pull(
+                    Base_Archetype_count   
+                ),
+            "<br /> ", df_base_arch_Ci_by_all_week %>%
+                mutate(temp_ci = paste0(
+                    round(Arch_winrate * 100, 1), " %",
+                    "[", round((Arch_winrate + CI_Arch_winrate) * 100, 2), ";",
+                    round((Arch_winrate - CI_Arch_winrate) * 100, 2), "]")
+                ) %>% 
+                pull(
+                    temp_ci
+                )
+            
+        ),
+        # guide = guide_axis(n.dodge=3)
+    ) +
+  coord_flip()
+  )  %>%
+  ggplotly(
+    tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
+  ) %>% bslib::card(full_screen = TRUE)
+```
+:::
 
 # Number of copy of each cards 
 
@@ -650,6 +827,7 @@ total_deck_total <-   full_join(
 tooltips_deck_new_cards <- c(
   "Main, Side or Both combine",
   "Card name",
+  "Set code of cards (probably last edition not sure)",
   "Number of copies of the cards",
   "Number of decks with the card (exact number of copies)",
   "Number of decks include in the win rate computation of the card (exact number of copies)",
@@ -662,6 +840,13 @@ tooltips_deck_new_cards <- c(
 ```
 
 
+```{r}
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
+   filter(
+     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+     )
+```
+
 
 
 ```{r}
@@ -670,7 +855,15 @@ DT::datatable(
     total_deck_total,
     Main_board_total,
     Side_board_total
-  ) %>%
+  ) %>% 
+  left_join(modern_DB_card %>%
+  mutate(
+    name = str_remove(name, "\\s? //.+")
+  ) %>% 
+    select(name,set),by = join_by(CardName == name)) %>%
+    mutate(set = as.factor(set),
+           ) %>% 
+  relocate(set,.after = CardName)  %>% 
   mutate(
     count_presence_percent = count_presence/unique(df_export$n_deck),
     .after = count_presence
@@ -719,7 +912,7 @@ for (var i = 0; i < tips.length; i++) {
   options = list(
     dom = "ltipr",
     searchCols = list(
-      list(search = '["All"]'), NULL,
+      list(search = '["All"]'), NULL,NULL,
       list(search = '["Any"]'),
       NULL,NULL,NULL,NULL, NULL,
       NULL, # list(search = '10 ...'),
@@ -728,7 +921,7 @@ for (var i = 0; i < tips.length; i++) {
     ), autoWidth = TRUE, pageLength = 25
   )
 ) %>% 
-  DT::formatPercentage(c(5,7,10#,10,13
+  DT::formatPercentage(c(6,8,11#,10,13
                          ),digits = 1)
 ```
 

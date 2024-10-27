@@ -520,7 +520,7 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
     mutate(
         Archetype = factor(
             Archetype,
-            levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
+            levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
     ) %>% 
     arrange(Archetype)
 

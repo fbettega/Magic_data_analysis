@@ -3,7 +3,7 @@
   "ReferenceFormat": "Modern",
   "startdate": "2024-05-26",
   "ConflictSolvingMode": "PreferSimpler",
-  "outputfile": "data_FB_test.json",
+  "outputfile": "data.json",
   "ShowColors" : true,
   "Filter": [
 	"Modern"
@@ -14,6 +14,6 @@
   "FormatDataFolder": "MTGOFormatData_FB\\Formats",
   "IncludeDecklists": "true",
   "IncludeMatchups": "true"
-
-
 }
+
+

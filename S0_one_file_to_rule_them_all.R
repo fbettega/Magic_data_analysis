@@ -126,6 +126,15 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     "./MTGOArchetypeParser.App.exe json detect",
     "ArchetypeParser/"
   )
+  
+  
+
+  
+  file.rename(from = paste0("ArchetypeParser/",format_date_en_cours$format_param,"_","data.json"),
+              to = paste0("data/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
+              )
+  
+  
 
   tictoc::toc(log = TRUE, quiet = TRUE)
   
@@ -139,7 +148,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
 
 
-  tictoc::tic(paste0("Archetype parser : ", format_date_en_cours$format_param))
+  tictoc::tic(paste0("Training archetype : ", format_date_en_cours$format_param))
 
   sys.source(
     "sources/S3_Archetype_classif_models.R",
@@ -155,7 +164,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   
   tictoc::tic.clearlog()
 
-  tictoc::tic(paste0("Archetype parser : ", format_date_en_cours$format_param))
+  tictoc::tic(paste0("Prediction archetype : ", format_date_en_cours$format_param))
   # calledProgram <- define_env(format_date_en_cours)
   sys.source(
     "sources/S4_predict_arch_with_ML.R",
@@ -170,14 +179,31 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     format_fun = format_date_en_cours$format_param,
     tictoc_res = paste0(tictoc::tic.log(format = TRUE))
   )
-  
   tictoc::tic.clearlog()
 
 
+  tictoc::tic(paste0("Proximity aggregation : ", format_date_en_cours$format_param))
+  # calledProgram <- define_env(format_date_en_cours)
+  sys.source(
+    "sources/S5_proximity_classification.R",
+    envir = define_env(format_date_en_cours),
+    # keep.source = FALSE,
+    toplevel.env = define_env(format_date_en_cours)
+  )
+  # rm(calledProgram)
+  tictoc::toc(log = TRUE, quiet = TRUE)
+  log_df <- log_df_fun(
+    log_df_fun = log_df,
+    format_fun = format_date_en_cours$format_param,
+    tictoc_res = paste0(tictoc::tic.log(format = TRUE))
+  )
+  tictoc::tic.clearlog()
+  
+  
   # quarto::quarto_render("rmd_files/", output_format = "html", as_job = FALSE)
   
 
-  if (
+  if(
     length(
       list.files(
         path = "data/mtg_data/",
@@ -202,12 +228,12 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   # # debug purpose
-  # quarto::quarto_render(
-  #   "rmd_files/4_matrix_WR.qmd",
-  #   output_format = "html",
-  #   profile = "basic",
-  #   as_job = FALSE
-  # )
+  quarto::quarto_render(
+    "rmd_files/5_Deck_analysis.qmd",
+    output_format = "html",
+    profile = "basic",
+    as_job = FALSE
+  )
 
 
   unlink(

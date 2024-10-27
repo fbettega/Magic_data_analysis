@@ -144,6 +144,12 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 
+```{r dependancy_test}
+# Init Step to make sure that the dependencies are loaded
+# htmltools::tagList(datatable(cars))
+# htmltools::tagList(ggplotly(ggplot()))
+```
+
 
 ```{r}
 

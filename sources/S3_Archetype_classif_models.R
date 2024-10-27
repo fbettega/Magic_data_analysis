@@ -11,10 +11,8 @@ library(baguette)
 library("xgboost")
 source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 
-
-
 # format_param <- format_date_en_cours$format_param
- # date_cut <- format_date_en_cours$date_cutoff
+# date_cut <- format_date_en_cours$date_cutoff
 
 
 ################################################################################
@@ -219,7 +217,7 @@ fall_back_list <- lapply(
 
 Archetype_parser_list <- lapply(
   list.files(
-    paste0("ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"/Archetypes/"),
+    paste0("ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"_FB/Archetypes/"),
     full.names = TRUE
   ),
   function(x) {
@@ -281,7 +279,7 @@ Archetype_parser_list <- lapply(
 
 
 
-json_parsing <- fromJSON(file = paste0("ArchetypeParser/",format_param,"_","data_FB_test.json")
+json_parsing <- fromJSON(file = paste0("data/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
                          )
 
 
@@ -352,10 +350,12 @@ df_export_pre_60_filter <- json_parsing %>%
 
 
 
-format_bann_cards <- tryCatch(scryr::scry_cards(paste0("banned:",format_param)),
+format_bann_cards <- tryCatch(
+  scryr::scry_cards(paste0("banned:",format_param)),
                               error = function(e) {
                                 data.frame(name = "No card bann in format")
-                              })
+                              }
+  )
 
 
 
@@ -464,7 +464,6 @@ if (!rerun_ml) {
   not_train_col <- colnames(known_arch)[colnames(known_arch) %notin% colnames(previous_data)] %>% 
     saveRDS(paste0("data/intermediate_result/",format_param,"not_train_col.rds"))
 }
-
 ################################################################################
 rm(df_export)
 
