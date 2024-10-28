@@ -1438,7 +1438,7 @@ DF_presence_fun <- function(
         mean(
           intermediateResult %>%
             distinct(Base_Archetype,.keep_all = TRUE) %>% 
-            pull(Based_Arch_winrate)
+            pull(Based_Arch_winrate), na.rm = TRUE
           )
       ) %>% 
     group_by(Base_Archetype) %>% 

@@ -651,8 +651,9 @@ group_linear_comb_cards <- function(df_long){
 
   
 
+  x <- df_wide_linear_comb[[2]]
 res_group_df_to_join <- lapply(df_wide_linear_comb, function(x) {
-  
+  # print(unique(x$Archetype))
   df_linear_comb_apply_encours <- x %>%
       select(where(~n_distinct(.) > 1)) %>%
   mutate(
@@ -668,12 +669,42 @@ res_group_df_to_join <- lapply(df_wide_linear_comb, function(x) {
    df_linear_comb_apply_encours
    )$linearCombos  
 
-
-named_and_groups_combo <-  linear_combo %>% 
+ 
+ 
+linear_combo_definition <- function(
+  fun_list_of_linear_comb,
+  n = 1
+  ){
+  # print(n)
+  
+  res <- fun_list_of_linear_comb %>% 
     # check whether any numbers of an element are in any of the elements
-    map(~map_lgl(linear_combo, compose(any, `%in%`), .x)) %>% 
+    map(~map_lgl(fun_list_of_linear_comb, purrr::compose(any, `%in%`), .x)) %>% 
     unique() %>%    # drop duplicated groups
-    map(~reduce(linear_combo[.x], union))  %>% 
+    map(~reduce(fun_list_of_linear_comb[.x], union))  
+  
+  if(length(res) != length(fun_list_of_linear_comb)){
+    
+    res <- linear_combo_definition(
+      fun_list_of_linear_comb = res,
+      n = n + 1
+      )
+    
+  }
+  
+  return(res)
+}
+ 
+
+named_and_groups_combo <-   
+  linear_combo_definition(fun_list_of_linear_comb = linear_combo) %>% 
+    # check whether any numbers of an element are in any of the elements
+    # map(~map_lgl(linear_combo, purrr::compose(any, `%in%`), .x)) %>% 
+    # unique() %>%    # drop duplicated groups
+    # map(~reduce(linear_combo[.x], union))  %>% 
+
+  
+  
   lapply(., function(x) colnames(df_linear_comb_apply_encours)[x])
 
 
@@ -1403,7 +1434,7 @@ Deck_Base_Archetype_win_rate_join <- df_Base_Archetype_long %>%
   ungroup() %>%
   distinct(id,.keep_all = TRUE) %>% 
   group_by(Archetype) %>%
-  summarise(Archetype_winrate = sum(Wins)/(sum(Wins) + sum(Losses))
+  summarise(Archetype_winrate = sum(Wins,na.rm = TRUE)/(sum(Wins,na.rm = TRUE) + sum(Losses,na.rm = TRUE))
               ) %>% 
   ungroup()
 ```
@@ -1438,15 +1469,15 @@ df_side_Base_Archetype_long <- df_export %>%
 Df_side_Base_Archetype_cards_agreg <- df_side_Base_Archetype_long %>%
   group_by(Archetype, Archetype_count, Sideboard_CardName, Sideboard_Count) %>%
   summarise(
-    Wins = sum(Wins),
-    Losses = sum(Losses),
+    Wins = sum(Wins,na.rm = TRUE),
+    Losses = sum(Losses,na.rm = TRUE),
     count_iteration_cards = n(),
     .groups = "drop"
   ) %>%
   group_by(Archetype, Sideboard_CardName) %>%
   mutate(
-    Wins = sum(Wins),
-    Losses = sum(Losses),
+    Wins = sum(Wins,na.rm = TRUE),
+    Losses = sum(Losses,na.rm = TRUE),
     total_number_of_copie = sum(count_iteration_cards),
     most_common_count = max(count_iteration_cards)
   ) %>% 
@@ -1531,7 +1562,7 @@ Base_Archetype_Base_cards_and_base_count <-
   rowwise() %>%
   mutate(Mainboard_Count = paste0(findIntRuns(as.numeric(unlist(str_split(Mainboard_Count, "/")))), collapse = "/")) %>%
   ungroup() %>%
-  left_join(Deck_win_rate_join,by = "Archetype") %>% 
+  left_join(Deck_Base_Archetype_win_rate_join,by = "Archetype") %>% 
   group_split(Archetype) %>%
   name_list_of_df_with_arch()
 ```
@@ -1553,7 +1584,7 @@ Base_Archetype_Side_Base_cards_and_base_count <-
   rowwise() %>%
   mutate(Sideboard_Count = paste0(findIntRuns(as.numeric(unlist(str_split(Sideboard_Count, "/")))), collapse = "/")) %>%
   ungroup() %>%
-  left_join(Deck_win_rate_join,by = "Archetype") %>% 
+  left_join(Deck_Base_Archetype_win_rate_join,by = "Archetype") %>% 
   group_split(Archetype) %>%
   name_list_of_df_with_arch()
 ```
@@ -1688,14 +1719,14 @@ for (i in sort(levels(df_Base_Archetype_long$Archetype))) {
   )
   
   # Inserts Month titles
-  pander::pandoc.header(i, level = 1)
+  pander::pandoc.header(i, level = 2)
   # Section contents
-  pander::pandoc.header("Main deck", level = 2)
+  pander::pandoc.header("Main deck", level = 3)
   pander::pandoc.p("")
 
 
   if (i %in% names(Base_Archetype_Base_cards_and_base_count)) {
-  pander::pandoc.header("Base Cards", level = 3)
+  pander::pandoc.header("Base Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
   pander::pandoc.p(print_count_string)
@@ -1719,13 +1750,13 @@ for (i in sort(levels(df_Base_Archetype_long$Archetype))) {
 
 
   if (i %in% names(Base_Archetype_uncomon_card_format_model)) {
-  pander::pandoc.header("Variable Cards", level = 3)
+  pander::pandoc.header("Variable Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards not always in deck using binomial regression for WR")
   pander::pandoc.p("")
     pander::pandoc.p('::: {.panel-tabset .nav-pills}')
 if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_any)) {
-    pander::pandoc.header("Any", level = 4)
+    pander::pandoc.header("Any", level = 5)
     flextable::flextable_to_rmd(
       Base_Archetype_uncomon_card_format_model[[i]]$Model_any %>%
         gtsummary::as_flex_table()
@@ -1737,7 +1768,7 @@ if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_any)) {
     # pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
     if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_count )) {
-    pander::pandoc.header("Count", level = 4)
+    pander::pandoc.header("Count", level = 5)
     flextable::flextable_to_rmd(
       Base_Archetype_uncomon_card_format_model[[i]]$Model_count %>%
         gtsummary::as_flex_table()
@@ -1745,7 +1776,7 @@ if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_any)) {
     }
     pander::pandoc.p("")
     if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$model_ridge )) {
-     pander::pandoc.header("Ridge", level = 4)
+     pander::pandoc.header("Ridge", level = 5)
     # flextable::flextable_to_rmd(
       print(htmltools::tagList(Base_Archetype_uncomon_card_format_model[[i]]$model_ridge))# %>%        gt::as_flex_table()
     # )
@@ -1758,12 +1789,12 @@ if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_any)) {
   pander::pandoc.p("")
   pander::pandoc.p("")
 
-  pander::pandoc.header("Side Board", level = 2)
+  pander::pandoc.header("Side Board", level = 3)
   pander::pandoc.p("")
 
 
   if (i %in% names(Base_Archetype_Side_Base_cards_and_base_count)) {
-  pander::pandoc.header("Base Cards", level = 3)
+  pander::pandoc.header("Base Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards Always in deck with nearly fix count")
   pander::pandoc.p(print_count_string)
@@ -1786,7 +1817,7 @@ if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_any)) {
   }
 
   if (i %in% names(Base_Archetype_uncomon_card_format_model)) {
-  pander::pandoc.header("Variable Cards", level = 3)
+  pander::pandoc.header("Variable Cards", level = 4)
   pander::pandoc.p("")
   pander::pandoc.p("Cards not always in deck using binomial regression for WR")
   pander::pandoc.p("")
@@ -1795,7 +1826,7 @@ if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_any)) {
 
     pander::pandoc.p('::: {.panel-tabset .nav-pills}')
     if (!is.null(Base_Archetype_Side_uncomon_card_format_model[[i]]$Model_any)) {
-       pander::pandoc.header("Any", level = 4)
+       pander::pandoc.header("Any", level = 5)
     flextable::flextable_to_rmd(
       Base_Archetype_Side_uncomon_card_format_model[[i]]$Model_any %>%
         gtsummary::as_flex_table()
@@ -1806,7 +1837,7 @@ if (!is.null(Base_Archetype_uncomon_card_format_model[[i]]$Model_any)) {
     # pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
 if (!is.null(Base_Archetype_Side_uncomon_card_format_model[[i]]$Model_count)) {
-     pander::pandoc.header("Count", level = 4)
+     pander::pandoc.header("Count", level = 5)
     flextable::flextable_to_rmd(
       Base_Archetype_Side_uncomon_card_format_model[[i]]$Model_count %>%
         gtsummary::as_flex_table()
@@ -1814,7 +1845,7 @@ if (!is.null(Base_Archetype_Side_uncomon_card_format_model[[i]]$Model_count)) {
 } 
     pander::pandoc.p("")
     if (!is.null(Base_Archetype_Side_uncomon_card_format_model[[i]]$model_ridge )) {
-     pander::pandoc.header("Ridge", level = 4)
+     pander::pandoc.header("Ridge", level = 5)
     # flextable::flextable_to_rmd(
       print(htmltools::tagList(Base_Archetype_Side_uncomon_card_format_model[[i]]$model_ridge))# %>%        gt::as_flex_table()
     # )

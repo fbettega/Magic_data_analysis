@@ -51,35 +51,6 @@ pull_format_repo <- git2r::pull(repo = deck_list_format)
 
 
 
-# my.file.copy_file <- function(from, to, ...) {
-#   lapply(seq_along(from), function(x){
-#     
-#     if (!dir.exists(dirname(to[x])))  dir.create(dirname(to[x]), recursive = TRUE) 
-#     file.copy(from = from[x],  to = to[x], ...)
-#   }
-#   )
-# }
-# merge_repo <- function(){
-# 
-# 
-# badaro_files <- list.files("ArchetypeParser/MTGODecklistCache_B/",#full.names = TRUE, 
-#                            recursive = TRUE)
-# Jiliac_files <- list.files("ArchetypeParser/MTGODecklistCache_J/",#full.names = TRUE,
-#                            recursive = TRUE)
-# 
-# if(length(badaro_files[!(badaro_files %in% Jiliac_files)]) > 0){
-# files_to_copy <- paste0("ArchetypeParser/MTGODecklistCache_B/",badaro_files[!(badaro_files %in% Jiliac_files)])
-# destination <- stringr::str_replace_all(files_to_copy,"MTGODecklistCache_B","MTGODecklistCache_J")
-# 
-# print(paste0("Try to copy ",length(files_to_copy)," files"))
-# 
-# my.file.copy_file(files_to_copy,destination)
-# } else {
-# print("No files to copy ")
-# }
-# }
-# merge_repo()
-
 
 # log_df <- data.frame(
 #   date_run = as.character(as.Date(Sys.time())),
@@ -258,6 +229,11 @@ rmarkdown::render(
   input = "sources/index.Rmd",
   envir = new.env(),
   output_dir = "outpout/"
+)
+rmarkdown::render(
+  input = "sources/README.rmd",
+  envir = new.env(),
+  output_dir = "."
 )
 
 

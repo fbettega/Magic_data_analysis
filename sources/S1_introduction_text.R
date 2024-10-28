@@ -37,8 +37,8 @@ pander::pandoc.p("")
 Introduction_char_vec_par_2_1 <-
   "This chapter shows the representation of differences over time. Leagues are excluded from this analysis.\n\n
   File in 3 parts :\n
-The first shows the presence curves over time for each archetype or archetype base. Archetypes with too low a presence are deactivated by default but can be reactivated by clicking on the desired decks. \n
-The second part shows the presence barchart of the different archetypes and base archetypes for different time intervals: \n\n
+The first shows the presence curves over time for each archetype or archetype base. Archetypes with too low a presence are deactivated by default but can be reactivated by clicking on the desired decks. By default, certain Archetypes are hidden if their number is less than 0.25%.\n
+The second part shows the presence barchart of the different archetypes (archetype is define as other if their number is less than the minimum of 50 or 1%) and base archetypes for different time intervals: \n\n
 - all data\n
 - one moth\n
 - two weeks\n
