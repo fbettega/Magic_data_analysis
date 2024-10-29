@@ -248,6 +248,7 @@ resulting_distance_mat_with_all_group <- grouping_cards_recursive(
   rename(Archetype_proximity = Archetype_name )
 
 
+
 res_proximity_joins <- df_export_pre_60_filter %>% 
   left_join(resulting_distance_mat_with_all_group,by = join_by(Archetype == value)) %>% 
   mutate(
@@ -266,6 +267,7 @@ res_proximity_joins <- df_export_pre_60_filter %>%
 
 
 
+write.csv(resulting_distance_mat_with_all_group,paste0("data/intermediate_result/",format_param,"_proxymity_archetype_group.csv"))
 
 write_rds(res_proximity_joins ,paste0("data/",format_param,"_data_meta_en_cours.rds"))
 

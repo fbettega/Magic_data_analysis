@@ -1,3 +1,38 @@
+################################################################################
+# Function to uptdate scryfall data
+update_scryfall_data <- function(
+    path  ,
+    reupdate = FALSE
+){
+  
+  
+  if(dir.exists(path)&reupdate){
+    res <- "No scryfall update"
+    print(res)
+    sys.source(
+      paste0(path,"genrating_data.R"),
+      chdir = TRUE,
+      envir = define_env(df_format_date = NULL),
+      toplevel.env = define_env(df_format_date = NULL)
+    )
+    
+  } else {
+    res <- "No scryfall update"
+    print(res)
+  }
+  
+  return(res)
+}
+
+
+
+
+
+
+
+
+
+
 run_command_from_dir <- function(cmd, dir_cmd) {
   # Current working directory
   cur <- getwd()
@@ -17,8 +52,13 @@ run_command_from_dir <- function(cmd, dir_cmd) {
 define_env <- function(
     df_format_date) {
   env_fun <- new.env()
+  
+  if(!is.null(df_format_date)){
   env_fun$format_param <- df_format_date$format_param
   env_fun$date_cut <- df_format_date$date_cutoff
+  }
+  
+  
   return(env_fun)
 }
 

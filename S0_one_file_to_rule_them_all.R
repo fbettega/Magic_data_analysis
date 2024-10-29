@@ -31,10 +31,6 @@ git2r::config(
 #   "https://github.com/Jiliac/MTGODecklistCache.git",
 #   "ArchetypeParser/MTGODecklistCache_J/"
 #   )
-
-
-
-
 # au moment du switch pour multiple format penser a créer un fichier format : start_date
 
 # rajouter un fichier de qmd de debug associé au collection tracker avec les combinaisons base archetype / archetype et les cartes
@@ -50,6 +46,26 @@ pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
 
 
+
+
+
+tictoc::tic("Scryfall update data")
+ 
+
+scryfall_update <- update_scryfall_data(
+  "../scry_fall_to_csv/",
+  reupdate = TRUE
+)
+
+tictoc::toc(log = TRUE, quiet = TRUE)
+
+log_df <- log_df_fun(
+  log_df_fun = log_df,
+  format_fun = "Global",
+  tictoc_res = paste0(tictoc::tic.log(format = TRUE))
+)
+
+tictoc::tic.clearlog()
 
 
 # log_df <- data.frame(
@@ -199,12 +215,12 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   # # debug purpose
-  quarto::quarto_render(
-    "rmd_files/5_Deck_analysis.qmd",
-    output_format = "html",
-    profile = "basic",
-    as_job = FALSE
-  )
+  # quarto::quarto_render(
+  #   "rmd_files/5_Deck_analysis.qmd",
+  #   output_format = "html",
+  #   profile = "basic",
+  #   as_job = FALSE
+  # )
 
 
   unlink(
