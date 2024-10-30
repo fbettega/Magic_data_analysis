@@ -1,7 +1,7 @@
-archive/
+data/archive/
 MTG_FB_tools/
 ArchetypeParser/
-ssh_key/
+other_file/ssh_key/
 other_file/log_run.csv
 .Rproj.user
 .Rhistory

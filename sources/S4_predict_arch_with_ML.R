@@ -227,7 +227,7 @@ sort(table(DF_post_archetype_pred$Archetype))
 
 
 
-write_rds(DF_post_archetype_pred, paste0("data/",format_param,"pre_proximity.rds"))
+write_rds(DF_post_archetype_pred, paste0("data/intermediate_result/proximity_data/",format_param,"pre_proximity.rds"))
 
 
 

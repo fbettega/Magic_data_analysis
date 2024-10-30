@@ -6,8 +6,13 @@ Result are avaible [here](https://mtg-modern.serveur-du-placard.xyz/)
 
 ## Dependencies
 
+### Github repo and script
+
 The initial json is obtained from the [badaro
-parser](https://github.com/Badaro/MTGOArchetypeParser).
+parser](https://github.com/Badaro/MTGOArchetypeParser).  
+To get scryfall data in csv i use my own script you can find it
+[here](https://github.com/fbettega/fetch_scryfall_data_to_csv) file
+generated should be put in \*Modern_data_analysis\_data\*.
 
 ## format includes
 

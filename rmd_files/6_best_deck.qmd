@@ -8,9 +8,15 @@ title: "Best decks"
 library(pander)
 library("rjson")
 library(tidyverse)
-conflicted::conflicts_prefer(dplyr::filter)
-conflicted::conflicts_prefer(dplyr::lag)
-conflicted::conflicts_prefer(purrr::discard)
+# conflicted::conflicts_prefer(dplyr::filter)
+# conflicted::conflicts_prefer(dplyr::lag)
+# conflicted::conflicts_prefer(purrr::discard)
+# conflicted::conflicts_prefer(dplyr::mutate)
+# conflicted::conflicts_prefer(dplyr::arrange)
+
+conflicted::conflict_prefer_all("dplyr")
+
+
 source("../sources/S2_Source_mtg_new_card.R")
 
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
@@ -56,7 +62,16 @@ df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.
     Archetype_count = n()
   ) %>%
   filter(Archetype != "Unknown") %>% 
-  ungroup()
+  ungroup() %>%
+  select(
+    id,
+    Tournament,Player,
+    Date,Week,
+    Draws, Archetype, Archetype_count,Color,Base_Archetype,
+    Wins, Losses,
+    Mainboard,Sideboard,
+    AnchorUri 
+    )
 ```
 
 
@@ -145,8 +160,8 @@ model_total_cards_fun <- function(df_fun, cols_fun) {
         ) %>%
         mutate(id = as.numeric(id)) %>% 
         select(
-          -Archetype, -Player, -Archetype_count,
-               -Draws
+          -any_of(c("Archetype", "Player", "Archetype_count",
+               "Draws"))
           ) %>% 
         column_to_rownames("id")
     
@@ -157,7 +172,7 @@ model_total_cards_fun <- function(df_fun, cols_fun) {
   
 
   model_unco_fun <- lapply(
-    unique(df_fun$Archetype),
+    unique(df_fun$Archetype), 
     function(x) {
       
       init_df_model <- model_total_cards_sub_fun(df_fun, cols_fun,archetype_en_cours = x)
@@ -267,12 +282,14 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
           filter(Archetype == Archetype_fun) ) == 0|
      nrow(df %>%  
           select(
-            -id,-proba,
-            -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
-            -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
-            -ReferenceArchetype_Companion,- matches,-Base_Archetype,
-            -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck,
-            -parser_base_arch,-type
+            -any_of(c(
+             "id", "proba",
+             "TournamentFile","Meta", "Result", "Points", "Wins", "Losses", "Draws", "Color",
+             "Companion", "ReferenceArchetype_Archetype", "ReferenceArchetype_Color",
+             "ReferenceArchetype_Companion",  "matches", "Base_Archetype",
+             "Archetype_count", "Matchups", "Number_of_main_deck_cards", "Valide_deck",
+             "parser_base_arch", "type"
+          ))
           ) %>% 
           mutate(Date = lubridate::date(Date))%>% 
           select(-all_of(not_colfuns)) %>% 
@@ -288,12 +305,14 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
   
   Unnest_filter_table <- df %>%  
     select(
-      -id,-proba,
-      -TournamentFile,-Meta,-Result,-Points,-Wins,-Losses,-Draws,-Color,
-      -Companion,-ReferenceArchetype_Archetype,-ReferenceArchetype_Color,
-      -ReferenceArchetype_Companion,- matches,-Base_Archetype,
-      -Archetype_count,-Matchups,-Number_of_main_deck_cards,-Valide_deck,
-      -parser_base_arch,-type
+            -any_of(c(
+             "id", "proba",
+             "TournamentFile","Meta", "Result", "Points", "Wins", "Losses", "Draws", "Color",
+             "Companion", "ReferenceArchetype_Archetype", "ReferenceArchetype_Color",
+             "ReferenceArchetype_Companion",  "matches", "Base_Archetype",
+             "Archetype_count", "Matchups", "Number_of_main_deck_cards", "Valide_deck",
+             "parser_base_arch", "type"
+          ))
     ) %>% 
     mutate(Date = lubridate::date(Date))%>% 
     select(-all_of(not_colfuns)) %>% 
@@ -348,8 +367,12 @@ table_generator_sub_fun <- function(
         Player = paste0(Player, "<br>", Tournament, "<br>Week : ", Week),
       ) %>%
       select(
-        -rank, -Tournament,
-        -Week, -type_of_model, -Date, -Archetype, -Deck_winrate
+        
+        -any_of(c(
+           "rank",  "Tournament",
+         "Week",  "type_of_model",  "Date",  "Archetype",  "Deck_winrate"
+        ))
+        
       ) %>%
       pivot_wider(
         names_from = Player,
@@ -521,7 +544,7 @@ Best_deck_get_table_function <- function(res_fun_init_main,
 
 ```{r agreg_land_name}
 df_Archetype_long <- df_export %>%
-  filter(!is.na(Wins)) %>%
+  filter(!is.na(Wins))  %>% 
   rowwise() %>%
   filter(!is.null(Mainboard)) %>%
   filter(!is.null(Sideboard)) %>%

@@ -172,6 +172,8 @@ For the grouping of decks, the analyses are mainly centred around 2 concepts: ar
 
 
 
+
+## Predict model
 5 models were trained on decks with a defined archetype over the last 6 months, or over the entire period of interest if it was longer than 6 months, with cross-validation on 5 folds. The hyper parameters of each model were chosen from a grid search. 
 
 - C5 decision tree
@@ -291,5 +293,37 @@ Table_with_arch_count_and_sub_count  %>%
 ```
 
 
+## Proximity aggregation
+If the median jaccard distance between 2 archetypes is smaller than the 3 quartiles of the internal distance within the archetype, these 2 archetypes will be grouped together.
+The table below shows the grouped archetypes:
 
+```{r results='asis'}
+proximty_classif <- read.csv(
+  paste0("../data/intermediate_result/",
+         params$format_param,"_proxymity_archetype_group.csv")) 
+
+# recalculer les quatités ..... TODO
+title_table_proximity <- paste0(
+  "**Proximity aggregation**"
+  )
+
+proximty_classif  %>% 
+          select(Archetype_proximity,value) %>%
+  gt::gt() %>% 
+   cols_label(
+    Archetype_proximity = md("**Total archetype name**"),
+    value = md("**Base archetype name group**")
+  ) %>%
+  gt::cols_align(
+    align = c("center"),
+    columns = everything()
+  ) %>%
+  gt::tab_header(
+    title = gt::md(title_table_proximity)
+  ) %>%
+  gt::tab_options(
+    # column_labels.hidden = TRUE,
+    table.layout = "Auto"
+    )
+```
 

@@ -52,7 +52,7 @@ grouping_close_df <- function(
 
 
 # df_export_pre_60_filter
-df_export_pre_60_filter <- read_rds(paste0("data/",format_param,"pre_proximity.rds"))
+df_export_pre_60_filter <- read_rds(paste0("data/intermediate_result/proximity_data/",format_param,"pre_proximity.rds"))
 
 
 Not_60_cards_main <- df_export_pre_60_filter %>%
@@ -267,7 +267,82 @@ res_proximity_joins <- df_export_pre_60_filter %>%
 
 
 
-write.csv(resulting_distance_mat_with_all_group,paste0("data/intermediate_result/",format_param,"_proxymity_archetype_group.csv"))
+
+
+
+Debug_resulting_distance_mat_with_all_group <- long_dist_mat %>%
+  group_by(Archetype.x ,Archetype.y) %>% 
+  summarize(
+    count = n(),
+    Q2 = quantile(value ,0.5),
+    .groups = "drop"
+  ) %>% 
+  left_join(
+    long_dist_mat %>% 
+      filter(Archetype.x == Archetype.y) %>% 
+      select(-Archetype.y) %>% 
+      group_by(Archetype.x) %>% 
+      summarize(
+        Q3 = quantile(value ,0.75),
+        .groups = "drop"
+      ) %>% 
+      rename_all(~paste0("self_",.)) %>% 
+      rename(Archetype = self_Archetype.x) ,
+    by = join_by(Archetype.x == Archetype)
+  ) %>% 
+  mutate(
+    Q3_compare_Median = self_Q3 - Q2
+  ) %>% 
+  filter( Archetype.x != Archetype.y   ) %>% 
+  filter(Q3_compare_Median >= 0) %>% 
+  arrange(desc(Q3_compare_Median)) 
+
+
+
+
+
+
+
+Debug_resulting_distance_mat_with_all_group <- resulting_distance_mat_with_all_group %>% 
+  left_join(
+    long_dist_mat %>% 
+      filter(Archetype.x == Archetype.y) %>% 
+      select(-Archetype.y) %>% 
+      group_by(Archetype.x) %>% 
+      summarize(
+        Q3 = quantile(value ,0.75),
+        .groups = "drop"
+      ) %>% 
+      rename_all(~paste0("self_",.)) %>% 
+      rename(Archetype = self_Archetype.x),
+            by =  join_by(
+              Archetype_proximity == Archetype )
+            ) %>% 
+  left_join(
+    long_dist_mat %>%
+              group_by(Archetype.x ,Archetype.y) %>% 
+              summarize(
+                # count = n(),
+                Q2 = quantile(value ,0.5),
+                .groups = "drop"
+              ),
+    by =  join_by(
+      Archetype_proximity == Archetype.x,
+      value == Archetype.y
+      )
+    
+            ) %>% 
+  mutate(
+    Q3_compare_Median = self_Q3 - Q2
+  )
+  
+
+
+
+write.csv(
+  Debug_resulting_distance_mat_with_all_group,
+  paste0("data/intermediate_result/",format_param,"_proxymity_archetype_group.csv"),
+  row.names = FALSE)
 
 write_rds(res_proximity_joins ,paste0("data/",format_param,"_data_meta_en_cours.rds"))
 

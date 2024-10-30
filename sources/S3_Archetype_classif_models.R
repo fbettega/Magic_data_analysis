@@ -205,7 +205,7 @@ fall_back_list <- lapply(
       file = x
     ) %>% 
       purrr::list_modify("CommonCards" = NULL) %>% 
-      compact()
+      purrr::compact()
   }
 ) %>% 
   bind_rows() %>% 
@@ -225,11 +225,11 @@ Archetype_parser_list <- lapply(
       file = x
     ) %>% 
       purrr::list_modify("Conditions" = NULL) %>% 
-      compact()
+      purrr::compact()
     
     base_archetype <- base_parsing_res %>% 
       purrr::list_modify("Variants" = NULL) %>% 
-      compact() %>% 
+      purrr::compact() %>% 
       as_tibble() %>% 
       mutate(
         file = str_extract(x,"(?<=Archetypes/)(.+)(?=\\.json)"),
@@ -241,7 +241,7 @@ Archetype_parser_list <- lapply(
       variant_list <- lapply(base_parsing_res$Variants, function(y){
         y %>% 
           purrr::list_modify("Conditions" = NULL) %>% 
-          compact() %>% 
+          purrr::compact() %>% 
           as_tibble() %>% 
           mutate(
             file = str_extract(x,"(?<=Archetypes/)(.+)(?=\\.json)"),
@@ -279,7 +279,7 @@ Archetype_parser_list <- lapply(
 
 
 
-json_parsing <- fromJSON(file = paste0("data/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
+json_parsing <- fromJSON(file = paste0("data/intermediate_result/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
                          )
 
 
@@ -365,6 +365,7 @@ df_export_pre_60_filter_remove_bann <- Ban_patch(
 )  %>% 
   # add rules if a fall back is more than 1% meta it become an archetype
   mutate(type = ifelse(type == "Fallback" & Archetype_count/nrow(.) > 0.01,"variant",type))
+
 
 
 ################################################################################

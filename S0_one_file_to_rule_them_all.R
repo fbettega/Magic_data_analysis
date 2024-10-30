@@ -2,7 +2,9 @@ library(yaml)
 source("sources/S0_source_init.R")
 
 
-
+# temp sleep if risk of bug
+tryCatch(
+{
 
 format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
 log_df <- read.csv("other_file/log_run.csv")
@@ -52,10 +54,11 @@ pull_format_repo <- git2r::pull(repo = deck_list_format)
 tictoc::tic("Scryfall update data")
  
 
-scryfall_update <- update_scryfall_data(
-  "../scry_fall_to_csv/",
-  reupdate = TRUE
-)
+# scryfall_update <- update_scryfall_data(
+#   "../scry_fall_to_csv/",
+#   reupdate = FALSE #TRUE FALSE
+# )
+
 
 tictoc::toc(log = TRUE, quiet = TRUE)
 
@@ -75,7 +78,7 @@ tictoc::tic.clearlog()
 # )
 
 # i <- 1
-
+# i <- 3
 
 
 
@@ -118,7 +121,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
   
   file.rename(from = paste0("ArchetypeParser/",format_date_en_cours$format_param,"_","data.json"),
-              to = paste0("data/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
+              to = paste0("data/intermediate_result/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
               )
   
   
@@ -216,7 +219,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
   # # debug purpose
   # quarto::quarto_render(
-  #   "rmd_files/5_Deck_analysis.qmd",
+  #   "rmd_files/6_best_deck.qmd",
   #   output_format = "html",
   #   profile = "basic",
   #   as_job = FALSE
@@ -277,3 +280,11 @@ log_df <- log_df_fun(
 
 tictoc::tic.clearlog()
 system("shutdown -s")
+},
+error = function(e) {
+  print(paste0("shutdown cause of error"))
+  system("shutdown")
+
+}
+)
+

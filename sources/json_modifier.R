@@ -62,7 +62,7 @@ write(toJSON(settings_parser, indent = 2), "ArchetypeParser/settings.json")
 # x <-   list.files(
 #   paste0( "ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"/Archetypes/"),
 #   full.names = TRUE
-# )[1]
+# )[5]
 
 
 
@@ -131,7 +131,9 @@ modify_archetype_res <- lapply(
     
     
     
-    base_parsing_res$Name <- str_extract(x, "(?<=Archetypes/)(.+)(?=\\.json)")
+    base_parsing_res$Name <- str_replace(
+      str_extract(x, "(?<=Archetypes/)(.+)(?=\\.json)"),
+      "_"," ")
     base_parsing_res$IncludeColorInName <- FALSE
 
     

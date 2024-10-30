@@ -167,9 +167,9 @@ model_pred <- left_join(
   rename(Reference_Archetype = ReferenceArchetype_Archetype) %>% 
   mutate(across(where(is.character),as.factor)) %>% 
   mutate(AnchorUri = as.character(AnchorUri)) %>% 
-  mutate(Archetype = paste0(
-    '<a href=\"',AnchorUri,'">',as.character(Archetype),'</a>'
-    )
+  mutate(link = paste0(
+    '<a href=\"',AnchorUri,'">',"link",'</a>'
+    ),.before = 1  
     ) %>% 
   select(-AnchorUri) %>% 
   arrange(desc(Voting_result))
@@ -198,6 +198,44 @@ htmltools::tagList(
   escape=FALSE
   )  %>% 
   DT::formatPercentage(c("Voting_result","regression_proba","rando_forest_proba","knn_proba","decision_tree_c5_proba","xgboost_proba"),digits = 1)
+  )
+```
+
+
+# Proximity
+
+negative numbers are explicable because Y to X is positive.
+
+```{r}
+
+proximty_classif <- read.csv(
+  paste0("../data/intermediate_result/",
+         params$format_param,"_proxymity_archetype_group.csv")) 
+
+htmltools::tagList(
+      DT::datatable( 
+        proximty_classif %>% 
+          mutate(
+            Archetype_proximity = as.factor(Archetype_proximity),
+            value = as.factor(value)
+                 ) %>% 
+          rename(
+            `Total archetype name` = Archetype_proximity ,
+            `Base archetype name group` = value 
+            ),
+        # colnames = str_replace_all(colnames(model_pred), "_", " "),
+             callback = DT::JS(
+      return_filter_js()
+    ),     
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+  dom = "ltipr",
+  autoWidth = TRUE,
+  pageLength = 25),
+  escape=FALSE
+  ) %>% 
+    DT::formatRound(c(3:5), digits = 2)
   )
 ```
 

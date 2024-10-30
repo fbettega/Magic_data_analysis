@@ -7,7 +7,7 @@ update_scryfall_data <- function(
   
   
   if(dir.exists(path)&reupdate){
-    res <- "No scryfall update"
+    res <- "scryfall update"
     print(res)
     sys.source(
       paste0(path,"genrating_data.R"),
