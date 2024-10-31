@@ -15,10 +15,10 @@ source("../sources/sources_script_specific/S7_last_weeks_winners.R",local = TRUE
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
-    filter(
-        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-    )
+# modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
+#     filter(
+#         !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+#     )
 
 # sample size minimum pour etre un groupe
 

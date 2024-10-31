@@ -1,12 +1,23 @@
 library(yaml)
 source("sources/S0_source_init.R")
 
-
-# temp sleep if risk of bug
+# Try catch because script is long allow shutdown if error
 tryCatch(
 {
 
 format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
+
+################################################################################
+############### easy debug just init with one format to run script #############
+# i <- 1
+# format_date_en_cours <- format_date_en_cours_fulltable[i, ]
+# print(format_date_en_cours$format_param)
+# readr::write_rds(
+#   format_date_en_cours, 
+#   "data/intermediate_result/temp_format_encours_for_param.rds"
+# )
+################################################################################
+
 log_df <- read.csv("other_file/log_run.csv")
 
 
@@ -33,10 +44,7 @@ git2r::config(
 #   "https://github.com/Jiliac/MTGODecklistCache.git",
 #   "ArchetypeParser/MTGODecklistCache_J/"
 #   )
-# au moment du switch pour multiple format penser a créer un fichier format : start_date
 
-# rajouter un fichier de qmd de debug associé au collection tracker avec les combinaisons base archetype / archetype et les cartes
-# MTGODecklistCache
 
 deck_list_repo_base <-  git2r::repository("ArchetypeParser/MTGODecklistCache_B/")
 deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache_J/")
@@ -48,16 +56,17 @@ pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
 
 
-
-
-
 tictoc::tic("Scryfall update data")
  
 
-# scryfall_update <- update_scryfall_data(
-#   "../scry_fall_to_csv/",
-#   reupdate = FALSE #TRUE FALSE
-# )
+
+
+scryfall_update <- update_scryfall_data(
+  "../scry_fall_to_csv/",
+  reupdate = FALSE #TRUE FALSE
+)
+
+
 
 
 tictoc::toc(log = TRUE, quiet = TRUE)

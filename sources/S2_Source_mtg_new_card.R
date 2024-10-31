@@ -1963,5 +1963,61 @@ filter_archetype_count_6 <- 50
 min_tournament_size_7 <- 64
 last_week_number_7 <- 3
 
+################################################################################
+# function that get scry fall id from a df with card_name
+join_with_scryfall <- function(
+    Df_with_cardname,
+    cardname_col ,
+    scry_fall_df 
+){
 
+  df_with_card_name_to_match_fun <- Df_with_cardname %>% #modify 
+    select(
+      #modify 
+      all_of(cardname_col)
+    ) %>% 
+    rename(CardName = !!cardname_col) %>% 
+    distinct()
+  
+  
+  
+  initial_match <-  df_with_card_name_to_match_fun %>%
+    left_join(
+      scry_fall_df,
+      by = c(
+        #modify 
+        "CardName" = "name"
+      )
+    ) %>% 
+    select(
+      #modify 
+      CardName,id) %>%
+    filter(!is.na(id))
+  
+  
+  match_double_face <-  df_with_card_name_to_match_fun  %>% 
+    filter(CardName %notin% initial_match$CardName) %>% 
+    # select(-id) %>%
+    left_join(
+      scry_fall_df %>%
+        filter(id %notin% initial_match$id) %>%
+        mutate(
+          name = str_remove(name,"\\s+//.*$")
+        ),
+      by = c("CardName" = "name")
+    ) %>% 
+    select(
+      #modify 
+      CardName,id
+      )
+  
+  res <- rbind(
+    initial_match,
+    match_double_face
+  ) %>% 
+    rename(scry_fall_id = id)
+  
+  
+  return(res)
+}
 

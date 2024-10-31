@@ -47,6 +47,7 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types 
      !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
      )
  
+number_of_month_for_new_set <- 3
 ```
 
 
@@ -54,7 +55,9 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types 
 set_code_help_search <- modern_DB_card %>%
   arrange(desc(released_at)) %>%
   select(released_at, set) %>%
-  distinct(set, .keep_all = TRUE)
+  distinct(set, .keep_all = TRUE) 
+
+
 
 ## all code to pull cards new to moder
 # if (refetch_cards_new_set) {
@@ -82,7 +85,11 @@ exclude_cards <- c(
 
 card_of_interest <- modern_DB_card %>%
   filter(
-    set %in% (set_code_help_search$set %>% head(5)),
+    set %in% (set_code_help_search %>% 
+  filter(
+    released_at >= as.Date(Sys.time()) %m-% months(number_of_month_for_new_set)
+    ) %>% 
+  pull(set)),
     !reprint,
     # name %in% cards_in_set_of_interest_name,
     # name %notin% exclude_cards,
@@ -91,6 +98,9 @@ card_of_interest <- modern_DB_card %>%
   mutate(
     name = str_remove(name, "\\s? //.+")
   )
+
+
+
 ```
 
 
@@ -134,13 +144,18 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```{r}
 win_rate_main_board <- Count_and_winrates_cards_in_decklist(
   df_export,
-  card_of_interest$name, 
+  # card_of_interest$name, 
+  card_of_interest,
   "Mainboard"
 )
 
 
+
+
 General_presence_mainboard <- Count_cards_in_decklist(
-  df_export, card_of_interest$name, 
+  df_export,
+  # card_of_interest$name, 
+  card_of_interest,
   "Mainboard"
 ) %>%
   rename(count_presence = count)
@@ -151,11 +166,17 @@ General_presence_mainboard <- Count_cards_in_decklist(
 
 ```{r}
 win_rate_side_board <- Count_and_winrates_cards_in_decklist(
-  df_export, card_of_interest$name, "Sideboard"
+  df_export,
+  # card_of_interest$name,
+  card_of_interest,
+  "Sideboard"
 )
 
 General_presence_sideboard <- Count_cards_in_decklist(
-  df_export, card_of_interest$name, "Sideboard"
+  df_export, 
+  # card_of_interest$name, 
+  card_of_interest,
+  "Sideboard"
 ) %>%
   rename(count_presence = count)
 ```
@@ -169,14 +190,16 @@ win_rate_main_total <- Count_and_winrates_cards_in_decklist(
       Archetype = "All",
       Archetype_count = 100
       ),
-  card_of_interest$name, 
+  # card_of_interest$name, 
+  card_of_interest,
   "All"
 )
 
 General_presence_total <- Count_cards_in_decklist(
   df_export %>% 
     mutate(Archetype = "All"), 
-  card_of_interest$name,
+  # card_of_interest$name,
+  card_of_interest,
   "All"
 ) %>%
   rename(count_presence = count) %>% 
@@ -193,19 +216,38 @@ Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distin
 Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
 
 ```{r}
+
+
+a <- 
+ 
+
+```
+
+
+
+```{r}
 DT::datatable(
   full_join(
     win_rate_main_total,
     General_presence_total,
     by = c("Archetype", "CardName", "Count")
+  ) %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("CardName")
   ) %>%
   inner_join(
     card_of_interest %>% 
-      select(name,set),
+      select(id,set),
     by = join_by(
-      CardName == name
+      scry_fall_id == id
     )
   ) %>%
+  select(-scry_fall_id) %>% 
     relocate(set,.after = CardName) %>% 
     mutate(
       count_presence = ifelse(
@@ -279,14 +321,23 @@ DT::datatable(
     General_presence_mainboard,
     win_rate_main_board,
     by = c("Archetype", "Mainboard_CardName", "Mainboard_Count")
+  ) %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Mainboard_CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Mainboard_CardName" = "CardName")
   ) %>%
   inner_join(
     card_of_interest %>% 
-      select(name,set),
+      select(id,set),
     by = join_by(
-      Mainboard_CardName == name
+      scry_fall_id == id
     )
   ) %>%
+  select(-scry_fall_id) %>% 
     relocate(set,.after = Mainboard_CardName) %>% 
     mutate(
       count_presence = ifelse(
@@ -353,14 +404,23 @@ DT::datatable(
     General_presence_sideboard,
     win_rate_side_board,
     by = c("Archetype", "Sideboard_CardName", "Sideboard_Count")
+  )  %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Sideboard_CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Sideboard_CardName" = "CardName")
   ) %>%
   inner_join(
     card_of_interest %>% 
-      select(name,set),
+      select(id,set),
     by = join_by(
-      Sideboard_CardName == name
+      scry_fall_id == id
     )
   ) %>%
+  select(-scry_fall_id) %>% 
     relocate(set,.after = Sideboard_CardName) %>%
     mutate(
       count_presence = ifelse(

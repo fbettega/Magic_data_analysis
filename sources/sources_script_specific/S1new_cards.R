@@ -1,6 +1,8 @@
 
 # Fonction that count cards in given arhcetype
-Count_cards_in_decklist <- function(df, Name_of_card_of_interest = NULL, colname_deck_list,
+Count_cards_in_decklist <- function(df,
+                                    Name_of_card_of_interest = NULL,
+                                    colname_deck_list,
                                     # this paramater and following if statement are for overall card presence in presence script
                                     No_grouping_column = FALSE
 ) {
@@ -53,11 +55,25 @@ Count_cards_in_decklist <- function(df, Name_of_card_of_interest = NULL, colname
       
   }
   
-  
+  if(!is.null(Name_of_card_of_interest)){
+    scry_fall_id_of_tinrest <- join_with_scryfall(
+      Df_with_cardname = df_unnest %>% 
+        ungroup(),
+      cardname_col = paste0(colname_deck_list, "_CardName"),
+      scry_fall_df = Name_of_card_of_interest
+    ) %>% 
+      filter(!is.na(scry_fall_id))
+    
+    df_unnest <- df_unnest %>% 
+      right_join(scry_fall_id_of_tinrest,
+                 by = join_by(!!rlang::sym(paste0(colname_deck_list, "_CardName")) == CardName)
+                 # c(paste0(colname_deck_list, "_CardName") = "CardName") 
+      ) 
+  }
   
 
   df_new_card_base <- df_unnest  %>%
-    {if(is.null(Name_of_card_of_interest)) . else filter(.,!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% Name_of_card_of_interest)} %>%
+    # {if(is.null(Name_of_card_of_interest)) . else filter(.,!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% Name_of_card_of_interest)} %>%
     mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       ALL_mod = TRUE
@@ -151,6 +167,8 @@ Count_and_winrates_cards_in_decklist <- function(df,
                                                  
                                                  
                                                  ) {
+  
+  
   winrate_by_archetype <- df %>%
     filter(!is.na(Wins)) %>%
     filter(!is.null(!!colname_deck_list)) %>%
@@ -207,6 +225,7 @@ Count_and_winrates_cards_in_decklist <- function(df,
     colname_deck_list <- ""
     
   } else {
+    # browser()
     df_unnest <- df %>%
       filter(!is.na(Wins)) %>%
       filter(!is.null(!!colname_deck_list)) %>%
@@ -217,11 +236,27 @@ Count_and_winrates_cards_in_decklist <- function(df,
       # a filtrer mes uniquement pour le main deck
       mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))) %>%
       filter(Number_of_cards >= expected_min_size)
+    
   }
   
-
+  if(!is.null(Name_of_card_of_interest)){
+   scry_fall_id_of_tinrest <- join_with_scryfall(
+      Df_with_cardname = df_unnest %>% 
+        ungroup(),
+      cardname_col = paste0(colname_deck_list, "_CardName"),
+      scry_fall_df = Name_of_card_of_interest
+      ) %>% 
+     filter(!is.na(scry_fall_id))
+      
+   df_unnest <- df_unnest %>% 
+     right_join(scry_fall_id_of_tinrest,
+                by = join_by(!!rlang::sym(paste0(colname_deck_list, "_CardName")) == CardName)
+                  # c(paste0(colname_deck_list, "_CardName") = "CardName") 
+                ) 
+  }
+  
   df_new_card_base <- df_unnest %>%
-    {if(is.null(Name_of_card_of_interest)) . else filter(.,!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% Name_of_card_of_interest)} %>%
+    # {if(is.null(Name_of_card_of_interest)) . else filter(.,!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% Name_of_card_of_interest)} %>%
     mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       ALL_mod = TRUE

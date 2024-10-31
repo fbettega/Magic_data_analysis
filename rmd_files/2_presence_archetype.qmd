@@ -851,6 +851,7 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types 
 
 
 
+
 ```{r}
 DT::datatable(
   rbind(
@@ -858,11 +859,22 @@ DT::datatable(
     Main_board_total,
     Side_board_total
   ) %>% 
-  left_join(modern_DB_card %>%
-  mutate(
-    name = str_remove(name, "\\s? //.+")
-  ) %>% 
-    select(name,set),by = join_by(CardName == name)) %>%
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("CardName" = "CardName")
+  ) %>%
+  inner_join(
+    card_of_interest %>% 
+      select(id,set),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>%
+  select(-scry_fall_id) %>% 
     mutate(set = as.factor(set),
            ) %>% 
   relocate(set,.after = CardName)  %>% 
