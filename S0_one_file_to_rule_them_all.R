@@ -1,5 +1,6 @@
 library(yaml)
 source("sources/S0_source_init.R")
+Reupdate_scryfall_db <- FALSE #TRUE FALSE
 
 # Try catch because script is long allow shutdown if error
 tryCatch(
@@ -9,13 +10,13 @@ format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
 
 ################################################################################
 ############### easy debug just init with one format to run script #############
-# i <- 1
-# format_date_en_cours <- format_date_en_cours_fulltable[i, ]
-# print(format_date_en_cours$format_param)
-# readr::write_rds(
-#   format_date_en_cours, 
-#   "data/intermediate_result/temp_format_encours_for_param.rds"
-# )
+i <- 1
+format_date_en_cours <- format_date_en_cours_fulltable[i, ]
+print(format_date_en_cours$format_param)
+readr::write_rds(
+  format_date_en_cours,
+  "data/intermediate_result/temp_format_encours_for_param.rds"
+)
 ################################################################################
 
 log_df <- read.csv("other_file/log_run.csv")
@@ -63,7 +64,7 @@ tictoc::tic("Scryfall update data")
 
 scryfall_update <- update_scryfall_data(
   "../scry_fall_to_csv/",
-  reupdate = FALSE #TRUE FALSE
+  reupdate = Reupdate_scryfall_db #TRUE FALSE
 )
 
 
@@ -125,9 +126,6 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     "./MTGOArchetypeParser.App.exe json detect",
     "ArchetypeParser/"
   )
-  
-  
-
   
   file.rename(from = paste0("ArchetypeParser/",format_date_en_cours$format_param,"_","data.json"),
               to = paste0("data/intermediate_result/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
@@ -228,12 +226,25 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
   # # debug purpose
   # quarto::quarto_render(
-  #   "rmd_files/6_best_deck.qmd",
+  #   "rmd_files/5_Deck_analysis.qmd",
   #   output_format = "html",
   #   profile = "basic",
   #   as_job = FALSE
   # )
-
+  quarto::quarto_render(
+    "rmd_files/6_best_deck.qmd",
+    output_format = "html",
+    profile = "basic",
+    as_job = FALSE
+  )
+  # quarto::quarto_render(
+  #   "rmd_files/1_2_debug_archetype.qmd",
+  #   output_format = "html",
+  #   profile = "fb",
+  #   as_job = FALSE
+  # )
+  
+  
 
   unlink(
     c(
@@ -292,7 +303,7 @@ system("shutdown -s")
 },
 error = function(e) {
   print(paste0("shutdown cause of error"))
-  system("shutdown")
+  system("shutdown -s")
 
 }
 )

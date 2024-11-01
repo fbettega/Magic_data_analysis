@@ -134,9 +134,128 @@ htmltools::tagList(
 ```
 
 
+# Proximity
+
+negative numbers are explicable because Y to X is positive.
+
+```{r}
+proximty_classif <- read.csv(
+  paste0("../data/intermediate_result/",
+         params$format_param,"_proxymity_archetype_group.csv")) %>% 
+          mutate(
+            Archetype_proximity = as.factor(Archetype_proximity),
+            value = as.factor(value)
+                 ) %>% 
+          rename(
+            `Total archetype name` = Archetype_proximity ,
+            `Base archetype name group` = value 
+            ) %>% 
+  as_tibble()
+
+```
+
+
+```{r}
+htmltools::tagList(
+      DT::datatable( 
+        proximty_classif ,
+             callback = DT::JS(
+      return_filter_js()
+    ),     
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+  dom = "ltipr",
+  autoWidth = TRUE,
+  pageLength = 25)  ,
+  escape=FALSE
+  ) %>% 
+    DT::formatRound(c(3:5), digits = 2)
+  )
+
+```
+
+
+
+# Scryfall join not matching cards   
+
+Just list all distinct cards in format with boolean if match or not with my scryfall join function.
+
+```{r}
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
+   filter(
+     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+     )
+
+
+test_scry_fall_on_all_cards <- 
+  rbind(
+    df_export %>%
+    unnest_longer(Mainboard) %>%
+    unnest_wider(Mainboard, names_sep = "_") %>% 
+  select(Mainboard_CardName) %>%
+  rename(CardName = Mainboard_CardName) ,
+    df_export %>%
+    unnest_longer(Sideboard) %>%
+    unnest_wider(Sideboard, names_sep = "_") %>% 
+  select(Sideboard_CardName) %>%
+  rename(CardName = Sideboard_CardName) 
+  )
+
+```
+
+
+
+
+```{r}
+scry_fall_join_test_res <- join_with_scryfall(
+    Df_with_cardname = test_scry_fall_on_all_cards,
+    cardname_col = "CardName",
+    scry_fall_df = modern_DB_card
+                                 )
+```
+
+
+```{r}
+htmltools::tagList(
+      DT::datatable( 
+        scry_fall_join_test_res %>% 
+          mutate(
+            `parsing fail` = is.na(scry_fall_id),
+            CardName = as.factor(CardName)
+          ) %>% 
+          select(-scry_fall_id) %>% 
+          arrange(desc(`parsing fail`)
+                  ),
+      # colnames = str_replace_all(colnames(model_pred), "_", " "),
+             callback = DT::JS(
+      return_filter_js()
+    ),     
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+  dom = "ltipr",
+  autoWidth = TRUE,
+  pageLength = 25)  ,
+  escape=FALSE
+  ) 
+  )
+
+
+```
+
+
+
+
+
+
+
 # Prediction and deck list
 
 ```{r}
+# note pour FB du futur l'ordre compte et si cette table est affiché en premier les 
+# autres ne fonctionne pas
+
 Base_prediction_df <- read_rds(
   paste0("../data/intermediate_result/",params$format_param,"_result_pred.rds")
   )
@@ -179,12 +298,12 @@ model_pred <- left_join(
 
 ```{r}
 htmltools::tagList(
-      DT::datatable( 
+      DT::datatable(
         model_pred,
         colnames = str_replace_all(colnames(model_pred), "_", " "),
              callback = DT::JS(
       return_filter_js()
-    ),     
+    ),
   filter = "top",
   rownames = FALSE,
   options = list(
@@ -196,119 +315,7 @@ htmltools::tagList(
   autoWidth = TRUE,
   pageLength = 25),
   escape=FALSE
-  )  %>% 
+  )  %>%
   DT::formatPercentage(c("Voting_result","regression_proba","rando_forest_proba","knn_proba","decision_tree_c5_proba","xgboost_proba"),digits = 1)
   )
 ```
-
-
-# Proximity
-
-negative numbers are explicable because Y to X is positive.
-
-```{r read_proximity_DT}
-proximty_classif <- read.csv(
-  paste0("../data/intermediate_result/",
-         params$format_param,"_proxymity_archetype_group.csv")) %>% 
-          mutate(
-            Archetype_proximity = as.factor(Archetype_proximity),
-            value = as.factor(value)
-                 ) %>% 
-          rename(
-            `Total archetype name` = Archetype_proximity ,
-            `Base archetype name group` = value 
-            )
-```
-
-
-```{r print_proximitty_DT}
-htmltools::tagList(
-      DT::datatable( 
-        proximty_classif ,
-        # colnames = str_replace_all(colnames(model_pred), "_", " "),
-             callback = DT::JS(
-      return_filter_js()
-    ),     
-  filter = "top",
-  rownames = FALSE,
-  options = list(
-  dom = "ltipr",
-  autoWidth = TRUE,
-  pageLength = 25),
-  escape=FALSE
-  ) %>% 
-    DT::formatRound(c(3:5), digits = 2)
-  )
-```
-
-
-# Scryfall join not matching cards 
-
-Just list all distinct cards in format with boolean if match or not with my scryfall join function.
-
-```{r}
-modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
-   filter(
-     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-     )
-
-
-test_scry_fall_on_all_cards <- 
-  rbind(
-    df_export %>%
-    unnest_longer(Mainboard) %>%
-    unnest_wider(Mainboard, names_sep = "_") %>% 
-  select(Mainboard_CardName) %>%
-  rename(CardName = Mainboard_CardName) ,
-    df_export %>%
-    unnest_longer(Sideboard) %>%
-    unnest_wider(Sideboard, names_sep = "_") %>% 
-  select(Sideboard_CardName) %>%
-  rename(CardName = Sideboard_CardName) 
-  )
-
-```
-
-
-
-
-```{r}
-scry_fall_join_test_res <- join_with_scryfall(
-    Df_with_cardname = test_scry_fall_on_all_cards,
-    cardname_col = "CardName",
-    scry_fall_df = modern_DB_card
-                                 )
-```
-
-
-```{r print_scry_all_id}
-htmltools::tagList(
-      DT::datatable( 
-        scry_fall_join_test_res %>% 
-          mutate(
-            `parsing fail` = is.na(id),
-            CardName = as.factor(CardName)
-          ) %>% 
-          
-          arrange(desc(`parsing fail`)
-                  ),
-        # colnames = str_replace_all(colnames(model_pred), "_", " "),
-             callback = DT::JS(
-      return_filter_js()
-    ),     
-  filter = "top",
-  rownames = FALSE,
-  options = list(
-  dom = "ltipr",
-  autoWidth = TRUE,
-  pageLength = 25),
-  escape=FALSE
-  ) 
-  )
-```
-
-
-
-
-
-

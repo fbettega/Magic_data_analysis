@@ -1954,7 +1954,7 @@ flattenCorrMatrix <- function(cormat, pmat) {
   )
 }
 ################################################################################
-
+new_cards_number_of_month_for_new_set_1 <- 3
 Archetype_cut_of_4 <- 50
 min_sample_size_5 <- 50
 filter_archetype_count_5 <- 50

@@ -7,7 +7,8 @@
 ## ---- Introduction_chunk_1_newcards
 
 Introduction_char_vec_par_1_1 <-
-  "This chapter focuses on the cards that have recently entered the format (the latest 5 sets). The aim is to present the number of times they have been included in decks and their winrates. 
+  paste0(
+  "This chapter focuses on the cards that have recently entered the format (the latest ",new_cards_number_of_month_for_new_set_1  ," months). The aim is to present the number of times they have been included in decks and their winrates. 
 The file is split into 3 parts: \n\n  
 - A first part aggregating all the cards whether they are maindeck or sideboard and whatever the archetypes.\n
 - The second part is stratified by archetype and shows the presence and winrate of new cards when they are present in the main deck. \n
@@ -15,7 +16,7 @@ The file is split into 3 parts: \n\n
 \n\n
 For parts 2 and 3, the win rates of the cards are only described in situations with a number of wins and losses (excluding 5-0 leagues), but the presence of a card also includes 5-0 leagues.
 \n"
-
+)
 pander::pandoc.p(Introduction_char_vec_par_1_1)
 pander::pandoc.p("")
 pander::pandoc.p("")

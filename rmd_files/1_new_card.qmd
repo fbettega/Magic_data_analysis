@@ -47,7 +47,7 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types 
      !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
      )
  
-number_of_month_for_new_set <- 3
+
 ```
 
 
@@ -87,7 +87,9 @@ card_of_interest <- modern_DB_card %>%
   filter(
     set %in% (set_code_help_search %>% 
   filter(
-    released_at >= as.Date(Sys.time()) %m-% months(number_of_month_for_new_set)
+    released_at >= as.Date(Sys.time()) %m-% months(
+      new_cards_number_of_month_for_new_set_1
+      )
     ) %>% 
   pull(set)),
     !reprint,
@@ -214,14 +216,6 @@ General_presence_total <- Count_cards_in_decklist(
 
 Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
 Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
-
-```{r}
-
-
-a <- 
- 
-
-```
 
 
 
