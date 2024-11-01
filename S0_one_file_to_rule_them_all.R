@@ -105,7 +105,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
 
   sys.source(
-    "sources/json_modifier.R",
+    "sources/prediction_arch/P0_json_modifier.R",
     envir = define_env(format_date_en_cours),
     toplevel.env = define_env(format_date_en_cours)
   )
@@ -148,7 +148,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   tictoc::tic(paste0("Training archetype : ", format_date_en_cours$format_param))
 
   sys.source(
-    "sources/S3_Archetype_classif_models.R",
+    "sources/prediction_arch/P1_Archetype_classif_models.R",
     envir = define_env(format_date_en_cours),
     toplevel.env = define_env(format_date_en_cours)
   )
@@ -164,7 +164,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   tictoc::tic(paste0("Prediction archetype : ", format_date_en_cours$format_param))
   # calledProgram <- define_env(format_date_en_cours)
   sys.source(
-    "sources/S4_predict_arch_with_ML.R",
+    "sources/prediction_arch/P2_predict_arch_with_ML.R",
     envir = define_env(format_date_en_cours),
     # keep.source = FALSE,
     toplevel.env = define_env(format_date_en_cours)
@@ -182,7 +182,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   tictoc::tic(paste0("Proximity aggregation : ", format_date_en_cours$format_param))
   # calledProgram <- define_env(format_date_en_cours)
   sys.source(
-    "sources/S5_proximity_classification.R",
+    "sources/prediction_arch/P3_proximity_classification.R",
     envir = define_env(format_date_en_cours),
     # keep.source = FALSE,
     toplevel.env = define_env(format_date_en_cours)
@@ -226,17 +226,17 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
   # # debug purpose
   # quarto::quarto_render(
-  #   "rmd_files/5_Deck_analysis.qmd",
+  #   "rmd_files/2_presence_archetype.qmd",
   #   output_format = "html",
   #   profile = "basic",
   #   as_job = FALSE
   # )
-  quarto::quarto_render(
-    "rmd_files/6_best_deck.qmd",
-    output_format = "html",
-    profile = "basic",
-    as_job = FALSE
-  )
+  # quarto::quarto_render(
+  #   "rmd_files/1_new_card.qmd",
+  #   output_format = "html",
+  #   profile = "basic",
+  #   as_job = FALSE
+  # )
   # quarto::quarto_render(
   #   "rmd_files/1_2_debug_archetype.qmd",
   #   output_format = "html",
@@ -299,11 +299,22 @@ log_df <- log_df_fun(
 )
 
 tictoc::tic.clearlog()
-system("shutdown -s")
+# system("shutdown -s")
+# cancer shutdown use : 
+# system("shutdown -a")
+system("shutdown /s /t 30")
 },
 error = function(e) {
+  
+    
+  
+  error_message <- paste("Une erreur s'est produite :", e$message, "\n")
+  write(error_message, file = "outpout/erreur_log.txt")
+  
+  # cancer shutdown use : 
+  # system("shutdown -a")
   print(paste0("shutdown cause of error"))
-  system("shutdown -s")
+  system("shutdown /s /t 60")
 
 }
 )

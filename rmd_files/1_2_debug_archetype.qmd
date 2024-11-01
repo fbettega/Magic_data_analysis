@@ -235,6 +235,10 @@ htmltools::tagList(
   rownames = FALSE,
   options = list(
   dom = "ltipr",
+  searchCols = list(
+    NULL,
+    list(search = '["true"]' )
+  ),
   autoWidth = TRUE,
   pageLength = 25)  ,
   escape=FALSE

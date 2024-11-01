@@ -47,7 +47,6 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types 
      !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
      )
  
-
 ```
 
 
@@ -218,7 +217,6 @@ Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distin
 Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
 
 
-
 ```{r}
 DT::datatable(
   full_join(
@@ -228,7 +226,7 @@ DT::datatable(
   ) %>% 
   left_join(
      join_with_scryfall(
-    Df_with_cardname =   .,
+    Df_with_cardname = .,
     cardname_col = "CardName" ,
     scry_fall_df = modern_DB_card
 ),
@@ -236,11 +234,16 @@ by = c("CardName")
   ) %>%
   inner_join(
     card_of_interest %>% 
-      select(id,set),
+      select(id,set,scryfall_uri),
     by = join_by(
       scry_fall_id == id
     )
-  ) %>%
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link", #"link",
+  link_column = "scryfall_uri"
+)  %>%
   select(-scry_fall_id) %>% 
     relocate(set,.after = CardName) %>% 
     mutate(
@@ -288,16 +291,16 @@ for (var i = 0; i < tips.length; i++) {
   options = list(
     dom = "ltipr",
     searchCols = list(
-      NULL, NULL,
+      NULL,NULL, NULL,
       list(search = '["Any"]'),
       NULL,NULL,NULL,NULL,
        # list(search = '10 ...'),
       NULL, NULL, #NULL, NULL, NULL, NULL, 
       list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
-  )
+  ),escape = FALSE
  ) %>%  
-  DT::formatPercentage(c(8#,10,13
+  DT::formatPercentage(c(9#,10,13
                          ),digits = 1)
 ```
 
@@ -326,11 +329,16 @@ by = c("Mainboard_CardName" = "CardName")
   ) %>%
   inner_join(
     card_of_interest %>% 
-      select(id,set),
+      select(id,set,scryfall_uri),
     by = join_by(
       scry_fall_id == id
     )
-  ) %>%
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link", #"link",
+  link_column = "scryfall_uri"
+) %>%
   select(-scry_fall_id) %>% 
     relocate(set,.after = Mainboard_CardName) %>% 
     mutate(
@@ -369,19 +377,23 @@ for (var i = 0; i < tips.length; i++) {
       return_filter_js()
     )
   ),
-  filter = "top", rownames = FALSE,
+  filter = "top", 
+rownames = FALSE,
   options = list(
     dom = "ltipr",
     searchCols = list(
-      NULL, NULL, NULL,
+      NULL,NULL, NULL, NULL,
       list(search = '["Any"]'),
       NULL,NULL, NULL,
       NULL, # list(search = '10 ...'),
       NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
-    ), autoWidth = TRUE, pageLength = 25
-  )
+    ), 
+    autoWidth = TRUE,
+    pageLength = 25
+  ),
+  escape=FALSE
 ) %>% 
-  DT::formatPercentage(c(9,11,14),digits = 1)
+  DT::formatPercentage(c(10,12,15),digits = 1)
 ```
 
 
@@ -409,11 +421,16 @@ by = c("Sideboard_CardName" = "CardName")
   ) %>%
   inner_join(
     card_of_interest %>% 
-      select(id,set),
+      select(id,set,scryfall_uri),
     by = join_by(
       scry_fall_id == id
     )
-  ) %>%
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link", #"link",
+  link_column = "scryfall_uri"
+) %>%
   select(-scry_fall_id) %>% 
     relocate(set,.after = Sideboard_CardName) %>%
     mutate(
@@ -457,13 +474,14 @@ for (var i = 0; i < tips.length; i++) {
   options = list(
     dom = "ltipr",
     searchCols = list(
-      NULL, NULL, NULL,
+      NULL,NULL, NULL, NULL,
       list(search = '["Any"]'),
       NULL,NULL, NULL,
       NULL, # list(search = '10 ...'),
       NULL, NULL, NULL, NULL, NULL, NULL, list(search = '["false"]') # NULL
     ), autoWidth = TRUE, pageLength = 25
-  )
+  ),
+escape = FALSE
 ) %>% 
-  DT::formatPercentage(c(9,11,14),digits = 1)
+  DT::formatPercentage(c(10,12,15),digits = 1)
 ```

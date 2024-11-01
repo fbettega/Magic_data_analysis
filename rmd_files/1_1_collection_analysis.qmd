@@ -101,7 +101,6 @@ collection_archi <-
     ) %>% 
   # TEmp
   # filter(!str_detect(Tags, "Sealable|Commande_en_cours")) %>% 
-  
   group_by(Name) %>% 
   summarise(Quantity = sum(Quantity)) %>% 
   rownames_to_column("collect_id")
@@ -283,7 +282,7 @@ Summary_missing_cards_by_archetype <-
 
 # Number of missing cards aggregate
 
-```{r, results='asis'}
+```{r}
 Summary_missing_cards_aggregate <-
   rbind(
     not_owned_cards %>%
@@ -312,25 +311,61 @@ Summary_missing_cards_aggregate <-
     desc(Number_of_deck_with_missing_cards 
          )
     )
+```
 
- # print(
+
+
+
+
+```{r, results='asis'}
+# print(
+
 htmltools::tagList(
       DT::datatable( 
-        Summary_missing_cards_aggregate,
+        Summary_missing_cards_aggregate %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("CardName" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri,starts_with("colors.")),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>%
+  mutate(
+    colors = as.factor(pmap_chr(
+      list(colors.1, colors.2, colors.3, colors.4, colors.5),
+      ~ paste0(na.omit(c(...)), collapse = "")
+    ))
+  ) %>% 
+  select(-starts_with("colors.")) %>%  
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link", #"link",
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id),
         colnames = str_replace_all(colnames(Summary_missing_cards_aggregate), "_", " "),
   filter = "top",
   rownames = FALSE,
   options = list(
   dom = "ltipr",
     searchCols = list(
-    NULL,
+    NULL,NULL,
     list(search = '["Any"]' ),
     NULL,NULL,
     list(search = '10 ...'),
     NULL
   ),
   autoWidth = TRUE,
-  pageLength = 25)
+  pageLength = 25),
+escape = FALSE
   )  %>% 
   DT::formatPercentage(c("percent_of_deck_with_missing"),digits = 1)
   )
@@ -422,6 +457,34 @@ for (i in Archetype_list) {
   not_own_car_by_archetype %>%
   filter(Archetype == i) %>% 
     select(-Archetype) %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("CardName" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri,starts_with("colors.")),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>%
+  mutate(
+    colors = as.factor(pmap_chr(
+      list(colors.1, colors.2, colors.3, colors.4, colors.5),
+      ~ paste0(na.omit(c(...)), collapse = "")
+    ))
+  ) %>% 
+  select(-starts_with("colors.")) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link", #"link",
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
     mutate(across(where(is.factor),as.factor)) %>% 
     arrange(desc(Number_of_time_missing)),
    colnames = str_replace_all(colnames(
@@ -433,7 +496,7 @@ for (i in Archetype_list) {
     dom = "ltipr", 
   # searchBuilder = TRUE,
      searchCols = list(
-    NULL,
+    NULL,NULL,
     list(search = '["Any"]' ),
     NULL,
     list(search = '10 ...'),
@@ -441,7 +504,7 @@ for (i in Archetype_list) {
   ),
     autoWidth = TRUE, 
     pageLength = 25
-    )
+    ),escape = FALSE
 ) %>% 
   DT::formatPercentage(c("Archetype_count"),digits = 1)
 )
@@ -529,9 +592,37 @@ not_owned_cards %>%
 
 ```{r}
  # print(
-      htmltools::tagList(
+htmltools::tagList(
       DT::datatable(
-        base_archetype_not_owned,
+        base_archetype_not_owned  %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("CardName" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri,starts_with("colors.")),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>%
+  mutate(
+    colors = as.factor(pmap_chr(
+      list(colors.1, colors.2, colors.3, colors.4, colors.5),
+      ~ paste0(na.omit(c(...)), collapse = "")
+    ))
+  ) %>% 
+  select(-starts_with("colors.")) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link", #"link",
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id),
   colnames = str_replace_all(colnames(
      base_archetype_not_owned), "_", " "),
   filter = "top", rownames = FALSE,
@@ -540,7 +631,7 @@ not_owned_cards %>%
     dom = "ltipr", 
   searchBuilder = TRUE,
      searchCols = list(
-    NULL,NULL,
+    NULL,NULL,NULL,
     list(search = '["Any"]' ),
     NULL, NULL,
     list(search = '10 ...'),
@@ -548,7 +639,7 @@ not_owned_cards %>%
   ),
     autoWidth = TRUE, 
     pageLength = 25
-    )
+    ),escape = FALSE
 ) %>% 
   DT::formatPercentage(c("Base_Archetype_count"),digits = 1)
 )

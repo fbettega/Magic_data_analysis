@@ -29,9 +29,13 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 
-
 ```{r data_reading }
 filter_archetype_count <- 10#50
+
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
+   filter(
+     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+     )
 
 df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
     # include filter bad deck
@@ -130,9 +134,6 @@ win_rate_side_board <- Count_and_winrates_cards_in_decklist_total(
 ```
 
 
-
-
-
 # Archetype Card winrate table 
 
 ## Mainboard cards 
@@ -141,13 +142,41 @@ win_rate_side_board <- Count_and_winrates_cards_in_decklist_total(
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
+
+
+
 ```{r}
 # Create the datatable with hover-over tooltips
 DT::datatable(
   format_df_result_card_table(
     df_base_fun = win_rate_main_board$Card_always_in_deck_final,
    df_Archetyp_fun = df_Archetype
-  ),
+  ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Main percent", #"link",
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
   filter = "top", rownames = FALSE,
   callback = DT::JS(
     paste0(
@@ -161,20 +190,13 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Base cards in Mainboard"
   )
 )
 ```
-
-
-
-
-
-
-
-
 
 ### Variable Cards Mainboard
 
@@ -184,7 +206,32 @@ DT::datatable(
   format_df_result_card_table(
     win_rate_main_board$Win_rate_df_final,
     df_Archetype
-  ),
+  ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
   callback = DT::JS(
     paste0(
       "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
@@ -199,19 +246,20 @@ for (var i = 0; i < tips.length; i++) {
   filter = "top", rownames = FALSE,
   options = list(dom = "ltipr",  
                  searchCols = list(
-                   NULL,
+                   NULL,NULL,
                    list(search = '10 ...'),
                    NULL,NULL,NULL,NULL,
                    list(search = '["Any"]' ),
                    NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
   ), 
   autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Mainboard cards"
   )
 ) %>% 
-  DT::formatPercentage(c(3,8,10,13),digits = 1)
+  DT::formatPercentage(c(4,9,11,14),digits = 1)
 ```
 
 
@@ -231,7 +279,32 @@ DT::datatable(
     win_rate_side_board$Card_always_in_deck_final,
     # "Sideboard",
     df_Archetype,
-  ),
+  ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Side percent", #"link",
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
   callback = DT::JS(
     paste0(
       "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
@@ -245,6 +318,7 @@ for (var i = 0; i < tips.length; i++) {
   ),
   filter = "top", rownames = FALSE,
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Sideboard base cards"
@@ -262,7 +336,32 @@ DT::datatable(
     win_rate_side_board$Win_rate_df_final,
     # "Sideboard",
     df_Archetype,
-  ),
+  ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
   callback = DT::JS(
     paste0(
       "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
@@ -277,18 +376,19 @@ for (var i = 0; i < tips.length; i++) {
   filter = "top", rownames = FALSE,
   options = list(dom = "ltipr",  
                  searchCols = list(
-                   NULL,
+                   NULL,NULL,
                    list(search = '10 ...'),
                    NULL,NULL,NULL,NULL,
                    list(search = '["Any"]' ),
                    NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
   ), autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Sideboard cards"
   )
 ) %>% 
-  DT::formatPercentage(c(3,8,10,13),digits = 1)
+  DT::formatPercentage(c(3,8,10,13)+1,digits = 1)
 ```
 
 
@@ -328,13 +428,36 @@ DT::datatable(
     # colname_deck_list = "Mainboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
-  ),
+  )%>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Main percent", #"link",
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
+  filter = "top", rownames = FALSE,
   callback = DT::JS(
     paste0(
-      "var tips = ['", paste0(c(
-        "Deck Archetype not agregated",
-        tooltips_deck_base
-      ), collapse = "','"), "'],
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
@@ -343,8 +466,8 @@ for (var i = 0; i < tips.length; i++) {
       return_filter_js()
     )
   ),
-  filter = "top", rownames = FALSE,
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Mainboards base cards"
@@ -362,13 +485,35 @@ DT::datatable(
     # colname_deck_list = "Mainboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
-  ),
+  )%>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
   callback = DT::JS(
     paste0(
-      "var tips = ['", paste0(c(
-        "Deck Archetype not agregated",
-        tooltips_deck_variable_arch
-      ), collapse = "','"), "'],
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
@@ -378,21 +523,22 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr", 
+  options = list(dom = "ltipr",  
                  searchCols = list(
-                   NULL,NULL,
+                   NULL,NULL,NULL,
                    list(search = '10 ...'),
                    NULL,NULL,NULL,NULL,
                    list(search = '["Any"]' ),
-                   NULL,NULL,NULL,NULL
-  ),
-                 autoWidth = TRUE, pageLength = 25),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), 
+  autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Mainboard cards"
   )
 ) %>% 
-  DT::formatPercentage(c(4,9,11,14),digits = 1)
+  DT::formatPercentage(c(4,9,11,14)+1,digits = 1)
 ```
 
 
@@ -411,13 +557,35 @@ DT::datatable(
     # colname_deck_list = "Sideboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
-  ),
+  )%>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Side percent", #"link",
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
   callback = DT::JS(
     paste0(
-      "var tips = ['", paste0(c(
-        "Deck Archetype not agregated",
-        tooltips_deck_base
-      ), collapse = "','"), "'],
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
@@ -427,9 +595,8 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr",
-                 
-                 autoWidth = TRUE, pageLength = 25),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Sideboard base cards"
@@ -447,13 +614,35 @@ DT::datatable(
     # colname_deck_list = "Sideboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
-  ),
+  )%>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  inner_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri"
+) %>%
+  select(-scry_fall_id) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
   callback = DT::JS(
     paste0(
-      "var tips = ['", paste0(c(
-        "Deck Archetype not agregated",
-        tooltips_deck_variable_arch
-      ), collapse = "','"), "'],
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
     header = table.columns().header();
 for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
@@ -463,22 +652,19 @@ for (var i = 0; i < tips.length; i++) {
     )
   ),
   filter = "top", rownames = FALSE,
-  options = list(
-    dom = "ltipr",
-                     searchCols = list(
-                   NULL,NULL,
+  options = list(dom = "ltipr",  
+                 searchCols = list(
+                   NULL,NULL,NULL,
                    list(search = '10 ...'),
                    NULL,NULL,NULL,NULL,
                    list(search = '["Any"]' ),
-                   NULL,NULL,NULL,NULL
-  ),
-     autoWidth = TRUE,
-    pageLength = 25
-  ),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
   caption = htmltools::tags$caption(
     style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
     "Table : Sideboard cards"
   )
 )  %>% 
-  DT::formatPercentage(c(4,9,11,14),digits = 1)
+  DT::formatPercentage(c(4,9,11,14)+1,digits = 1)
 ```

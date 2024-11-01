@@ -1965,12 +1965,12 @@ last_week_number_7 <- 3
 
 ################################################################################
 # function that get scry fall id from a df with card_name
+
 join_with_scryfall <- function(
     Df_with_cardname,
     cardname_col ,
     scry_fall_df 
 ){
-
   df_with_card_name_to_match_fun <- Df_with_cardname %>% #modify 
     select(
       #modify 
@@ -2009,15 +2009,64 @@ join_with_scryfall <- function(
     select(
       #modify 
       CardName,id
-      )
+      ) %>%
+    filter(!is.na(id))
+  
+  
+  room_matching <- df_with_card_name_to_match_fun %>% 
+    filter(CardName %notin% c(initial_match$CardName,match_double_face$CardName)) %>% 
+    mutate(
+      CardName_temp = str_replace(CardName,"&&","//")
+    )  %>% 
+    # select(-id) %>%
+    left_join(
+      scry_fall_df,
+      by = c("CardName_temp" = "name")
+    )  %>% 
+    select(
+      #modify 
+      CardName,id
+    )
+  
+  
+  
   
   res <- rbind(
     initial_match,
-    match_double_face
+    match_double_face,
+    room_matching
   ) %>% 
     rename(scry_fall_id = id)
   
   
   return(res)
 }
+
+
+################################################################################
+# simple function that a link to a column or create column with link if not exists
+add_link_to_a_column <- function(
+    df_add_link_fun ,# =   a,
+    column_where_is_add, #= "link", #"link",
+    link_column #= "scryfall_uri",  , mode # type of link not use now
+){
+  result_with_link <- df_add_link_fun %>% 
+    mutate(!!rlang::sym(paste0(link_column)) := 
+             as.character(!!rlang::sym(paste0(link_column)))
+           
+    ) %>% 
+    {if (!column_where_is_add %in% colnames(.)) mutate(.,
+                                                       !!rlang::sym(paste0(column_where_is_add)) := "link",
+                                                       .before = 1
+    ) else .} %>% 
+    mutate(
+      !!rlang::sym(paste0(column_where_is_add)) := paste0(
+        '<a href=\"',!!rlang::sym(paste0(link_column)),'">',!!rlang::sym(paste0(column_where_is_add)),'</a>'
+      )
+    ) %>% 
+    select(-any_of(link_column))
+  
+  
+}
+
 
