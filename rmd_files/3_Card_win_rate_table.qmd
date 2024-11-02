@@ -161,7 +161,7 @@ DT::datatable(
 ),
 by = c("Main Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(
@@ -216,7 +216,7 @@ DT::datatable(
 ),
 by = c("Main Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(
@@ -289,7 +289,7 @@ DT::datatable(
 ),
 by = c("Side Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(
@@ -346,7 +346,7 @@ DT::datatable(
 ),
 by = c("Side Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(
@@ -438,7 +438,7 @@ DT::datatable(
 ),
 by = c("Main Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(
@@ -495,7 +495,7 @@ DT::datatable(
 ),
 by = c("Main Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(
@@ -567,7 +567,7 @@ DT::datatable(
 ),
 by = c("Side Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(
@@ -624,7 +624,7 @@ DT::datatable(
 ),
 by = c("Side Card" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri),
     by = join_by(

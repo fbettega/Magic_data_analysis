@@ -42,6 +42,10 @@ big_mtgo_tournament <- str_replace_all(
   ), "Modern", params$format_param
 )
 
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
+    filter(
+        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+    )
 ```
 
 ```{r initial_data_loading}
@@ -95,7 +99,7 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 
 
 ```{r}
-# x <- "modern-challenge-64-2024-09-2912692965"
+# x <- unique(Tournament_of_interest_df$TournamentFile)# "modern-challenge-64-2024-09-2912692965"
 
 total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
   
@@ -107,7 +111,8 @@ total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), functio
   
   vizual_result <- top_8_table_and_plot_prez_generator(
     df_fun = Tournament_of_interest_df,
-    current_tournament = x
+    current_tournament = x,
+    top_8_table_and_plot_scry_fall_db = modern_DB_card
   )
   
   
@@ -166,88 +171,6 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 ```
-
-
-
-```{r}
-fun_print_tournament <- function(
-    tournament_file_fun,
-    total_result_fun,
-                                 iteration){
-  
-  pander::pandoc.header(paste0("Week : ",names(tournament_file_fun)[iteration]), level = 1)
-  pander::pandoc.p("")
-  pander::pandoc.p("")
-  res <- lapply(seq_along(total_result_fun), function(u){
-
-    
-    
-# for (u in seq_along(total_result_fun)){
-if(names(total_result_fun)[u] %in% tournament_file_fun[[iteration]]){
-
-      pander::pandoc.header(total_result_fun[[u]]$Title,
-                            level = 2)
-      pander::pandoc.p("")
-      pander::pandoc.p("")
-      pander::pandoc.p("::: {.panel-tabset .nav-pills}")
-      pander::pandoc.p("")
-      pander::pandoc.p("")
-
-      # pander::pandoc.header(total_result_fun[[u]]$Title, level = 3)
-      # pander::pandoc.p("")
-      # pander::pandoc.p("")
-      pander::pandoc.header("Presence plot", level = 3)
-      pander::pandoc.p("")
-      pander::pandoc.p("")
-      # print(
-      # htmltools::tagList(
-      #   # as.widget(
-      # # cat(
-      # #   knitr::knit_print(
-      #   total_result_fun[[u]]$plot$plot_prez
-      #    )
-      #    )
-
-
-
-# solution to force inclusion of plotly in loop but lead to really large files
-      htmlwidgets::saveWidget(
-  total_result_fun[[u]]$plot$plot_prez,
-  paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
-         iteration,
-         tournament_file_fun[[iteration]][u],".html"),
-selfcontained = TRUE)
-
-       print(
-        htmltools::includeHTML(
-          paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
-        iteration,
-         tournament_file_fun[[iteration]][u],".html"))
-        )
-
-
-
-
-       # )
-      pander::pandoc.p("")
-      pander::pandoc.p("")
-      pander::pandoc.header("Top 8 list", level = 3)
-      print(htmltools::tagList(total_result_fun[[u]]$plot$top8_table))
-      pander::pandoc.p("")
-      pander::pandoc.p("")
-      pander::pandoc.p(":::")
-      pander::pandoc.p("")
-      pander::pandoc.p("")
-      }
-  }
-)
-
-  
-}
-  
-```
-
-
 
 
 

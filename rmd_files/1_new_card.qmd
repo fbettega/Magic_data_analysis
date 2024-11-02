@@ -232,7 +232,7 @@ DT::datatable(
 ),
 by = c("CardName")
   ) %>%
-  inner_join(
+  left_join(
     card_of_interest %>% 
       select(id,set,scryfall_uri),
     by = join_by(
@@ -327,7 +327,7 @@ DT::datatable(
 ),
 by = c("Mainboard_CardName" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     card_of_interest %>% 
       select(id,set,scryfall_uri),
     by = join_by(
@@ -419,7 +419,7 @@ DT::datatable(
 ),
 by = c("Sideboard_CardName" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     card_of_interest %>% 
       select(id,set,scryfall_uri),
     by = join_by(

@@ -867,7 +867,7 @@ DT::datatable(
 ),
 by = c("CardName" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,set,scryfall_uri),
     by = join_by(

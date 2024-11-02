@@ -540,30 +540,33 @@ model_unco_cards_fun <- function(df_fun) {
         )
         
         
+        df_mod <- rbind(
+          df_model %>%
+            rownames_to_column("id") %>% 
+            select(-Losses) %>%
+            uncount(Wins) %>%
+            mutate(
+              Y = 1,
+              .before = 1
+            ),
+          df_model %>%
+            rownames_to_column("id") %>% 
+            select(-Wins) %>%
+            uncount(Losses) %>%
+            mutate(
+              Y = 0,
+              .before = 1
+            )
+        ) %>%
+          # remove card with only 1+ like basic land fetch ....
+          # here because some rare deck as W 0 and L 0 and can be the only one with distinct value
+          select(where(~ n_distinct(.) > 1))
+        
+        
         if (ncol(df_model) <= 3) {
-          model_res_ridge <- NULL
+          fit_ridge <- NULL
         } else {
-          df_mod <- rbind(
-            df_model %>%
-              rownames_to_column("id") %>% 
-              select(-Losses) %>%
-              uncount(Wins) %>%
-              mutate(
-                Y = 1,
-                .before = 1
-              ),
-            df_model %>%
-              rownames_to_column("id") %>% 
-              select(-Wins) %>%
-              uncount(Losses) %>%
-              mutate(
-                Y = 0,
-                .before = 1
-              )
-          ) %>%
-            # remove card with only 1+ like basic land fetch ....
-            # here because some rare deck as W 0 and L 0 and can be the only one with distinct value
-            select(where(~ n_distinct(.) > 1))
+          
           
           
           x_mat_model <- model.matrix(
@@ -584,6 +587,7 @@ model_unco_cards_fun <- function(df_fun) {
                        suppress.grouptesting = TRUE
             )
           )
+          
           fit_ridge$data <- df_mod
           fit_ridge$Archetype <- x
         }

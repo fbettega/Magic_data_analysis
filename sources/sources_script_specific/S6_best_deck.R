@@ -1,7 +1,13 @@
-lapply_around_table_list <- function(df_main_fun,df_side_fun,Number_of_deck,observ_duration){
+lapply_around_table_list <- function(
+    df_main_fun,
+    df_side_fun,
+    Number_of_deck,
+    observ_duration,
+    Scry_fall_df_fun_around_list
+    ){
   Archetype_fun <- unique(c(df_main_fun$Archetype,df_side_fun$Archetype))
   
-  
+  # x <- Archetype_fun[1]
   res_lapply <- lapply(Archetype_fun, function(x){
     res_count_sep <- Best_deck_get_table_function(
       res_fun_init_main = df_main_fun,
@@ -9,7 +15,8 @@ lapply_around_table_list <- function(df_main_fun,df_side_fun,Number_of_deck,obse
       Archetype_fun = x,
       Model = "cout",
       top_x_rank = Number_of_deck,
-      Week_fun = observ_duration
+      Week_fun = observ_duration,
+      db_format_best_deck_table_fun = Scry_fall_df_fun_around_list
     )
     res_any <- Best_deck_get_table_function(
       res_fun_init_main = df_main_fun,
@@ -17,7 +24,8 @@ lapply_around_table_list <- function(df_main_fun,df_side_fun,Number_of_deck,obse
       Archetype_fun = x,
       Model = "Any",
       top_x_rank = Number_of_deck,
-      Week_fun = observ_duration
+      Week_fun = observ_duration,
+      db_format_best_deck_table_fun = Scry_fall_df_fun_around_list
     )
     
     
@@ -102,12 +110,22 @@ table_generator_sub_fun <- function(
     Model, 
     top_x_rank, 
     Week_fun,
-    maind_and_side = "All" #"Main" "Side"
+    maind_and_side = "All", #"Main" "Side"
+    db_scry_fall_generator_sub_dun
 ){
   
   if(is.null(df_fun)){
     Table_result <- NULL
   }else{
+    
+    
+
+    
+    
+    
+    
+    
+    
     Table_main_side <- df_fun %>%
       mutate(
         Tournament = Tournament_agreger(Tournament),
@@ -125,7 +143,30 @@ table_generator_sub_fun <- function(
         names_from = Player,
         values_from = c(Count),
         values_fill = 0
+      ) %>% 
+      left_join(
+        join_with_scryfall(
+          Df_with_cardname =   .,
+          cardname_col = "CardName" ,
+          scry_fall_df = db_scry_fall_generator_sub_dun
+        ),
+        by = c("CardName" = "CardName")
       ) %>%
+      left_join(
+        db_scry_fall_generator_sub_dun %>% 
+          select(id,set,scryfall_uri),
+        by = join_by(
+          scry_fall_id == id
+        )
+      ) %>% 
+      add_link_to_a_column(
+        df_add_link_fun =   .,
+        column_where_is_add = "CardName", #"link",
+        link_column = "scryfall_uri",
+        mode = "md"
+      ) %>%
+      
+      select(-scry_fall_id) %>%
       rowwise() %>%
       # Récupération des divers deck pour obtenir les stat desc par cartes
       mutate(
@@ -220,7 +261,8 @@ Best_deck_get_table_function <- function(res_fun_init_main,
                                          Archetype_fun, 
                                          Model, 
                                          top_x_rank, 
-                                         Week_fun#,
+                                         Week_fun,
+                                         db_format_best_deck_table_fun
 ) {
   
   if (identical(res_fun_init_main , res_fun_init_side)) {
@@ -245,7 +287,8 @@ Best_deck_get_table_function <- function(res_fun_init_main,
       Model = Model, 
       top_x_rank = top_x_rank, 
       Week_fun = Week_fun,
-      maind_and_side = "All" #"Main" "Side"
+      maind_and_side = "All", #"Main" "Side"
+      db_scry_fall_generator_sub_dun = db_format_best_deck_table_fun
     )
   } else {
     format_table_main <- table_generator_sub_fun(
@@ -259,7 +302,8 @@ Best_deck_get_table_function <- function(res_fun_init_main,
       Model = Model, 
       top_x_rank = top_x_rank, 
       Week_fun = Week_fun,
-      maind_and_side = "Main" 
+      maind_and_side = "Main" , #"Main" "Side"
+      db_scry_fall_generator_sub_dun = db_format_best_deck_table_fun
     )
     format_table_side <- table_generator_sub_fun(
       df_fun = unlist_side_or_main(
@@ -272,7 +316,8 @@ Best_deck_get_table_function <- function(res_fun_init_main,
       Model = Model, 
       top_x_rank = top_x_rank, 
       Week_fun = Week_fun,
-      maind_and_side = "Side"
+      maind_and_side = "Side", #"Main" "Side"
+      db_scry_fall_generator_sub_dun = db_format_best_deck_table_fun
     )
     
     format_table <- list(
@@ -382,8 +427,10 @@ generate_total_result_of_best_deck <- function(
     fun_parland_name_fun = Land_modern,
     fun_parmin_number_of_cards = min_sample_size_6,
     fun_parnumber_of_week = c(Inf,2),
-    fun_parNumber_of_deck_print = Number_of_deck
+    fun_parNumber_of_deck_print = Number_of_deck,
+    db_scryfall_fun_par
 ){
+  
   list_of_Model_result_total_fun <- lapply(fun_pardeck_or_side, function(all_main_side_fun){
     # print(all_main_side_fun)
     
@@ -417,7 +464,7 @@ generate_total_result_of_best_deck <- function(
   
   
   
-  
+  # duration_en_cours <- fun_parnumber_of_week[1]
   list_of_GT_table_for_all_duration <- lapply(
     fun_parnumber_of_week,
     function(duration_en_cours){
@@ -426,14 +473,16 @@ generate_total_result_of_best_deck <- function(
         df_main_fun = list_of_Model_result_total_fun$All,
         df_side_fun = list_of_Model_result_total_fun$All,
         Number_of_deck = fun_parNumber_of_deck_print,
-        observ_duration = duration_en_cours
+        observ_duration = duration_en_cours,
+        Scry_fall_df_fun_around_list = db_scryfall_fun_par
       )
       
       main_and_side_combine_res <- lapply_around_table_list(
         df_main_fun = list_of_Model_result_total_fun$Mainboard,
         df_side_fun = list_of_Model_result_total_fun$Sideboard,
         Number_of_deck = fun_parNumber_of_deck_print,
-        observ_duration = duration_en_cours
+        observ_duration = duration_en_cours,
+        Scry_fall_df_fun_around_list = db_scryfall_fun_par
       )
       return( 
         list(

@@ -1,4 +1,10 @@
-format_model_list <- function(model_list) {
+format_model_list <- function(
+    model_list,
+    scry_fall_db_format_par = NULL
+    ) {
+  
+  
+  # x <- model_list[[1]]
   model_clean <- lapply(model_list, function(x) {
     # print(as.character(x$Model_any$Archetype))
     
@@ -10,6 +16,34 @@ format_model_list <- function(model_list) {
     ) {
       Model_any_encours <- NULL
     } else {
+      df_with_link_any <- 
+        data.frame(
+          CardName = colnames(
+            x$Model_any$data %>% 
+              select(
+                -any_of(c( "Wins", "Losses", "Color", "Number_of_cards"))
+              )
+          )
+        ) %>% 
+        left_join(
+          join_with_scryfall(
+            Df_with_cardname =   .,
+            cardname_col = "CardName" ,
+            scry_fall_df = scry_fall_db_format_par
+          ),
+          by = c("CardName" = "CardName")
+        ) %>%
+        inner_join(
+          scry_fall_db_format_par %>% 
+            select(id,scryfall_uri),
+          by = join_by(
+            scry_fall_id == id
+          )
+        ) %>% 
+        select(-scry_fall_id)
+      
+      
+      
       Model_any_encours <- x$Model_any %>%
         gtsummary::tbl_regression(exponentiate = TRUE) %>%
         gtsummary::bold_labels() %>%
@@ -25,7 +59,31 @@ format_model_list <- function(model_list) {
               sum(x$Model_any$data$Wins + x$Model_any$data$Losses),
               "**"
             )
-        )
+        ) %>% 
+        gtsummary::as_gt() %>% 
+      gt::text_transform(
+        locations = gt::cells_body(columns = label),
+        fn = function(x) {
+          tibble(
+            base_name = x
+          ) %>% 
+            left_join(
+              df_with_link_any,
+              by = join_by(base_name == CardName)
+            ) %>% 
+            mutate(
+              final_name = ifelse(
+                !is.na(scryfall_uri),
+                paste0(
+                  '<a href=\"',scryfall_uri,'">',base_name,'</a>'
+                ),
+                base_name
+              )
+            ) %>% pull(final_name)
+        }
+      )
+
+      
     }
     if (is.null(x$Model_count)) {
       Model_count_encours <- NULL
@@ -34,6 +92,33 @@ format_model_list <- function(model_list) {
     ) {
       Model_count_encours <- NULL
     } else {
+      
+      df_with_link_count <- 
+        data.frame(
+          CardName = colnames(
+            x$Model_count$data %>% 
+              select(
+                -any_of(c( "Wins", "Losses", "Color", "Number_of_cards"))
+              )
+          )
+        ) %>% 
+        left_join(
+          join_with_scryfall(
+            Df_with_cardname =   .,
+            cardname_col = "CardName" ,
+            scry_fall_df = scry_fall_db_format_par
+          ),
+          by = c("CardName" = "CardName")
+        ) %>%
+        inner_join(
+          scry_fall_db_format_par %>% 
+            select(id,scryfall_uri),
+          by = join_by(
+            scry_fall_id == id
+          )
+        ) %>% 
+        select(-scry_fall_id)
+      
       Model_count_encours <- x$Model_count %>%
         gtsummary::tbl_regression(exponentiate = TRUE) %>%
         gtsummary::bold_labels() %>%
@@ -49,7 +134,31 @@ format_model_list <- function(model_list) {
               sum(x$Model_count$data$Wins + x$Model_count$data$Losses),
               "**"
             )
+        ) %>% 
+        gtsummary::as_gt() %>% 
+        gt::text_transform(
+          locations = gt::cells_body(columns = label),
+          fn = function(x) {
+          tibble(
+              base_name = x
+            ) %>% 
+              left_join(
+                df_with_link_count,
+                by = join_by(base_name == CardName)
+                        ) %>% 
+              mutate(
+                final_name = ifelse(
+                  !is.na(scryfall_uri),
+                  paste0(
+                    '<a href=\"',scryfall_uri,'">',base_name,'</a>'
+                  ),
+                  base_name
+                )
+              ) %>% pull(final_name)
+          }
         )
+ 
+      
     }
     if (is.null(x$model_ridgge)) {
       Model_ridge_encours <- NULL
@@ -104,6 +213,9 @@ format_model_list <- function(model_list) {
       
       
       
+ 
+ 
+      
       
       
       DF_Model_ridge_encours <- model_format_table_ridge %>%
@@ -126,6 +238,28 @@ format_model_list <- function(model_list) {
         group_by(Card_name) %>%
         rename(` ` = quantity)
       
+
+      df_with_link_ridge <-
+        data.frame(
+          CardName = DF_Model_ridge_encours$Card_name
+        ) %>%
+        left_join(
+          join_with_scryfall(
+            Df_with_cardname =   .,
+            cardname_col = "CardName" ,
+            scry_fall_df = scry_fall_db_format_par
+          ),
+          by = c("CardName" = "CardName")
+        ) %>%
+        inner_join(
+          scry_fall_db_format_par %>%
+            select(id,scryfall_uri),
+          by = join_by(
+            scry_fall_id == id
+          )
+        ) %>%
+        select(-scry_fall_id) %>% 
+        distinct()
       
       
       Model_ridge_encours <- gt::gt(DF_Model_ridge_encours) %>%
@@ -133,29 +267,48 @@ format_model_list <- function(model_list) {
         gt::fmt_number(
           columns = -N
         ) %>%
-        gt::text_transform(
-          locations = gt::cells_row_groups(),
-          fn = function(x) {
-            lapply(x, function(x) {
-              gt::md(paste0("**", x, "**"))
-            })
-          }
-        ) %>%
         gt::cols_align(
           align = c("center"),
           columns = everything()
         ) %>%
         gt::tab_spanner(
-          label = gt::md(paste0(
-            "**", unique(model_format_table_ridge$Archetype), " N :",
+          label = gt::html(paste0(
+            "<b>", unique(model_format_table_ridge$Archetype), " N :",
             unique((DF_Model_ridge_encours %>%
                       summarise(n = sum(N)))$n),
-            "**"
+            "</b>"
           )),
           columns = everything()
+        ) %>% 
+        gt::text_transform(
+          locations = gt::cells_row_groups(),
+          fn = function(x) {
+            # print(x)
+            lapply(x, function(y) {
+           tibble(
+              base_name = y
+            ) %>% 
+              left_join(
+                df_with_link_ridge,
+                by = join_by(base_name == CardName)
+              ) %>% 
+              mutate(
+                final_name = gt::html(ifelse(
+                  !is.na(scryfall_uri),
+                  paste0(
+                    '<a href=\"',scryfall_uri,'"><b>',base_name,'</b></a>'
+                  ),
+                  paste0('<b>',base_name,"</b>")
+                ))
+              )  %>%
+             pull(final_name)
+           
+            })
+          }
         )
+        
     }
-    
+
     
     return(
       list(
@@ -371,7 +524,9 @@ Generate_and_format_model_result <-
     deck_or_side,
     type_of_archetype,
     land_name_fun,
-    min_number_of_cards = min_sample_size_5) {
+    min_number_of_cards = min_sample_size_5,
+    db_scryfall_fun_par
+    ) {
     result_pre_treatement <- Prepare_df_for_long_for_model(
       df_base_fun = df_base_fun,
       min_arch_presence_fun = filter_archetype_count_5,
@@ -395,7 +550,10 @@ Generate_and_format_model_result <-
       name_list_of_model_with_string(unique(DF_prepare_for_model$group_com_unco_cards_res$Archetype))
     
     
-    uncomon_card_format_model <- format_model_list(result_models_Uncommon_cards_all_arch) %>%
+    uncomon_card_format_model <- format_model_list(
+      model_list = result_models_Uncommon_cards_all_arch,
+      scry_fall_db_format_par = db_scryfall_fun_par
+      ) %>%
       name_list_of_model_with_string(unique(DF_prepare_for_model$group_com_unco_cards_res$Archetype))
     
     
@@ -417,12 +575,13 @@ Generate_and_format_model_result <-
       )
     )
   }
-
+################################################################################
 
 print_result_total_script_deck_ana <- function(
     res_main,
     res_side,
     iteration) {
+  
   temp_df_to_print <- res_main$Df_base_number_to_print_res %>%
     filter(Archetype == iteration)
   
@@ -472,25 +631,29 @@ print_result_total_script_deck_ana <- function(
     pander::pandoc.p("::: {.panel-tabset .nav-pills}")
     if (!is.null(res_main$uncomon_card_format_model_res[[iteration]]$Model_any)) {
       pander::pandoc.header("Any", level = 5)
-      flextable::flextable_to_rmd(
-        res_main$uncomon_card_format_model_res[[iteration]]$Model_any %>%
-          gtsummary::as_flex_table()
-      )
+      
+      print(htmltools::tagList(
+        res_main$uncomon_card_format_model_res[[iteration]]$Model_any
+      ))
     }
+    
     pander::pandoc.p("")
     pander::pandoc.p("")
     if (!is.null(res_main$uncomon_card_format_model_res[[iteration]]$Model_count)) {
       pander::pandoc.header("Count", level = 5)
-      flextable::flextable_to_rmd(
-        res_main$uncomon_card_format_model_res[[iteration]]$Model_count %>%
-          gtsummary::as_flex_table()
-      )
+      
+       print(htmltools::tagList(
+        res_main$uncomon_card_format_model_res[[iteration]]$Model_count
+      ))
     }
     pander::pandoc.p("")
     if (!is.null(res_main$uncomon_card_format_model_res[[iteration]]$model_ridge)) {
       pander::pandoc.header("Ridge", level = 5)
       print(
-        htmltools::tagList(res_main$uncomon_card_format_model_res[[iteration]]$model_ridge))
+        htmltools::tagList(
+          res_main$uncomon_card_format_model_res[[iteration]]$model_ridge
+          )
+        )
       
     }
     pander::pandoc.p(":::")
@@ -534,31 +697,25 @@ print_result_total_script_deck_ana <- function(
     pander::pandoc.p("")
     pander::pandoc.p("Cards not always in deck using binomial regression for WR")
     pander::pandoc.p("")
-    #     pander::pandoc.p(':::::::::::::: {.columns}
-    # ::: {.column width="50%"}')
-    
     pander::pandoc.p("::: {.panel-tabset .nav-pills}")
     if (!is.null(
       res_side$uncomon_card_format_model_res[[iteration]]$Model_any
     )) {
       pander::pandoc.header("Any", level = 5)
-      flextable::flextable_to_rmd(
-        res_side$uncomon_card_format_model_res[[iteration]]$Model_any %>%
-          gtsummary::as_flex_table()
-      )
+      
+      print(htmltools::tagList(
+        res_side$uncomon_card_format_model_res[[iteration]]$Model_any
+      ))
+      
     }
-    # pander::pandoc.p(":::")
-    #
-    # pander::pandoc.p('::: {.column width="50%"}')
     pander::pandoc.p("")
     if (!is.null(
       res_side$uncomon_card_format_model_res[[iteration]]$Model_count
     )) {
       pander::pandoc.header("Count", level = 5)
-      flextable::flextable_to_rmd(
-        res_side$uncomon_card_format_model_res[[iteration]]$Model_count %>%
-          gtsummary::as_flex_table()
-      )
+      print(htmltools::tagList(
+        res_side$uncomon_card_format_model_res[[iteration]]$Model_count
+      ))
     }
     pander::pandoc.p("")
     if (!is.null(

@@ -47,12 +47,10 @@ path_collection <-
       )
 ```
 
-
 ```{r}
 knitr::opts_chunk$set(
   eval = length(path_collection) > 0
 )
-
 ```
 
 
@@ -267,8 +265,21 @@ Summary_missing_cards_by_archetype <-
  # print(
       htmltools::tagList(
       DT::datatable( 
-        Summary_missing_cards_by_archetype,
+        Summary_missing_cards_by_archetype %>% 
+          mutate(
+            Archetype =as.factor(Archetype)
+                 ),
         colnames = str_replace_all(colnames(Summary_missing_cards_by_archetype), "_", " "),
+          callback = DT::JS(
+#     paste0(
+#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+      return_filter_js()
+    ),
   filter = "top", rownames = FALSE,
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
 ) %>% 
@@ -331,7 +342,7 @@ htmltools::tagList(
 ),
 by = c("CardName" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri,starts_with("colors.")),
     by = join_by(
@@ -342,7 +353,8 @@ by = c("CardName" = "CardName")
     colors = as.factor(pmap_chr(
       list(colors.1, colors.2, colors.3, colors.4, colors.5),
       ~ paste0(na.omit(c(...)), collapse = "")
-    ))
+    )),
+    CardName = as.factor(CardName)
   ) %>% 
   select(-starts_with("colors.")) %>%  
 add_link_to_a_column(
@@ -351,7 +363,22 @@ add_link_to_a_column(
   link_column = "scryfall_uri"
 ) %>%
   select(-scry_fall_id),
-        colnames = str_replace_all(colnames(Summary_missing_cards_aggregate), "_", " "),
+        colnames = str_replace_all(
+          c(
+            "link",
+            colnames(Summary_missing_cards_aggregate),
+             "colors"
+            ), "_", " "),
+  callback = DT::JS(
+#     paste0(
+#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+      return_filter_js()
+    ),
   filter = "top",
   rownames = FALSE,
   options = list(
@@ -465,7 +492,7 @@ for (i in Archetype_list) {
 ),
 by = c("CardName" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri,starts_with("colors.")),
     by = join_by(
@@ -476,7 +503,8 @@ by = c("CardName" = "CardName")
     colors = as.factor(pmap_chr(
       list(colors.1, colors.2, colors.3, colors.4, colors.5),
       ~ paste0(na.omit(c(...)), collapse = "")
-    ))
+    )),
+    CardName = as.factor(CardName)
   ) %>% 
   select(-starts_with("colors.")) %>% 
 add_link_to_a_column(
@@ -487,10 +515,24 @@ add_link_to_a_column(
   select(-scry_fall_id) %>% 
     mutate(across(where(is.factor),as.factor)) %>% 
     arrange(desc(Number_of_time_missing)),
-   colnames = str_replace_all(colnames(
+   colnames = str_replace_all(c("link",
+                                colnames(
      not_own_car_by_archetype %>% 
-       select(-Archetype)), "_", " "),
-  filter = "top", rownames = FALSE,
+       select(-Archetype)
+     ),
+             "colors"), "_", " "),
+  callback = DT::JS(
+#     paste0(
+#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+      return_filter_js()
+    ),
+  filter = "top",
+rownames = FALSE,
   # extensions = c("SearchBuilder", "DateTime"),
   options = list(
     dom = "ltipr", 
@@ -603,7 +645,7 @@ htmltools::tagList(
 ),
 by = c("CardName" = "CardName")
   ) %>%
-  inner_join(
+  left_join(
     modern_DB_card %>% 
       select(id,scryfall_uri,starts_with("colors.")),
     by = join_by(
@@ -614,7 +656,8 @@ by = c("CardName" = "CardName")
     colors = as.factor(pmap_chr(
       list(colors.1, colors.2, colors.3, colors.4, colors.5),
       ~ paste0(na.omit(c(...)), collapse = "")
-    ))
+    )),
+    CardName = as.factor(CardName)
   ) %>% 
   select(-starts_with("colors.")) %>% 
 add_link_to_a_column(
@@ -623,9 +666,21 @@ add_link_to_a_column(
   link_column = "scryfall_uri"
 ) %>%
   select(-scry_fall_id),
-  colnames = str_replace_all(colnames(
-     base_archetype_not_owned), "_", " "),
-  filter = "top", rownames = FALSE,
+  colnames = str_replace_all(c("link",colnames(
+     base_archetype_not_owned),
+             "colors"), "_", " "),
+  callback = DT::JS(
+#     paste0(
+#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+      return_filter_js()
+    ),
+  filter = "top",
+rownames = FALSE,
   # extensions = c("SearchBuilder", "DateTime"),
   options = list(
     dom = "ltipr", 
@@ -639,7 +694,8 @@ add_link_to_a_column(
   ),
     autoWidth = TRUE, 
     pageLength = 25
-    ),escape = FALSE
+    ),
+escape = FALSE
 ) %>% 
   DT::formatPercentage(c("Base_Archetype_count"),digits = 1)
 )

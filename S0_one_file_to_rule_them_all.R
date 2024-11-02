@@ -10,7 +10,9 @@ format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
 
 ################################################################################
 ############### easy debug just init with one format to run script #############
-i <- 1
+## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
+
+i <- 3
 format_date_en_cours <- format_date_en_cours_fulltable[i, ]
 print(format_date_en_cours$format_param)
 readr::write_rds(
@@ -226,11 +228,12 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
   # # debug purpose
   # quarto::quarto_render(
-  #   "rmd_files/2_presence_archetype.qmd",
+  #   "rmd_files/5_Deck_analysis.qmd",
   #   output_format = "html",
   #   profile = "basic",
   #   as_job = FALSE
   # )
+
   # quarto::quarto_render(
   #   "rmd_files/1_new_card.qmd",
   #   output_format = "html",
@@ -238,7 +241,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   #   as_job = FALSE
   # )
   # quarto::quarto_render(
-  #   "rmd_files/1_2_debug_archetype.qmd",
+  #   "rmd_files/1_1_collection_analysis.qmd",
   #   output_format = "html",
   #   profile = "fb",
   #   as_job = FALSE
@@ -279,10 +282,10 @@ rmarkdown::render(
 
 
 
-if (file.exists("ssh_key/id_rsa")) {
+if (file.exists("other_file/ssh_key/id_rsa")) {
   session <- ssh::ssh_connect(
     "francois@176.31.183.129", 
-    keyfile = "ssh_key/id_rsa"
+    keyfile = "other_file/ssh_key/id_rsa"
     )
   ssh::scp_upload(
     session, files = list.files("outpout/", full.names = TRUE),

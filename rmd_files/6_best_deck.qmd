@@ -98,14 +98,21 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 ```{r compute_res_arch}
-total_result_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(fun_par_df = df_export,
+total_result_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(
+  fun_par_df = df_export,
 fun_parmin_arch_presence_fun = filter_archetype_count_6,
-fun_pardeck_or_side = c("All","Mainboard" ,"Sideboard"),
+fun_pardeck_or_side = c(
+  "All","Mainboard" ,"Sideboard"
+  ),
 fun_partype_of_archetype = "Archetype",# "Archetype" "Base_Archetype"
 fun_parland_name_fun = Land_modern,
 fun_parmin_number_of_cards = min_sample_size_6,
-fun_parnumber_of_week = c(Inf,2),
-fun_parNumber_of_deck_print = Number_of_deck)
+fun_parnumber_of_week = c(
+  Inf,2
+  ),
+fun_parNumber_of_deck_print = Number_of_deck,
+  db_scryfall_fun_par = modern_DB_card
+)
 ```
 
 
@@ -165,14 +172,17 @@ twoweeks_data_best_deck_arch_print_res <-
 # Base Archetype
 
 ```{r compute_res_base_arch}
-total_result_base_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(fun_par_df = df_export,
+total_result_base_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(
+  fun_par_df = df_export,
 fun_parmin_arch_presence_fun = filter_archetype_count_6,
 fun_pardeck_or_side = c("All","Mainboard" ,"Sideboard"),
 fun_partype_of_archetype = "Base_Archetype",# "Archetype" "Base_Archetype"
 fun_parland_name_fun = Land_modern,
 fun_parmin_number_of_cards = min_sample_size_6,
 fun_parnumber_of_week = c(Inf,2),
-fun_parNumber_of_deck_print = Number_of_deck)
+fun_parNumber_of_deck_print = Number_of_deck,
+  db_scryfall_fun_par = modern_DB_card
+)
 ```
 
 

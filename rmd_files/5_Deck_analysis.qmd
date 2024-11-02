@@ -69,15 +69,6 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 
-```{r}
-# Manque visual représentation of deck
-
-# Projet detection automatiques des cartes nested par exemple : felidar et sahelli  dans l'idéal devrait détecter zulaport et bloodartist
-
-# check with codetools::checkUsage(f) and all fun
-```
-
-
 
 # Archetype
 
@@ -89,7 +80,8 @@ Main_res_Archetype <- Generate_and_format_model_result(
   deck_or_side = "Mainboard", # "Mainboard" "Sideboard" "All
   type_of_archetype = "Archetype", # "Archetype" "Base_Archetype"
   land_name_fun = Land_modern,
-  min_number_of_cards = min_sample_size_5
+  min_number_of_cards = min_sample_size_5,
+  db_scryfall_fun_par = modern_DB_card
 )
 
 Side_res_Archetype <- Generate_and_format_model_result(
@@ -98,15 +90,17 @@ Side_res_Archetype <- Generate_and_format_model_result(
   deck_or_side = "Sideboard", # "Mainboard" "Sideboard" "All
   type_of_archetype = "Archetype", # "Archetype" "Base_Archetype"
   land_name_fun = Land_modern,
-  min_number_of_cards = min_sample_size_5
+  min_number_of_cards = min_sample_size_5,
+  db_scryfall_fun_par = modern_DB_card
 )
 ```
 
 
 ```{r print_result_arch, results='asis', out.width="100%"}
 if (is_inside_knitr()) {
+  # x <- sort(Main_res_Archetype$list_archetype)[1]
   res_arch <- lapply(sort(Main_res_Archetype$list_archetype), function(x) {
-    # print(x)
+     print(x)
     print_result_total_script_deck_ana(
       res_main = Main_res_Archetype,
       res_side = Side_res_Archetype,
@@ -127,7 +121,8 @@ Main_res_base_archetype <- Generate_and_format_model_result(
   deck_or_side = "Mainboard",
   type_of_archetype = "Base_Archetype", # "Archetype" "Base_Archetype"
   land_name_fun = Land_modern,
-  min_number_of_cards = min_sample_size_5
+  min_number_of_cards = min_sample_size_5,
+  db_scryfall_fun_par = modern_DB_card
 )
 
 Side_res_base_archetype <- Generate_and_format_model_result(
@@ -136,7 +131,8 @@ Side_res_base_archetype <- Generate_and_format_model_result(
   deck_or_side = "Sideboard",
   type_of_archetype = "Base_Archetype", # "Archetype" "Base_Archetype"
   land_name_fun = Land_modern,
-  min_number_of_cards = min_sample_size_5
+  min_number_of_cards = min_sample_size_5,
+  db_scryfall_fun_par = modern_DB_card
 )
 ```
 

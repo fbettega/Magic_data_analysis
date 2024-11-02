@@ -2048,7 +2048,8 @@ join_with_scryfall <- function(
 add_link_to_a_column <- function(
     df_add_link_fun ,# =   a,
     column_where_is_add, #= "link", #"link",
-    link_column #= "scryfall_uri",  , mode # type of link not use now
+    link_column, #= "scryfall_uri",  , 
+    mode = "html" # type of link not use now
 ){
   result_with_link <- df_add_link_fun %>% 
     mutate(!!rlang::sym(paste0(link_column)) := 
@@ -2058,14 +2059,43 @@ add_link_to_a_column <- function(
     {if (!column_where_is_add %in% colnames(.)) mutate(.,
                                                        !!rlang::sym(paste0(column_where_is_add)) := "link",
                                                        .before = 1
-    ) else .} %>% 
-    mutate(
-      !!rlang::sym(paste0(column_where_is_add)) := paste0(
-        '<a href=\"',!!rlang::sym(paste0(link_column)),'">',!!rlang::sym(paste0(column_where_is_add)),'</a>'
-      )
-    ) %>% 
-    select(-any_of(link_column))
+    ) else .}
   
+  
+  # create link
+  if(mode == "html"){
+    res <-  result_with_link  %>% 
+      mutate(
+        
+        !!rlang::sym(paste0(column_where_is_add)) := ifelse(
+          is.na(!!rlang::sym(paste0(link_column))),
+          paste0(!!rlang::sym(paste0(column_where_is_add))),
+          
+          paste0(
+            '<a href=\"',!!rlang::sym(paste0(link_column)),'">',!!rlang::sym(paste0(column_where_is_add)),'</a>'
+          ))
+      ) %>% 
+      select(-any_of(link_column))
+  } else if(mode == "md"){
+    res <-  result_with_link  %>% 
+      mutate(
+        
+        !!rlang::sym(paste0(column_where_is_add)) := ifelse(
+          is.na(!!rlang::sym(paste0(link_column))),
+          paste0(!!rlang::sym(paste0(column_where_is_add))),
+          
+          paste0(
+            "[",!!rlang::sym(paste0(column_where_is_add)),'](',!!rlang::sym(paste0(link_column)),')'
+          ))
+      ) %>% 
+      select(-any_of(link_column))
+    
+    
+    
+  }
+  
+
+  return(res)
   
 }
 
