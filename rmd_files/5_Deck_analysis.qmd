@@ -56,7 +56,7 @@ df_export <- readRDS(paste0("../data/", params$format_param, "_data_meta_en_cour
   mutate(
     Archetype_count = n()
   ) %>%
-  filter(Archetype != "Unknown")
+  filter(Archetype != "Unknown") 
 ```
 
 ```{r}
@@ -73,7 +73,7 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 # Archetype
 
 
-```{r result_archetype}
+```{r result_archetype_mainboard}
 Main_res_Archetype <- Generate_and_format_model_result(
   df_base_fun = df_export,
   min_arch_presence_fun = filter_archetype_count_5,
@@ -83,6 +83,9 @@ Main_res_Archetype <- Generate_and_format_model_result(
   min_number_of_cards = min_sample_size_5,
   db_scryfall_fun_par = modern_DB_card
 )
+```
+
+```{r result_archetype_sideboard}
 
 Side_res_Archetype <- Generate_and_format_model_result(
   df_base_fun = df_export,
@@ -96,14 +99,17 @@ Side_res_Archetype <- Generate_and_format_model_result(
 ```
 
 
-```{r print_result_arch, results='asis', out.width="100%"}
+
+```{r print_result_arch, results='asis'}
+#, out.width="100%"
 if (is_inside_knitr()) {
   # x <- sort(Main_res_Archetype$list_archetype)[1]
   res_arch <- lapply(sort(Main_res_Archetype$list_archetype), function(x) {
-     print(x)
+     # print(x)
     print_result_total_script_deck_ana(
       res_main = Main_res_Archetype,
       res_side = Side_res_Archetype,
+      scryfall_db = modern_DB_card,
       iteration = x
     )
   })
@@ -114,7 +120,7 @@ if (is_inside_knitr()) {
 # Base archetype  
 
 
-```{r result_base_archetype}
+```{r result_base_archetype_main_board}
 Main_res_base_archetype <- Generate_and_format_model_result(
   df_base_fun = df_export,
   min_arch_presence_fun = filter_archetype_count_5,
@@ -125,6 +131,10 @@ Main_res_base_archetype <- Generate_and_format_model_result(
   db_scryfall_fun_par = modern_DB_card
 )
 
+
+```
+
+```{r result_base_archetype_side_board}
 Side_res_base_archetype <- Generate_and_format_model_result(
   df_base_fun = df_export,
   min_arch_presence_fun = filter_archetype_count_5,
@@ -136,13 +146,15 @@ Side_res_base_archetype <- Generate_and_format_model_result(
 )
 ```
 
+```{r print_result_base_arch, results='asis'}
+#, out.width="100%"
 
-```{r print_result_base_arch, results='asis', out.width="100%"}
 if (is_inside_knitr()) {
   res_base_arch <- lapply(sort(Main_res_base_archetype$list_archetype), function(x) {
     print_result_total_script_deck_ana(
       res_main = Main_res_base_archetype,
       res_side = Side_res_base_archetype,
+      scryfall_db = modern_DB_card,
       iteration = x
     )
   })

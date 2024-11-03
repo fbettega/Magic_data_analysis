@@ -12,13 +12,13 @@ format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
 ############### easy debug just init with one format to run script #############
 ## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
 
-i <- 3
-format_date_en_cours <- format_date_en_cours_fulltable[i, ]
-print(format_date_en_cours$format_param)
-readr::write_rds(
-  format_date_en_cours,
-  "data/intermediate_result/temp_format_encours_for_param.rds"
-)
+# i <- 5
+# format_date_en_cours <- format_date_en_cours_fulltable[i, ]
+# print(format_date_en_cours$format_param)
+# readr::write_rds(
+#   format_date_en_cours,
+#   "data/intermediate_result/temp_format_encours_for_param.rds"
+# )
 ################################################################################
 
 log_df <- read.csv("other_file/log_run.csv")
@@ -119,6 +119,13 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
       recursive = TRUE
       )
   }
+  if (!dir.exists(paste0("outpout/", format_date_en_cours$format_param,"/debug"))) {
+    dir.create(
+      paste0("outpout/", format_date_en_cours$format_param,"/debug"),
+      recursive = TRUE
+    )
+  }
+  
   
   eddit_yaml(format_date_en_cours)
 

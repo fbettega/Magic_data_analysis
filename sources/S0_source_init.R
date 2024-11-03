@@ -101,7 +101,7 @@ eddit_yaml <- function(format_date_en_cours_fun){
   quarto_fun_fb <- read_yaml("other_file/_quarto-fb.yml")
   quarto_fun_fb$project$`output-dir` <- paste0(
     quarto_fun_fb$project$`output-dir`,
-    "/", format_date_en_cours_fun$format_param
+    "/", format_date_en_cours_fun$format_param,"/debug"
   )
   
   
