@@ -215,6 +215,10 @@ fall_back_list <- lapply(
 
 }
 
+if(  length(list.files(
+  paste0("ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"_FB/Archetypes/"),
+  full.names = TRUE
+)) > 0 ){
 Archetype_parser_list <- lapply(
   list.files(
     paste0("ArchetypeParser/MTGOFormatData_FB/Formats/",format_param,"_FB/Archetypes/"),
@@ -266,7 +270,7 @@ Archetype_parser_list <- lapply(
     join_name =  str_remove_all(str_remove_all(Name,"\\s+"),"Generic")
   ) 
 
-
+}
 
 
 # acdd exeception if fallback name = archetype name 
@@ -279,9 +283,12 @@ Archetype_parser_list <- lapply(
 
 
 
-json_parsing <- fromJSON(file = paste0("data/intermediate_result/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
+json_parsing <- fromJSON(file = paste0(
+  "data/intermediate_result/parser_outpout/",
+  format_date_en_cours$format_param,"_",
+  "data.json"
+  )
                          )
-
 
 # df_export_pre_60_filter
 df_export_pre_60_filter <- json_parsing %>%

@@ -12,9 +12,8 @@ format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
 ############### easy debug just init with one format to run script #############
 ## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
 
-# i <- 5
+# i <- 3
 # format_date_en_cours <- format_date_en_cours_fulltable[i, ]
-# print(format_date_en_cours$format_param)
 # readr::write_rds(
 #   format_date_en_cours,
 #   "data/intermediate_result/temp_format_encours_for_param.rds"
@@ -83,17 +82,6 @@ log_df <- log_df_fun(
 tictoc::tic.clearlog()
 
 
-# log_df <- data.frame(
-#   date_run = as.character(as.Date(Sys.time())),
-#   format = format_date_en_cours$format_param,
-#   log.txt = tictoc::tic.log(format = TRUE)
-# )
-
-# i <- 1
-# i <- 3
-
-
-
 
 for (i in 1:nrow(format_date_en_cours_fulltable)) {
   format_date_en_cours <- format_date_en_cours_fulltable[i, ]
@@ -135,6 +123,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     "./MTGOArchetypeParser.App.exe json detect",
     "ArchetypeParser/"
   )
+  
   
   file.rename(from = paste0("ArchetypeParser/",format_date_en_cours$format_param,"_","data.json"),
               to = paste0("data/intermediate_result/parser_outpout/",format_date_en_cours$format_param,"_","data.json")
@@ -234,19 +223,12 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   # # debug purpose
-  # quarto::quarto_render(
-  #   "rmd_files/5_Deck_analysis.qmd",
-  #   output_format = "html",
-  #   profile = "basic",
-  #   as_job = FALSE
-  # )
-
-  # quarto::quarto_render(
-  #   "rmd_files/1_new_card.qmd",
-  #   output_format = "html",
-  #   profile = "basic",
-  #   as_job = FALSE
-  # )
+  quarto::quarto_render(
+    "rmd_files/7_last_weeks_winners.qmd",
+    output_format = "html",
+    profile = "basic",
+    as_job = FALSE
+  )
   # quarto::quarto_render(
   #   "rmd_files/1_1_collection_analysis.qmd",
   #   output_format = "html",

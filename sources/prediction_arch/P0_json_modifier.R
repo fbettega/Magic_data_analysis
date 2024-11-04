@@ -1,7 +1,8 @@
 library("rjson")
 library(tidyverse)
 
-
+# format_param <- format_date_en_cours$format_param
+# date_cut <- format_date_en_cours$date_cutoff
 
 
 unlink(
@@ -38,8 +39,11 @@ settings_parser <- fromJSON(
 # date_cut <- format_date_en_cours$date_cutoff
 
 # keep based data to have a reference format and suffix data without color with FB
+if(format_param != "Duel_commander"){
+  
 settings_parser$Format <- paste0(format_param,"_FB")
 settings_parser$ReferenceFormat <- format_param
+}
 
 # if periode of interst greater than 6 month -> periode of interest 
 # if not last 6 month
@@ -51,8 +55,13 @@ settings_parser$startdate <- as.character(min_date)
 
 
 settings_parser$outputfile <- paste0(format_param, "_", settings_parser$outputfile)
-settings_parser$Filter[[1]] <- format_param
 
+
+if(format_param != "Duel_commander"){
+  settings_parser$Filter[[1]] <- format_param
+}else{
+  settings_parser$Filter[[1]] <- ""
+}
 
 
 write(toJSON(settings_parser, indent = 2), "ArchetypeParser/settings.json")

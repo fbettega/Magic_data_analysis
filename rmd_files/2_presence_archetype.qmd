@@ -109,9 +109,15 @@ Presence_df_base_all_data <- Presence_df_base %>%
   )
 
 # Plot color scales
-colors_scales_presence <- scheme$hex(
+colors_scales_presence_arch <- scheme$hex(
+  length(levels(Presence_df_base_all_data$Archetype))
+)
+
+
+colors_scales_presence_base_arch <- scheme$hex(
   length(levels(Presence_df_base_all_data$Base_Archetype))
 )
+
 
 
 one_week_inline <- Presence_df_base_all_data %>%
@@ -130,6 +136,8 @@ one_month_inline <- Presence_df_base_all_data %>%
     Week > (max(Week) - 5)
   )
 ```
+
+
 
 ```{r}
 spaghetti_plot_df <- Presence_df_base %>%
@@ -234,9 +242,7 @@ plot_archetype_spaghetti <- (ggplot(
                     )
   ) +
   scale_color_manual(
-    values = colors_scales_presence[1:length(
-      unique(spaghetti_plot_df$Base_Archetype)
-    )]
+    values = colors_scales_presence_arch
   ) +
   ylab("Archetype presence") +
   scale_y_continuous(labels = function(x) scales::percent(x))
@@ -293,9 +299,7 @@ plot_base_archetype_spaghetti <- (ggplot(
                     )
   ) +
   scale_color_manual(
-    values = colors_scales_presence[1:length(
-      unique(spaghetti_plot_df$Base_Archetype)
-    )]
+    values = colors_scales_presence_base_arch
   ) +
   ylab("Archetype presence") +
   scale_y_continuous(labels = function(x) scales::percent(x))
@@ -337,7 +341,7 @@ plot_base_archetype_spaghetti %>%
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
-  color_scheme = colors_scales_presence,
+  color_scheme = colors_scales_presence_base_arch,
   time_limit = Inf,
   compare_time_limit = NULL,
   plot_scaling = ratio_plot
@@ -355,7 +359,7 @@ plot_presence_fun(
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
-  color_scheme = colors_scales_presence,
+  color_scheme = colors_scales_presence_base_arch,
   time_limit = 5,
   compare_time_limit = Inf,
   plot_scaling = ratio_plot
@@ -377,7 +381,7 @@ plot_presence_fun(
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
-  color_scheme = colors_scales_presence,
+  color_scheme = colors_scales_presence_base_arch,
   time_limit = 3,
   compare_time_limit = 5,
   plot_scaling = ratio_plot
@@ -398,7 +402,7 @@ plot_presence_fun(
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
-  color_scheme = colors_scales_presence,
+  color_scheme = colors_scales_presence_base_arch,
   time_limit = 2,
   compare_time_limit = 5,
   plot_scaling = ratio_plot
@@ -712,6 +716,7 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
   ) %>% bslib::card(full_screen = TRUE)
 ```
 :::
+
 
 # Number of copy of each cards 
 

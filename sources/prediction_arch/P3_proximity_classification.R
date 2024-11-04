@@ -12,7 +12,8 @@ library(future)
 source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 # library("ggdendro")
 
-
+# format_param <- format_date_en_cours$format_param
+# date_cut <- format_date_en_cours$date_cutoff
 
 grouping_close_df <- function(
     df = Grouping_dist_matrix
@@ -46,8 +47,7 @@ grouping_close_df <- function(
   return(already_select_arch)
 }
 
-# format_param <- format_date_en_cours$format_param
-# date_cut <- format_date_en_cours$date_cutoff
+
 
 
 

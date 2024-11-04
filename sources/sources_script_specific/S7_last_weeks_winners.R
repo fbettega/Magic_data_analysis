@@ -208,36 +208,30 @@ fun_print_tournament <- function(
       pander::pandoc.header("Presence plot", level = 3)
       pander::pandoc.p("")
       pander::pandoc.p("")
-      # print(
-      # htmltools::tagList(
-      #   # as.widget(
-      # # cat(
-      # #   knitr::knit_print(
-      #   total_result_fun[[u]]$plot$plot_prez
-      #    )
-      #    )
       
-      
-      
-      # solution to force inclusion of plotly in loop but lead to really large files
-      htmlwidgets::saveWidget(
-        total_result_fun[[u]]$plot$plot_prez,
-        paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
-               iteration,
-               tournament_file_fun[[iteration]][u],".html"),
-        selfcontained = TRUE)
       
       print(
-        htmltools::includeHTML(
-          paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
-                 iteration,
-                 tournament_file_fun[[iteration]][u],".html"))
-      )
+      htmltools::tagList(
+        ggplotly(total_result_fun[[u]]$plot$plot_prez)
+         )
+         )
+
       
-      
-      
-      
+      # solution to force inclusion of plotly in loop but lead to really large files
+      # htmlwidgets::saveWidget(
+      #   total_result_fun[[u]]$plot$plot_prez,
+      #   paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
+      #          iteration,
+      #          tournament_file_fun[[iteration]][u],".html"),
+      #   selfcontained = TRUE)
+
+      # print(
+      #   htmltools::includeHTML(
+      #     paste0("../data/intermediate_result/temp_html_outpout/temp7plot/",
+      #            iteration,
+      #            tournament_file_fun[[iteration]][u],".html"))
       # )
+      
       pander::pandoc.p("")
       pander::pandoc.p("")
       pander::pandoc.header("Top 8 list", level = 3)

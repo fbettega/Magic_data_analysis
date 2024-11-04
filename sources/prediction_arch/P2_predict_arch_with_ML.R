@@ -14,7 +14,8 @@ source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 # scale_this <- function(x){
 #   (x - mean(x, na.rm=TRUE)) / sd(x, na.rm=TRUE)
 # }
-
+# format_param <- format_date_en_cours$format_param
+# date_cut <- format_date_en_cours$date_cutoff
 
 
 

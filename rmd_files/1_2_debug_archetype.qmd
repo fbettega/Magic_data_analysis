@@ -1,5 +1,5 @@
 ---
-title: "Collection Tracker"
+title: "Archetype definition and other debug results"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 

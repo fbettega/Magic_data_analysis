@@ -13,14 +13,6 @@ conflicted::conflicts_prefer(dplyr::lag)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 source("../sources/sources_script_specific/S7_last_weeks_winners.R",local = TRUE)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
-# loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
-
-# modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
-#     filter(
-#         !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-#     )
-
-# sample size minimum pour etre un groupe
 
 
 df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
@@ -137,8 +129,6 @@ TournamentFile_by_week <- lapply(unique(Tournament_of_interest_df$Week),function
 ```
 
 
-
-
 ```{r sources_introduction}
 knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
@@ -149,30 +139,10 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 
-```{r dependancy_test}
-# Init Step to make sure that the dependencies are loaded
-# htmltools::tagList(datatable(cars))
-# htmltools::tagList(ggplotly(ggplot()))
+```{r include=FALSE}
+# Init step to include the JS dependencies
+plot_ly()
 ```
-
-
-```{r}
-
-
-
-
-# htmlwidgets::saveWidget(
-#   total_result[[u]]$plot$plot_prez, 
-#   paste0("../data/intermediate_result/temp_html_outpout/",
-#          i,
-#          TournamentFile_by_week[[i]][u],".html"),
-# selfcontained = TRUE)
-
-
-
-```
-
-
 
 ```{r,  results='asis'}
 # this week
@@ -186,11 +156,6 @@ fun_print_tournament(
     iteration = i)
  })
 
-  unlink(
-    list.files("../data/intermediate_result/temp_html_outpout/temp7plot/",
-               full.names = TRUE
-               ),recursive = TRUE
-  )
 ```
 
 
