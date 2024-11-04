@@ -90,7 +90,7 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 ```
 
 
-```{r}
+```{r run_main_result}
 # x <- unique(Tournament_of_interest_df$TournamentFile)# "modern-challenge-64-2024-09-2912692965"
 
 total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
@@ -139,22 +139,23 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 
-```{r include=FALSE}
+```{r plotly_dependencies, include=FALSE}
 # Init step to include the JS dependencies
 plot_ly()
 ```
 
-```{r,  results='asis'}
+```{r print_result,  results='asis'}
 # this week
 # last week
 # two weeks ago
 print_res_winning_deck <- lapply(seq_along(TournamentFile_by_week),function(i){
-  
-fun_print_tournament(
-    tournament_file_fun =TournamentFile_by_week ,
+  fun_print_tournament(
+    tournament_file_fun = TournamentFile_by_week ,
     total_result_fun = total_result,
-    iteration = i)
- })
+    iteration = i
+    )
+ }
+)
 
 ```
 

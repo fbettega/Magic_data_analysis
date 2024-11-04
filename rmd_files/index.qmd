@@ -29,7 +29,7 @@ Thanks to [Badaro](https://github.com/Badaro) for his data collection work and t
 Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.
 Thanks to [Jiliac](https://github.com/Jiliac) for integrating Qonfused data and maintaining Format data.  
 
-```{r}
+```{r data_reading}
 proportion_format_fun <- function(nb,tot){
   percent = round(nb*100/tot,1)
   res <- paste0(nb,"/",tot,"(",percent,"%)")
@@ -84,22 +84,6 @@ Table_with_arch_count_and_sub_count <- df_export %>%
 
 ```
 
-
-
-
-
-<!---
-Reste a détailler le groupement probablement tableau
--->
-
-<!---
-CI computation
--->
-<!---
-Type of tournament 
-<!---
-Tournament with matchup
--->
 
 
 # Principal chapter
@@ -186,7 +170,7 @@ Then the ‘unknown’ decks or decks with an archetype with low sample size wer
 
 
 
-```{r results='asis'}
+```{r Archetype_prediction_table,results='asis'}
 title_table <- paste0("**Tabler summarise how the archetypes are aggregated**")
 
 Subtitle <- paste0(
@@ -242,7 +226,7 @@ Table_with_arch_count_and_sub_count  %>%
 
 
 
-```{r}
+```{r invalide_deck_print}
 # recalculer les quatités ..... TODO
 title_table_invalide <- paste0(
   "**Invalid deck (< 60 cards) Tabler summarise how the archetypes are aggregated**"
@@ -297,7 +281,7 @@ Table_with_arch_count_and_sub_count  %>%
 If the median jaccard distance between 2 archetypes is smaller than the 3 quartiles of the internal distance within the archetype, these 2 archetypes will be grouped together.
 The table below shows the grouped archetypes:
 
-```{r results='asis'}
+```{r proximity_table_print,results='asis'}
 proximty_classif <- read.csv(
   paste0("../data/intermediate_result/",
          params$format_param,"_proxymity_archetype_group.csv")) 

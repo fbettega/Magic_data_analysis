@@ -26,8 +26,6 @@ refetch_cards_new_set <- FALSE
 
 
 ```{r data_reading }
-
-
 df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
   # include filter bad deck
   filter(Valide_deck) %>%
@@ -40,40 +38,26 @@ df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.
   ) %>%
   ungroup()
 
-
-# formatmodif
+```
+```{r scry_fall_db_reading}
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
    filter(
      !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
      )
- 
 ```
 
 
-```{r}
+```{r possible_set}
 set_code_help_search <- modern_DB_card %>%
   arrange(desc(released_at)) %>%
   select(released_at, set) %>%
   distinct(set, .keep_all = TRUE) 
-
-
-
-## all code to pull cards new to moder
-# if (refetch_cards_new_set) {
-#   cards_in_set_of_interest <- scry_cards(
-#     paste0("e:",set_code_help_search$set %>% head(7),collapse = " or ")
-#     # "e:mh3"
-#     )
-#   cards_in_set_of_interest_name <- cards_in_set_of_interest$name
-#   write_rds(cards_in_set_of_interest_name,"../data/intermediate_result/list_of_new_cards")
-# } else {
-#   cards_in_set_of_interest_name <- read_rds("../data/intermediate_result/list_of_new_cards")
-# }
 ```
 
 
 
 ```{r set_choose }
+
 # Meta_of_interest <- c("PostMurdersAtKarlovManor")
 exclude_cards <- c(
   "Flooded Strand", "Polluted Delta",
@@ -107,7 +91,7 @@ card_of_interest <- modern_DB_card %>%
 
 
 
-```{r}
+```{r tool_tips_new_card_assignation}
 tooltips_deck_new_cards <- c(
   "Deck Archetype agregated",
   "Card name",
@@ -142,20 +126,15 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 
-```{r}
+```{r main_board_new_cards_computation}
 win_rate_main_board <- Count_and_winrates_cards_in_decklist(
   df_export,
-  # card_of_interest$name, 
   card_of_interest,
   "Mainboard"
 )
 
-
-
-
 General_presence_mainboard <- Count_cards_in_decklist(
   df_export,
-  # card_of_interest$name, 
   card_of_interest,
   "Mainboard"
 ) %>%
@@ -165,7 +144,7 @@ General_presence_mainboard <- Count_cards_in_decklist(
 
 
 
-```{r}
+```{r side_board_new_cards_computation}
 win_rate_side_board <- Count_and_winrates_cards_in_decklist(
   df_export,
   # card_of_interest$name,
@@ -184,7 +163,7 @@ General_presence_sideboard <- Count_cards_in_decklist(
 
 
 
-```{r}
+```{r overall_new_cards_computation}
 win_rate_main_total <- Count_and_winrates_cards_in_decklist(
   df_export %>% 
     mutate(
@@ -217,7 +196,7 @@ Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distin
 Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
 
 
-```{r}
+```{r total_new_cards_print}
 DT::datatable(
   full_join(
     win_rate_main_total,
@@ -312,7 +291,7 @@ Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distin
 Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
 
 
-```{r}
+```{r main_board_new_cards_print}
 DT::datatable(
   full_join(
     General_presence_mainboard,
@@ -404,7 +383,7 @@ Number of total deck for presence : `r df_export %>% summarise(n_deck = n_distin
 Number of deck with winrates : `r df_export %>% filter(!is.na(Wins) & !is.na(Losses)) %>% summarise(n_deck = n_distinct(id)) %>% pull(n_deck)`  
 
 
-```{r}
+```{r side_board_new_cards_print}
 DT::datatable(
   full_join(
     General_presence_sideboard,

@@ -36,7 +36,7 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 
 
 
-```{r}
+```{r color_scheme_and_base_data_manipulation}
 # Generate different color scheme for close archetype
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
 
@@ -139,7 +139,7 @@ one_month_inline <- Presence_df_base_all_data %>%
 
 
 
-```{r}
+```{r spagheti_computation_arch_and_base_arch}
 spaghetti_plot_df <- Presence_df_base %>%
   arrange(desc(Archetype_count)) %>%
   mutate(
@@ -214,7 +214,7 @@ ratio_plot <- 3
 Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`  for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
 
 
-```{r}
+```{r print_spagheti_arch}
 #| column: screen
 plot_archetype_spaghetti <- (ggplot(
   spaghetti_plot_df ,
@@ -271,7 +271,7 @@ plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ## Base Archetype
 Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)` for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
 
-```{r}
+```{r print_spagheti_base_arch}
 #| column: screen
 plot_base_archetype_spaghetti <- (ggplot(
   spaghetti_plot_df,
@@ -337,7 +337,7 @@ plot_base_archetype_spaghetti %>%
 
 
 
-```{r}
+```{r plot_presence_arch_all_data_print}
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
@@ -355,7 +355,7 @@ plot_presence_fun(
 * Include meta : `r unique(one_month_inline$Meta)`.
 * Total number of deck : `r nrow(one_month_inline)`.  
 
-```{r}
+```{r plot_presence_arch_one_month_print}
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
@@ -377,7 +377,7 @@ plot_presence_fun(
 
 
 
-```{r}
+```{r plot_presence_arch_two_weeks_print}
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
@@ -398,7 +398,7 @@ plot_presence_fun(
 
 
 
-```{r}
+```{r plot_presence_arch_one_week_print}
 #| column: screen
 plot_presence_fun(
   df_base = Presence_df_base,
@@ -413,7 +413,7 @@ plot_presence_fun(
 
 ::: {.panel-tabset .nav-pills} 
 ## Archetype  
-```{r}
+```{r compute_ci_plot_arch}
 df_Ci_by_week <- rbind(
   Presence_df_base,
   Presence_df_base %>% 
@@ -485,7 +485,7 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
 
 
 
-```{r}
+```{r print_ci_plot_arch}
 #| column: screen
 
 (ggplot(data = df_Ci_by_all_week
@@ -552,7 +552,7 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
 
 
 ## Base archetype
-```{r}
+```{r base_arch_init_data_manipulation}
 filter_base_archetype_count <- min(50, 
  sum(
    Presence_df_base_no_filter %>% 
@@ -581,7 +581,7 @@ Presence_base_arch_df_base <- Presence_df_base_no_filter %>%
     )
 ```
 
-```{r}
+```{r compute_ci_plot_base_arch}
 df_base_arch_Ci_by_week <- rbind(
   Presence_base_arch_df_base,
   Presence_base_arch_df_base %>% 
@@ -653,7 +653,7 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
 
 
 
-```{r}
+```{r print_ci_plot_base_arch}
 #| column: screen
 
 (ggplot(data = df_base_arch_Ci_by_all_week
@@ -720,9 +720,7 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
 
 # Number of copy of each cards 
 
-
-
-```{r}
+```{r Base_init_number_of_copy_of_each_cards}
 source("../sources/sources_script_specific/S1new_cards.R", local = TRUE)
 df_export <- loaded_base_data %>%
   # include filter bad deck
@@ -749,7 +747,7 @@ The aim is to evaluate the most popular cards in the format. This table shows th
 Number of total deck for presence : `r unique(df_export$n_deck)`  
 Number of deck with winrates : `r unique(df_export$n_winrates)`  
 
-```{r}
+```{r computation_main_board_number_of_copy_of_each_cards}
 # bug any don't match count sum
 win_rate_main_board_overall <- Count_and_winrates_cards_in_decklist(
   df = df_export,
@@ -776,7 +774,7 @@ Main_board_total <-   full_join(
 
 
 
-```{r}
+```{r computation_side_board_number_of_copy_of_each_cards}
 win_rate_side_board_overall <- Count_and_winrates_cards_in_decklist(
    df = df_export,
   colname_deck_list = "Sideboard" , 
@@ -802,7 +800,7 @@ Side_board_total <-   full_join(
 
 
 
-```{r}
+```{r computation_total_number_of_copy_of_each_cards}
 win_rate_total_deck_overall <- Count_and_winrates_cards_in_decklist(
    df = df_export,
   colname_deck_list = "All" , 
@@ -830,15 +828,17 @@ total_deck_total <-   full_join(
 ```
 
 
-```{r}
+```{r tool_tips_number_of_copy_of_each_cards}
 tooltips_deck_new_cards <- c(
   "Link to scry fall",
   "Main, Side or Both combine",
   "Card name",
   "Set code of cards (probably last edition not sure)",
   "Number of copies of the cards",
-  "Number of decks with the card (exact number of copies)",
+  "Number of decks with the card (exact number of copies) including deck without winrate like 5-0 leagues",
+  "Percent of deck with the card (exact number of copies) including deck without winrate like 5-0 leagues",
   "Number of decks include in the win rate computation of the card (exact number of copies)",
+  "Percent of deck with the card (exact number of copies) only deck with winrate",
   "Number of wins",
   "Number of looses",
   "Win rate of the card",
@@ -847,7 +847,7 @@ tooltips_deck_new_cards <- c(
 ```
 
 
-```{r}
+```{r read_modern_db}
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
    filter(
      !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
@@ -857,7 +857,7 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types 
 
 
 
-```{r}
+```{r print_number_of_copy_of_each_cards}
 DT::datatable(
   rbind(
     total_deck_total,

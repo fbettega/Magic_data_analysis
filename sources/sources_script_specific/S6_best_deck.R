@@ -117,16 +117,7 @@ table_generator_sub_fun <- function(
   if(is.null(df_fun)){
     Table_result <- NULL
   }else{
-    
-    
-
-    
-    
-    
-    
-    
-    
-    Table_main_side <- df_fun %>%
+    Table_main_side_before_base_cards <- df_fun %>%
       mutate(
         Tournament = Tournament_agreger(Tournament),
         Player = paste0(Player, "<br>", Tournament, "<br>Week : ", Week),
@@ -154,7 +145,7 @@ table_generator_sub_fun <- function(
       ) %>%
       left_join(
         db_scry_fall_generator_sub_dun %>% 
-          select(id,set,scryfall_uri),
+          select(id,scryfall_uri),
         by = join_by(
           scry_fall_id == id
         )
@@ -165,42 +156,92 @@ table_generator_sub_fun <- function(
         link_column = "scryfall_uri",
         mode = "md"
       ) %>%
-      
       select(-scry_fall_id) %>%
-      rowwise() %>%
+      rowwise()  %>%
+  # Récupération des divers deck pour obtenir les stat desc par cartes
+  mutate(
+    mean_number = round(mean(c_across(starts_with(
+      "[" # "<a href=https://"
+    )
+    )
+    ), 1),
+    min_number = min(c_across(starts_with(
+      "[" # "<a href=https://"
+    )
+    )
+    ),
+    max_number = max(c_across(starts_with(
+      "[" # "<a href=https://"
+    )
+    )
+    ),
+    base_deck_cards = min_number > 0,
+    # base_deck_cards = min_number == max_number,
+    .before = 3
+  ) 
+    
+    
+    base_cards_table <-   Table_main_side_before_base_cards  %>%
+      filter(base_deck_cards ) %>% 
+      select(-base_deck_cards) %>% 
+      ungroup() %>%
+      mutate(
+        across(!c(CardName, Main_or_side , mean_number ,min_number ,max_number ),
+        ~ min_number
+      )) %>% 
+      mutate(
+        CardName = 
+            paste0(
+              CardName, " ",
+              min_number
+            ),
+        base_deck_cards = TRUE
+      ) %>% select(-c(mean_number, min_number, max_number))
+      
+      
+      
+    variables_cards_table <-   Table_main_side_before_base_cards  %>%
+      select(-base_deck_cards) %>% 
+      ungroup() %>%
+      mutate(
+        across(!c(CardName, Main_or_side , mean_number ,min_number ,max_number ),
+               ~ . -min_number
+        )) %>% 
+      rowwise()  %>%
       # Récupération des divers deck pour obtenir les stat desc par cartes
       mutate(
         mean_number = round(mean(c_across(starts_with(
           "[" # "<a href=https://"
-        ))), 1),
+        )
+        )
+        ), 1),
         min_number = min(c_across(starts_with(
           "[" # "<a href=https://"
-        ))),
+        )
+        )
+        ),
         max_number = max(c_across(starts_with(
           "[" # "<a href=https://"
-        ))),
-        base_deck_cards =min_number == max_number ,
-        .before = 3
-      ) %>%
-      ungroup() %>%
+        )
+        )
+        )
+      ) %>% 
+      ungroup() %>% 
+      filter(max_number > 0) %>% 
       mutate(
         CardName = 
-          ifelse(
-            base_deck_cards,
-            paste0(
-              CardName, " ",
-              mean_number
-            ),
             paste0(
               CardName, "<br>",
               mean_number, "[",
               min_number, ";",
               max_number, "]"
-            )
-          )
+            ),
+        base_deck_cards = FALSE
       ) %>%
       select(-c(mean_number, min_number, max_number))
     
+      Table_main_side <- rbind(base_cards_table,variables_cards_table)
+      
     title_table <- paste0(
       "Top ", top_x_rank,
       " best performing ",ifelse(
@@ -242,8 +283,7 @@ table_generator_sub_fun <- function(
     
     
   }
-  
-  
+
   return(Table_result)
 }
 

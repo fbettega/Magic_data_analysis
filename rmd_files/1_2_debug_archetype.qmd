@@ -34,7 +34,7 @@ df_export <-  readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours
 
 
 
-```{r}
+```{r cards_in_archetype_definition_computation}
 merge_df_side_main <- 
   rbind(
   df_export %>%
@@ -108,7 +108,7 @@ Deck_list_cards_count_with_any <- rbind(
 # Cards in Archetype based arch combination  
 
 
-```{r}
+```{r cards_in_archetype_definition_print}
 htmltools::tagList(
       DT::datatable( 
         Deck_list_cards_count_with_any,
@@ -138,7 +138,7 @@ htmltools::tagList(
 
 negative numbers are explicable because Y to X is positive.
 
-```{r}
+```{r proximity_classif_loading}
 proximty_classif <- read.csv(
   paste0("../data/intermediate_result/",
          params$format_param,"_proxymity_archetype_group.csv")) %>% 
@@ -155,7 +155,7 @@ proximty_classif <- read.csv(
 ```
 
 
-```{r}
+```{r proximity_classif_print}
 htmltools::tagList(
       DT::datatable( 
         proximty_classif ,
@@ -181,7 +181,7 @@ htmltools::tagList(
 
 Just list all distinct cards in format with boolean if match or not with my scryfall join function.
 
-```{r}
+```{r scryfall_db_matching_datareading}
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
    filter(
      !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
@@ -207,7 +207,7 @@ test_scry_fall_on_all_cards <-
 
 
 
-```{r}
+```{r scryfall_db_matching_computation}
 scry_fall_join_test_res <- join_with_scryfall(
     Df_with_cardname = test_scry_fall_on_all_cards,
     cardname_col = "CardName",
@@ -216,7 +216,12 @@ scry_fall_join_test_res <- join_with_scryfall(
 ```
 
 
-```{r}
+only show non matching cards no bug if table is empty.
+Number of cards correctly match : `r sum(!is.na(scry_fall_join_test_res$scry_fall_id))` (`r round(sum(!is.na(scry_fall_join_test_res$scry_fall_id))*100/nrow(scry_fall_join_test_res),2)` %)
+
+
+
+```{r scryfall_db_matching_print}
 htmltools::tagList(
       DT::datatable( 
         scry_fall_join_test_res %>% 
@@ -256,7 +261,7 @@ htmltools::tagList(
 
 # Prediction and deck list
 
-```{r}
+```{r model_prediction_reading}
 # note pour FB du futur l'ordre compte et si cette table est affiché en premier les 
 # autres ne fonctionne pas
 
@@ -300,7 +305,7 @@ model_pred <- left_join(
 
 ```
 
-```{r}
+```{r model_prediction_print}
 htmltools::tagList(
       DT::datatable(
         model_pred,

@@ -66,18 +66,8 @@ df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.
     Archetype_count = n()
   ) %>%
   filter(Archetype != "Unknown") %>% 
-  ungroup() #%>%
-  # select(
-  #   id,
-  #   Tournament,Player,
-  #   Date,Week,
-  #   Draws, Archetype, Archetype_count,Color,Base_Archetype,
-  #   Wins, Losses,
-  #   Mainboard,Sideboard,
-  #   AnchorUri 
-  #   )
-# df_export$id == row.names(df_export)
-# rownames(df_export) <- df_export$id
+  ungroup()
+
 Number_of_deck <- 7
 ```
 
@@ -116,12 +106,6 @@ fun_parNumber_of_deck_print = Number_of_deck,
 ```
 
 
-
-
-
-
-
-
 # Archetype
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
@@ -129,7 +113,6 @@ fun_parNumber_of_deck_print = Number_of_deck,
 
 
 ## All Data Model best deck prediction
-
 
 
 ```{r print_result_all_data, results='asis'}
@@ -147,11 +130,7 @@ all_data_best_deck_arch_print_res <-
 ```
 
 
-
-  
-
 ## 2 weeks Data Model best deck prediction
-
 
 
 ```{r print_result_2weeks, results='asis'}
@@ -170,6 +149,7 @@ twoweeks_data_best_deck_arch_print_res <-
 
 
 # Base Archetype
+
 
 ```{r compute_res_base_arch}
 total_result_base_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(

@@ -223,19 +223,19 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
   )
 
   # # debug purpose
-  quarto::quarto_render(
-    "rmd_files/7_last_weeks_winners.qmd",
-    output_format = "html",
-    profile = "basic",
-    as_job = FALSE
-  )
   # quarto::quarto_render(
-  #   "rmd_files/1_1_collection_analysis.qmd",
+  #   "rmd_files/6_best_deck.qmd",
+  #   output_format = "html",
+  #   profile = "basic",
+  #   as_job = FALSE
+  # )
+  # quarto::quarto_render(
+  #   "rmd_files/1_2_debug_archetype.qmd",
   #   output_format = "html",
   #   profile = "fb",
   #   as_job = FALSE
   # )
-  
+  # 
   
 
   unlink(

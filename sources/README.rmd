@@ -34,7 +34,7 @@ To get scryfall data in csv i use my own script you can find it [here](https://g
 
 ## format includes
 Table below list format includes and starting date
-```{r, results='asis'}
+```{r format_table_print, results='asis'}
 format_date_en_cours_fulltable <- read.csv("../other_file/format_handle.csv")
 format_date_en_cours_fulltable %>% 
   rename(

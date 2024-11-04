@@ -21,7 +21,6 @@ loaded_base_data <- readRDS(paste0("../data/", params$format_param, "_data_meta_
 # Reflechir a inclusion player
 #
 # A reflechir :
-# * WR matrix a l'échelle du match
 # * WR including player perf
 # * Combination
 
@@ -32,21 +31,14 @@ scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
 ```
 
 
-
 ```{r}
 knitr::read_chunk("../sources/S1_introduction_text.R")
 # Prendre en compte mieux le nombres de deck avec CI pour le best deck
 ```
 
 
-
-
-
-
-```{r}
+```{r base_data_formating}
 # Generate different color scheme for close archetype
-
-
 df_base <- loaded_base_data %>%
   filter(Tournament != paste0(params$format_param, " League")) %>%
   group_by(Archetype) %>%
@@ -106,16 +98,7 @@ df_base_all_data <- df_base %>%
 ```
 
 
-
-
-
-
-
-
-
-
-```{r}
-
+```{r winrate_matrix_computation}
 Df_win_rate_matrix_simple_unnest_matchup <- df_base_all_data %>%
   rowwise() %>%
   filter(!is.null(Matchups)) %>%
@@ -149,12 +132,6 @@ Df_win_rate_matrix_correct_maccro_archetype_oppo <- Df_win_rate_matrix_simple_un
   distinct()
 
 
-
-
-
-
-
-
 Df_win_rate_matrix_base <- Df_win_rate_matrix_simple_unnest_matchup %>%
   select(-Matchups_OpponentArchetype) %>%
   inner_join(
@@ -185,132 +162,9 @@ Df_win_rate_matrix_base <- Df_win_rate_matrix_simple_unnest_matchup %>%
 ```
 
 
-```{r some_check_chunk}
-# if(
-#   !all(
-#   Df_win_rate_matrix_correct_maccro_archetype_oppo$Matchups_Opponent_basedArchetype ==
-#   Df_win_rate_matrix_correct_maccro_archetype_oppo$Base_Archetype
-#   )
-#   ){
-#   print("problem in base archetype in matchup")
-# }
-```
 
 
-
-
-```{r}
-win_rate_matrix_maker <- function(
-    df_fun,
-    Archetype_type # "Archetype" , "Base_Archetype"
-    ) {
-  if (Archetype_type == "Archetype") {
-    select_col <- c("Archetype", "Matchups_OpponentArchetype")
-  } else if (Archetype_type == "Base_Archetype") {
-    select_col <- c("Base_Archetype", "Matchups_OpponentBase_Archetype")
-  }
-
-
-  win_rate_matrix_fun_res <- df_fun %>%
-    select(
-      all_of(select_col),
-      Matchups_Wins, Matchups_Losses
-    ) %>%
-    mutate(
-      Result = Matchups_Wins > Matchups_Losses,
-      Draw = Matchups_Wins == Matchups_Losses
-    ) %>%
-    group_by(across(all_of(select_col))) %>%
-    summarise(
-      number_of_matches = n() - sum(Draw),
-      Win_matches = sum(Result),
-      number_of_games = sum(Matchups_Wins) + sum(Matchups_Losses),
-      Matchups_Wins = sum(Matchups_Wins),
-      Matchups_Losses = sum(Matchups_Losses),
-      .groups = "drop"
-    ) %>%
-    mutate(
-      WR_games = winrate_1_data(Matchups_Wins, Matchups_Losses),
-      CI_WR_games = CI_prop(WR_games, number_of_games),
-      CI_WR_sign_games = factor(
-        ifelse(CI_WR_games == 0, "0",
-          ifelse(
-            ((WR_games - 0.5) + (CI_WR_games)) > 0,
-            "+",
-            ifelse(
-              ((WR_games - 0.5) - (CI_WR_games)) < 0,
-              "-", "0"
-            )
-          )
-        ),
-        levels = c("+", "0", "-")
-      ),
-      WR_matches = winrate_1_data(Win_matches, (number_of_matches - Win_matches)),
-      CI_WR_matches = CI_prop(WR_matches, number_of_matches),
-      CI_WR_sign_matches = factor(
-        ifelse(CI_WR_matches == 0, "0",
-          ifelse(
-            ((WR_matches - 0.5) + (CI_WR_matches)) > 0,
-            "+",
-            ifelse(
-              ((WR_matches - 0.5) - (CI_WR_matches)) < 0,
-              "-", "0"
-            )
-          )
-        ),
-        levels = c("+", "0", "-")
-      ),
-    )
-
-
-  return(win_rate_matrix_fun_res)
-}
-
-
-
-
-CI_plot_prepare_df_fun <- function(df_fun) {
-  res <- df_fun %>%
-    group_by(Archetype) %>%
-    summarise(
-      number_of_matches = sum(number_of_matches),
-      Win_matches = sum(Win_matches),
-      number_of_games = sum(number_of_games),
-      Matchups_Wins = sum(Matchups_Wins),
-      .groups = "keep"
-    ) %>%
-    mutate(
-      Loss_matches = number_of_matches - Win_matches,
-      Matchups_Loss = number_of_games - Matchups_Wins
-    ) %>%
-    summarise(
-      number_of_matches = number_of_matches,
-      number_of_games = number_of_games, 
-      Arch_winrate_matches = winrate_1_data(
-        sum(Win_matches, na.rm = TRUE), sum(Loss_matches, na.rm = TRUE)
-      ),
-      CI_Arch_winrate_matches = CI_prop(
-        Arch_winrate_matches, number_of_matches
-      ),
-      Arch_winrate_games = winrate_1_data(
-        sum(Matchups_Wins, na.rm = TRUE), sum(Matchups_Loss, na.rm = TRUE)
-      ),
-      CI_Arch_winrate_games = CI_prop(
-        Arch_winrate_games, number_of_games
-      )
-    )
-
-  return(res)
-}
-```
-
-
-
-
-
-
-
-```{r}
+```{r winrate_matrix_arch}
 Df_win_rate_matrix_summarise <- win_rate_matrix_maker(
   df_fun = Df_win_rate_matrix_base,
   Archetype_type = "Archetype" # "Archetype" , "Base_Archetype"
@@ -330,7 +184,8 @@ Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>%
   )
 ```
 
-```{r}
+
+```{r winrate_matrix_base_arch}
 Df_win_rate_matrix_base_arch_summarise <- win_rate_matrix_maker(
   df_fun = Df_win_rate_matrix_base,
   Archetype_type = "Base_Archetype" # "Archetype" , "Base_Archetype"
@@ -362,9 +217,6 @@ Df_win_rate_matrix_base_arch_format <- Df_win_rate_matrix_base_arch_summarise %>
 ```
 
 
-
-
-
 * All data : `r format(as.Date(min(Df_win_rate_matrix_simple_unnest_matchup$Date)), "%d-%m-%Y")` to `r format(as.Date(max(Df_win_rate_matrix_simple_unnest_matchup$Date)), format = "%d/%m/%Y")`. 
 * Duration `r round(max(difftime(Sys.Date(),Df_win_rate_matrix_simple_unnest_matchup$Date,units = "weeks")),0)` weeks.
 * Include meta : `r unique(Df_win_rate_matrix_simple_unnest_matchup$Meta)`.  
@@ -382,7 +234,7 @@ Df_win_rate_matrix_base_arch_format <- Df_win_rate_matrix_base_arch_summarise %>
 
 Plot below show presence of each archetype in the matrix
 
-```{r}
+```{r presence_plot}
 #| column: screen
 plot_presence_modify_for_matchup_matrix_fun(
      df_base = Df_win_rate_matrix_base,
@@ -394,25 +246,20 @@ plot_presence_modify_for_matchup_matrix_fun(
 ```
 
 
-
-
-
-
 # Archetype
-## Matrix using the number of parts
 
 For example, a score of 2-1 counts as 1 game won.
 
 ::: {.panel-tabset .nav-pills}
-### Total matrix  
+## Total matrix  
 
-```{r}
+```{r res_arch_matrix}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 2.8)
 ```
 
 
-### CI plot 
-```{r}
+## CI plot 
+```{r res_ci_plot_arch}
 #| column: screen
 Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
   mutate(
@@ -492,9 +339,9 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
 
 
 
-### Only significative CI
+## Only significative CI
 
-```{r}
+```{r only_signif_mat_arch}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
   # simplify_tab_ratio = 0.5,
   only_signif = TRUE, size_multiplier = 2.8
@@ -505,20 +352,19 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
 
 
 # Base archetype
-## Matrix using the number of games
 
 For example, a score of 2-1 counts as 1 game won.
 
 ::: {.panel-tabset .nav-pills}
-### Total matrix  
+## Total matrix  
 
-```{r}
+```{r res_base_arch_matrix}
 plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches", size_multiplier = 4)
 ```
 
 
-### CI plot 
-```{r}
+## CI plot 
+```{r res_ci_plot_base_arch}
 #| column: screen
 base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch_format) %>%
     mutate(
@@ -593,9 +439,9 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
   bslib::card(full_screen = TRUE)
 ```
 
-### Only significative CI
+## Only significative CI
 
-```{r}
+```{r base_arch_only_signif_mat_arch}
 plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
   # simplify_tab_ratio = 0.5,
   only_signif = TRUE, size_multiplier = 4
@@ -615,7 +461,7 @@ Attempt to multiply the win rate matrix (WR or CI lower bound) by the weekly pre
 Only decks with a CI are considered.
 
 ## Archetype 
-```{r}
+```{r best_deck_computation}
 Df_Expected_number_of_win_by_week <- df_base_all_data %>%
   group_by(Archetype, Week) %>%
   summarise(n = n(), .groups = "drop") %>%
@@ -688,7 +534,7 @@ Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>%
 
 
 
-```{r}
+```{r spagheti_plot_arch_compute}
 Presence_for_best_deck_plot <- rbind(
   Df_Expected_number_of_win_by_week %>%
     distinct(Matchups_OpponentArchetype, Week, n),
@@ -753,7 +599,7 @@ plot_archetype_spaghetti <- (
   ))
 ```
 
-```{r}
+```{r print_spagheti_plot_arch}
 #| column: screen
 plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ```
@@ -761,7 +607,7 @@ plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 
 ::: {.panel-tabset .nav-pills}
 ### Confidence intervalle lower bound
-```{r}
+```{r best_deck_using_ci_res}
 DT::datatable(
   Df_wide_expected_of_week_sum %>%
     select(Archetype, starts_with("S_ci_")) %>%
@@ -800,7 +646,7 @@ DT::datatable(
 
 ### Average Win rate
 
-```{r}
+```{r best_using_average_res}
 DT::datatable(
   Df_wide_expected_of_week_sum %>%
     select(Archetype, starts_with("S_wr_")) %>%
@@ -842,7 +688,7 @@ DT::datatable(
 
 
 ## Base Archetype 
-```{r}
+```{r best_deck_base_arch_computation}
 
 Df_Base_Archetype_Expected_number_of_win_by_week <- df_base_all_data %>%
   group_by(Base_Archetype, Week) %>%
@@ -916,7 +762,7 @@ Df_Base_Archetype_wide_expected_of_week_sum <- Df_Base_Archetype_expected_of_wee
 
 
 
-```{r}
+```{r spagheti_plot_base_arch_compute}
 Presence_Base_Archetype_for_best_deck_plot <- rbind(
   Df_Base_Archetype_Expected_number_of_win_by_week %>%
     distinct(Matchups_OpponentBase_Archetype, Week, n),
@@ -981,7 +827,7 @@ plot_Base_Archetype_spaghetti <- (
   ))
 ```
 
-```{r}
+```{r spagheti_plot_base_arch_print}
 #| column: screen
 plot_Base_Archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ```
@@ -989,7 +835,7 @@ plot_Base_Archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 
 ::: {.panel-tabset .nav-pills}
 ### Confidence intervalle lower bound
-```{r}
+```{r best_deck_base_arch_using_ci_res}
 DT::datatable(
   Df_Base_Archetype_wide_expected_of_week_sum %>%
     select(Base_Archetype, starts_with("S_ci_")) %>%
@@ -1024,11 +870,9 @@ DT::datatable(
 ```
 
 
-
-
 ### Average Win rate
 
-```{r}
+```{r best_deck_base_arch_using_average_res}
 DT::datatable(
   Df_Base_Archetype_wide_expected_of_week_sum %>%
     select(Base_Archetype, starts_with("S_wr_")) %>%
@@ -1063,22 +907,4 @@ DT::datatable(
 ```
 
 :::
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 

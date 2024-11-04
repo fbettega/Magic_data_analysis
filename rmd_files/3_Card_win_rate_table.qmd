@@ -82,7 +82,7 @@ df_base_Archetype <- df_export %>%
 
 
 
-```{r}
+```{r table_tooltip_assignation}
 tooltips_deck_base <- c(
   "Deck Archetype agregated",
   "Number of decks in the archetype",
@@ -115,7 +115,7 @@ tooltips_deck_variable_arch <- c(
 
 
 
-```{r}
+```{r Arch_main_board_computation}
 win_rate_main_board <- Count_and_winrates_cards_in_decklist_total(
   df_Archetype,
   "Archetype",
@@ -125,7 +125,7 @@ win_rate_main_board <- Count_and_winrates_cards_in_decklist_total(
 
 
 
-```{r}
+```{r Arch_side_board_computation}
 win_rate_side_board <- Count_and_winrates_cards_in_decklist_total(
   df_Archetype,
   "Archetype",
@@ -143,9 +143,7 @@ win_rate_side_board <- Count_and_winrates_cards_in_decklist_total(
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
 
-
-
-```{r}
+```{r print_arch_base_card_main_board}
 # Create the datatable with hover-over tooltips
 DT::datatable(
   format_df_result_card_table(
@@ -201,7 +199,7 @@ escape = FALSE,
 ### Variable Cards Mainboard
 
 
-```{r}
+```{r print_arch_variable_card_main_board}
 DT::datatable(
   format_df_result_card_table(
     win_rate_main_board$Win_rate_df_final,
@@ -273,7 +271,7 @@ escape = FALSE,
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
 
-```{r}
+```{r print_arch_base_card_side_board}
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board$Card_always_in_deck_final,
@@ -330,7 +328,7 @@ escape = FALSE,
 
 ### Variable Cards Side    
  
-```{r}
+```{r print_arch_variable_card_side_board}
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board$Win_rate_df_final,
@@ -394,7 +392,7 @@ escape = FALSE,
 
 # Based Archetype Card winrate table  
 
-```{r}
+```{r Base_Arch_main_board_computation}
 win_rate_main_board_based_arch <- Count_and_winrates_cards_in_decklist_total(
   df_base_Archetype,
   "Base_Archetype",
@@ -404,7 +402,7 @@ win_rate_main_board_based_arch <- Count_and_winrates_cards_in_decklist_total(
 
 
 
-```{r}
+```{r Base_Arch_side_board_computation}
 win_rate_side_board_based_arch <- Count_and_winrates_cards_in_decklist_total(
   df_base_Archetype,
   "Base_Archetype",
@@ -421,7 +419,7 @@ win_rate_side_board_based_arch <- Count_and_winrates_cards_in_decklist_total(
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
-```{r}
+```{r print_base_arch_base_card_main_board}
 DT::datatable(
   format_df_result_card_table(
     win_rate_main_board_based_arch$Card_always_in_deck_final,
@@ -478,7 +476,7 @@ escape = FALSE,
 ### Variable Cards Mainboard  
 
 
-```{r}
+```{r print_base_arch_variable_card_main_board}
 DT::datatable(
   format_df_result_card_table(
     win_rate_main_board_based_arch$Win_rate_df_final,
@@ -550,7 +548,7 @@ escape = FALSE,
 
 The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
 
-```{r}
+```{r print_base_arch_base_card_side_board}
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board_based_arch$Card_always_in_deck_final,
@@ -607,7 +605,7 @@ escape = FALSE,
 ### Variable Cards sideboard   
 
 
-```{r}
+```{r print_base_arch_variable_card_side_board}
 DT::datatable(
   format_df_result_card_table(
     win_rate_side_board_based_arch$Win_rate_df_final,

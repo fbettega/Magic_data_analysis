@@ -404,3 +404,117 @@ plot_win_rate_mat <- function(
   
   return(plot_en_cours)
 }
+
+
+
+
+win_rate_matrix_maker <- function(
+    df_fun,
+    Archetype_type # "Archetype" , "Base_Archetype"
+) {
+  if (Archetype_type == "Archetype") {
+    select_col <- c("Archetype", "Matchups_OpponentArchetype")
+  } else if (Archetype_type == "Base_Archetype") {
+    select_col <- c("Base_Archetype", "Matchups_OpponentBase_Archetype")
+  }
+  
+  
+  win_rate_matrix_fun_res <- df_fun %>%
+    select(
+      all_of(select_col),
+      Matchups_Wins, Matchups_Losses
+    ) %>%
+    mutate(
+      Result = Matchups_Wins > Matchups_Losses,
+      Draw = Matchups_Wins == Matchups_Losses
+    ) %>%
+    group_by(across(all_of(select_col))) %>%
+    summarise(
+      number_of_matches = n() - sum(Draw),
+      Win_matches = sum(Result),
+      number_of_games = sum(Matchups_Wins) + sum(Matchups_Losses),
+      Matchups_Wins = sum(Matchups_Wins),
+      Matchups_Losses = sum(Matchups_Losses),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      WR_games = winrate_1_data(Matchups_Wins, Matchups_Losses),
+      CI_WR_games = CI_prop(WR_games, number_of_games),
+      CI_WR_sign_games = factor(
+        ifelse(CI_WR_games == 0, "0",
+               ifelse(
+                 ((WR_games - 0.5) + (CI_WR_games)) > 0,
+                 "+",
+                 ifelse(
+                   ((WR_games - 0.5) - (CI_WR_games)) < 0,
+                   "-", "0"
+                 )
+               )
+        ),
+        levels = c("+", "0", "-")
+      ),
+      WR_matches = winrate_1_data(Win_matches, (number_of_matches - Win_matches)),
+      CI_WR_matches = CI_prop(WR_matches, number_of_matches),
+      CI_WR_sign_matches = factor(
+        ifelse(CI_WR_matches == 0, "0",
+               ifelse(
+                 ((WR_matches - 0.5) + (CI_WR_matches)) > 0,
+                 "+",
+                 ifelse(
+                   ((WR_matches - 0.5) - (CI_WR_matches)) < 0,
+                   "-", "0"
+                 )
+               )
+        ),
+        levels = c("+", "0", "-")
+      ),
+    )
+  
+  
+  return(win_rate_matrix_fun_res)
+}
+
+
+
+
+CI_plot_prepare_df_fun <- function(df_fun) {
+  res <- df_fun %>%
+    group_by(Archetype) %>%
+    summarise(
+      number_of_matches = sum(number_of_matches),
+      Win_matches = sum(Win_matches),
+      number_of_games = sum(number_of_games),
+      Matchups_Wins = sum(Matchups_Wins),
+      .groups = "keep"
+    ) %>%
+    mutate(
+      Loss_matches = number_of_matches - Win_matches,
+      Matchups_Loss = number_of_games - Matchups_Wins
+    ) %>%
+    summarise(
+      number_of_matches = number_of_matches,
+      number_of_games = number_of_games, 
+      Arch_winrate_matches = winrate_1_data(
+        sum(Win_matches, na.rm = TRUE), sum(Loss_matches, na.rm = TRUE)
+      ),
+      CI_Arch_winrate_matches = CI_prop(
+        Arch_winrate_matches, number_of_matches
+      ),
+      Arch_winrate_games = winrate_1_data(
+        sum(Matchups_Wins, na.rm = TRUE), sum(Matchups_Loss, na.rm = TRUE)
+      ),
+      CI_Arch_winrate_games = CI_prop(
+        Arch_winrate_games, number_of_games
+      )
+    )
+  
+  return(res)
+}
+
+
+
+
+
+
+
+
