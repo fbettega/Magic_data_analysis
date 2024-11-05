@@ -212,8 +212,6 @@ grouping_cards_recursive <- function(
     select(-name) %>% 
     filter(Archetype_name != value)
   
-
-  
   grouping_df_res <- rbind(grouping_df_base_fun,archetype_to_group)
   
   
@@ -270,73 +268,81 @@ res_proximity_joins <- df_export_pre_60_filter %>%
 
 
 
-Debug_resulting_distance_mat_with_all_group <- long_dist_mat %>%
-  group_by(Archetype.x ,Archetype.y) %>% 
-  summarize(
-    count = n(),
-    Q2 = quantile(value ,0.5),
-    .groups = "drop"
-  ) %>% 
-  left_join(
-    long_dist_mat %>% 
-      filter(Archetype.x == Archetype.y) %>% 
-      select(-Archetype.y) %>% 
-      group_by(Archetype.x) %>% 
-      summarize(
-        Q3 = quantile(value ,0.75),
-        .groups = "drop"
-      ) %>% 
-      rename_all(~paste0("self_",.)) %>% 
-      rename(Archetype = self_Archetype.x) ,
-    by = join_by(Archetype.x == Archetype)
-  ) %>% 
-  mutate(
-    Q3_compare_Median = self_Q3 - Q2
-  ) %>% 
-  filter( Archetype.x != Archetype.y   ) %>% 
-  filter(Q3_compare_Median >= 0) %>% 
-  arrange(desc(Q3_compare_Median)) 
 
 
 
 
 
 
-
-Debug_resulting_distance_mat_with_all_group <- resulting_distance_mat_with_all_group %>% 
-  left_join(
-    long_dist_mat %>% 
-      filter(Archetype.x == Archetype.y) %>% 
-      select(-Archetype.y) %>% 
-      group_by(Archetype.x) %>% 
-      summarize(
-        Q3 = quantile(value ,0.75),
-        .groups = "drop"
-      ) %>% 
-      rename_all(~paste0("self_",.)) %>% 
-      rename(Archetype = self_Archetype.x),
-            by =  join_by(
-              Archetype_proximity == Archetype )
-            ) %>% 
-  left_join(
-    long_dist_mat %>%
-              group_by(Archetype.x ,Archetype.y) %>% 
-              summarize(
-                # count = n(),
-                Q2 = quantile(value ,0.5),
-                .groups = "drop"
-              ),
-    by =  join_by(
-      Archetype_proximity == Archetype.x,
-      value == Archetype.y
-      )
-    
-            ) %>% 
-  mutate(
-    Q3_compare_Median = self_Q3 - Q2
-  )
+Debug_resulting_distance_mat_with_all_group <- 
+  # resulting_distance_mat_with_all_group %>% 
+  # left_join(
+  #   long_dist_mat %>% 
+  #     filter(Archetype.x == Archetype.y) %>% 
+  #     select(-Archetype.y) %>% 
+  #     group_by(Archetype.x) %>% 
+  #     summarize(
+  #       Q3 = quantile(value ,0.75),
+  #       .groups = "drop"
+  #     ) %>% 
+  #     rename_all(~paste0("self_",.)) %>% 
+  #     rename(Archetype = self_Archetype.x),
+  #           by =  join_by(
+  #             Archetype_proximity == Archetype )
+  #           ) %>% 
+  # left_join(
+  #   long_dist_mat %>%
+  #             group_by(Archetype.x ,Archetype.y) %>% 
+  #             summarize(
+  #               # count = n(),
+  #               Q2 = quantile(value ,0.5),
+  #               .groups = "drop"
+  #             ),
+  #   by =  join_by(
+  #     Archetype_proximity == Archetype.x,
+  #     value == Archetype.y
+  #     )
+  #           ) %>% 
+  # mutate(
+  #   Q3_compare_Median = self_Q3 - Q2
+  # )
   
 
+ long_dist_mat %>% 
+    filter(Archetype.x == Archetype.y) %>% 
+    select(-Archetype.y) %>% 
+    group_by(Archetype.x) %>% 
+    summarize(
+      Q3 = quantile(value ,0.75),
+      .groups = "drop"
+    ) %>% 
+    rename_all(~paste0("self_",.)) %>% 
+  right_join(
+    long_dist_mat %>%
+      group_by(Archetype.x ,Archetype.y) %>% 
+      summarize(
+        # count = n(),
+        Q2 = quantile(value ,0.5),
+        .groups = "drop"
+      ),
+    by =  join_by(
+      self_Archetype.x == Archetype.x
+    )
+  ) %>% 
+  mutate(
+    Q3_compare_Median = self_Q3 - Q2
+  ) %>% 
+  select(self_Archetype.x,Archetype.y ,everything()) %>% 
+  rename(Archetype.x = self_Archetype.x) %>% 
+  left_join(
+    resulting_distance_mat_with_all_group %>% 
+      mutate(groupe = TRUE),
+    join_by(
+      Archetype.x == Archetype_proximity,
+      Archetype.y == value        
+      )
+             ) %>% 
+  mutate(groupe = ifelse(is.na(groupe),FALSE,TRUE))
 
 
 write.csv(

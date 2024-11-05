@@ -5,21 +5,7 @@ Reupdate_scryfall_db <- FALSE #TRUE FALSE
 # Try catch because script is long allow shutdown if error
 tryCatch(
 {
-
 format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
-
-################################################################################
-############### easy debug just init with one format to run script #############
-## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
-
-# i <- 3
-# format_date_en_cours <- format_date_en_cours_fulltable[i, ]
-# readr::write_rds(
-#   format_date_en_cours,
-#   "data/intermediate_result/temp_format_encours_for_param.rds"
-# )
-################################################################################
-
 log_df <- read.csv("other_file/log_run.csv")
 
 
@@ -56,6 +42,10 @@ deck_list_format <- git2r::repository("ArchetypeParser/MTGOFormatData/")
 pull_deck_list_repo_base <- git2r::pull(repo = deck_list_repo_base)
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
+
+
+# deck_list_repo_test <-  git2r::repository("ArchetypeParser/MTGODecklistCache/")
+# fetch <- git2r::fetch(deck_list_repo_test,name = "jiliac")
 
 
 tictoc::tic("Scryfall update data")
@@ -222,21 +212,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     as_job = FALSE
   )
 
-  # # debug purpose
-  # quarto::quarto_render(
-  #   "rmd_files/6_best_deck.qmd",
-  #   output_format = "html",
-  #   profile = "basic",
-  #   as_job = FALSE
-  # )
-  # quarto::quarto_render(
-  #   "rmd_files/1_2_debug_archetype.qmd",
-  #   output_format = "html",
-  #   profile = "fb",
-  #   as_job = FALSE
-  # )
-  # 
-  
+
 
   unlink(
     c(
@@ -310,4 +286,36 @@ error = function(e) {
 
 }
 )
+
+
+# ################################################################################
+# ############### easy debug just init with one format to run script #############
+# format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
+# 
+# ## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
+# 
+# i <- 2
+# format_date_en_cours <- format_date_en_cours_fulltable[i, ]
+# readr::write_rds(
+#   format_date_en_cours,
+#   "data/intermediate_result/temp_format_encours_for_param.rds"
+# )
+# ################################################################################
+# 
+# log_df <- read.csv("other_file/log_run.csv")
+# 
+# eddit_yaml(format_date_en_cours)
+# # # debug purpose
+# quarto::quarto_render(
+#   "rmd_files/5_Deck_analysis.qmd",
+#   output_format = "html",
+#   profile = "basic",
+#   as_job = FALSE
+# )
+# quarto::quarto_render(
+#   "rmd_files/1_1_collection_analysis.qmd",
+#   output_format = "html",
+#   profile = "fb",
+#   as_job = FALSE
+# )
 

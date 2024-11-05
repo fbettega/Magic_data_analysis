@@ -250,13 +250,23 @@ plot_presence_modify_for_matchup_matrix_fun(
 
 For example, a score of 2-1 counts as 1 game won.
 
+## Matrix
 ::: {.panel-tabset .nav-pills}
-## Total matrix  
+### Total matrix  
 
 ```{r res_arch_matrix}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 2.8)
 ```
 
+### Only significative CI
+
+```{r only_signif_mat_arch}
+plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
+  # simplify_tab_ratio = 0.5,
+  only_signif = TRUE, size_multiplier = 2.8
+) %>% bslib::card(full_screen = TRUE)
+```
+:::
 
 ## CI plot 
 ```{r res_ci_plot_arch}
@@ -339,28 +349,28 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
 
 
 
-## Only significative CI
-
-```{r only_signif_mat_arch}
-plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
-  # simplify_tab_ratio = 0.5,
-  only_signif = TRUE, size_multiplier = 2.8
-) %>% bslib::card(full_screen = TRUE)
-```
-:::
-
-
-
 # Base archetype
 
 For example, a score of 2-1 counts as 1 game won.
 
+## Matrix
 ::: {.panel-tabset .nav-pills}
-## Total matrix  
+### Total matrix  
 
 ```{r res_base_arch_matrix}
 plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches", size_multiplier = 4)
 ```
+
+### Only significative CI
+
+```{r base_arch_only_signif_mat_arch}
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
+  # simplify_tab_ratio = 0.5,
+  only_signif = TRUE, size_multiplier = 4
+) %>% bslib::card(full_screen = TRUE)
+```
+
+:::
 
 
 ## CI plot 
@@ -438,19 +448,6 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
   ) %>%
   bslib::card(full_screen = TRUE)
 ```
-
-## Only significative CI
-
-```{r base_arch_only_signif_mat_arch}
-plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
-  # simplify_tab_ratio = 0.5,
-  only_signif = TRUE, size_multiplier = 4
-) %>% bslib::card(full_screen = TRUE)
-```
-
-:::
-
-
 
 
 #  Best deck 

@@ -107,15 +107,36 @@ Deck_list_cards_count_with_any <- rbind(
 
 # Cards in Archetype based arch combination  
 
+```{r tooltips_card_arch_def}
+tooltips_base_arch_cards <- c(
+  "Main, Side or Both combine",
+  "Card name",
+  "Number of copies of the cards",
+    "Deck Archetype agregated",
+    "Deck Archetype parser",
+  "Number of decks with the card (exact number of copies) including deck without winrate like 5-0 leagues",
+  "Number of time the cards is present",
+  "Percent of time the cards is present"#,"Boolean for card with no possible win rate inclusion (only league)"
+)
+```
+
 
 ```{r cards_in_archetype_definition_print}
 htmltools::tagList(
       DT::datatable( 
         Deck_list_cards_count_with_any,
         colnames = str_replace_all(colnames(Deck_list_cards_count_with_any), "_", " "),
-             callback = DT::JS(
+    callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_base_arch_cards, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
       return_filter_js()
-    ),     
+    )
+  ),     
   filter = "top",
   rownames = FALSE,
   options = list(
@@ -143,15 +164,27 @@ proximty_classif <- read.csv(
   paste0("../data/intermediate_result/",
          params$format_param,"_proxymity_archetype_group.csv")) %>% 
           mutate(
-            Archetype_proximity = as.factor(Archetype_proximity),
-            value = as.factor(value)
+            Archetype.x = as.factor(Archetype.x),
+            Archetype.y = as.factor(Archetype.y)
                  ) %>% 
-          rename(
-            `Total archetype name` = Archetype_proximity ,
-            `Base archetype name group` = value 
-            ) %>% 
+          # rename(
+          #   `Total archetype name` = Archetype_proximity ,
+          #   `Base archetype name group` = value 
+          #   ) %>% 
   as_tibble()
 
+```
+
+
+```{r tooltips_proximity}
+tooltips_proximity <- c(
+  "Final Archetype name",
+  "Initial Archetype name",
+  "Third quartile (75%) of distance between deck inside the final archetype",
+  "Median of distance between final and initial archetype",
+  "Delta between last Q3 and Q2 (last two columns)",
+  "Boolean TRUE if Final Archetype is group with initial archetype "
+)
 ```
 
 
@@ -159,13 +192,25 @@ proximty_classif <- read.csv(
 htmltools::tagList(
       DT::datatable( 
         proximty_classif ,
-             callback = DT::JS(
+    callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_proximity, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
       return_filter_js()
-    ),     
+    )
+  ),      
   filter = "top",
   rownames = FALSE,
   options = list(
-  dom = "ltipr",
+  dom = "ltipr"  ,
+  searchCols = list(
+    NULL,NULL,NULL,NULL,NULL,
+    list(search = '["true"]' )
+  ),
   autoWidth = TRUE,
   pageLength = 25)  ,
   escape=FALSE
@@ -219,7 +264,12 @@ scry_fall_join_test_res <- join_with_scryfall(
 only show non matching cards no bug if table is empty.
 Number of cards correctly match : `r sum(!is.na(scry_fall_join_test_res$scry_fall_id))` (`r round(sum(!is.na(scry_fall_join_test_res$scry_fall_id))*100/nrow(scry_fall_join_test_res),2)` %)
 
-
+```{r tooltips_scryfall_matching}
+tooltips_scryfall_matching <- c(
+  "Card name",
+ "Boolean if function result in no match with scryfall id"
+)
+```
 
 ```{r scryfall_db_matching_print}
 htmltools::tagList(
@@ -233,9 +283,17 @@ htmltools::tagList(
           arrange(desc(`parsing fail`)
                   ),
       # colnames = str_replace_all(colnames(model_pred), "_", " "),
-             callback = DT::JS(
+    callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_scryfall_matching, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
       return_filter_js()
-    ),     
+    )
+  ),     
   filter = "top",
   rownames = FALSE,
   options = list(
@@ -305,14 +363,47 @@ model_pred <- left_join(
 
 ```
 
+
+
+```{r tool_tips_prediction_arch}
+tooltips_prediction_arch <- c(
+  "Link to source deck",
+  "Archetype (a confirmer ???)",
+  "Badaro Parser results (???)",
+  "(???)",
+  "Base archetype (???)",
+  "Deck color from archetype",
+  "Model voting result if score > 0.3",
+  "Voting model score [0-1] predict if > 0.3s",
+  "Regression best prediction",
+  "Regression best score",
+   "Random forest best prediction",
+  "Random forest best score",
+   "K-nearest neighboor best prediction",
+  "K-nearest neighboor best score",
+   "Decision tree best prediction",
+  "Decision tree best score",
+   "Xgboost best prediction",
+  "Xgboost best score"
+)
+```
+
 ```{r model_prediction_print}
 htmltools::tagList(
       DT::datatable(
         model_pred,
         colnames = str_replace_all(colnames(model_pred), "_", " "),
-             callback = DT::JS(
+    callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_prediction_arch, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
       return_filter_js()
-    ),
+    )
+  ),    
   filter = "top",
   rownames = FALSE,
   options = list(

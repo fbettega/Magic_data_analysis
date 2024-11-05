@@ -87,17 +87,22 @@ tooltips_deck_base <- c(
   "Deck Archetype agregated",
   "Number of decks in the archetype",
   "Card name",
+  "Number of wins",
+  "Number of looses",
   "Number of copies of the most represented card",
   "Possible number of copies",
-  'Number of times and percentage where the card is not present in the most representative number of copies. For example, if "Most present count" = 4, this column counts the number of decks where the card is present 0, 1, 2 or 3 times.'
+  'Number of times and percentage where the card is not present in the most representative number of copies. For example, if "Most present count" = 4, this column counts the number of decks where the card is present 0, 1, 2 or 3 times.(include scryfall hyperlink to the cards)'
 )
 
 
 
 tooltips_deck_variable_arch <- c(
+  "Link to scry fall",
   "Deck Archetype agregated",
-  "Number of decks include in the win rate computation",
-  "Percent of the deck in the archetype with the card",
+  "Number of decks include in the win rate computation of the card (exact number of copies)",
+  "Percent of deck with the card (exact number of copies) only deck with winrate",
+  "Number of wins",
+  "Number of looses",
   "Card name",
   "Number of copies of the card",
   "Win rate of the card",

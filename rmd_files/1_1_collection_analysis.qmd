@@ -260,6 +260,18 @@ Summary_missing_cards_by_archetype <-
 
 ```
 
+```{r tooltip_aggregate_archetype_missing}
+tooltip_aggregate_archetype_missing <- c(
+  "Deck Archetype agregated",
+  "Number of cards missing (4 copy count for 4)",
+  "Number of deck with atleast one missing",
+  "Average number of missing cards [minimum ; maximum]",
+  "Average number of distinct missing cards [minimum ; maximum]",
+   "Number of deck with no missing",
+  "Percent of deck with atleast one missing in archetype"
+)
+```
+
 
 ```{r}
  # print(
@@ -271,13 +283,13 @@ Summary_missing_cards_by_archetype <-
                  ),
         colnames = str_replace_all(colnames(Summary_missing_cards_by_archetype), "_", " "),
           callback = DT::JS(
-#     paste0(
-#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
-#     header = table.columns().header();
-# for (var i = 0; i < tips.length; i++) {
-#   $(header[i]).attr('title', tips[i]);
-# }
-# ",
+    paste0(
+      "var tips = ['", paste0(tooltip_aggregate_archetype_missing, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+"),
       return_filter_js()
     ),
   filter = "top", rownames = FALSE,
@@ -324,6 +336,18 @@ Summary_missing_cards_aggregate <-
     )
 ```
 
+```{r tooltip_aggregate_cards_missing}
+tooltip_aggregate_cards_missing <- c(
+    "Link to scry fall",
+  "Card name",
+  "Number of copies of the card",
+  "Max number of copies missing",
+  "Median number of missing cards [first quartile ; third quartile]",
+  "Number of deck with this card missing",
+  "Percent of deck with this card missing",
+  "Card Color"
+)
+```
 
 
 
@@ -370,13 +394,13 @@ add_link_to_a_column(
              "colors"
             ), "_", " "),
   callback = DT::JS(
-#     paste0(
-#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
-#     header = table.columns().header();
-# for (var i = 0; i < tips.length; i++) {
-#   $(header[i]).attr('title', tips[i]);
-# }
-# ",
+    paste0(
+      "var tips = ['", paste0(tooltip_aggregate_cards_missing, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+"),
       return_filter_js()
     ),
   filter = "top",
@@ -462,6 +486,19 @@ not_own_car_by_archetype <-
 
 
 
+```{r tooltip_Archetype_cards_missing}
+tooltip_Archetype_cards_missing <- c(
+  "Link to scry fall",
+  "Card name",
+  "Number of copies of the card",
+  "Percent of deck in the archetype with missing cards",
+  "Number of deck with this card missing",
+  "Max number of copy of the card missing in the archetype",
+  "Card Color"
+)
+```
+
+
 ```{r, results='asis'}
 for (i in Archetype_list) {
   # Inserts Month titles
@@ -522,13 +559,13 @@ add_link_to_a_column(
      ),
              "colors"), "_", " "),
   callback = DT::JS(
-#     paste0(
-#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
-#     header = table.columns().header();
-# for (var i = 0; i < tips.length; i++) {
-#   $(header[i]).attr('title', tips[i]);
-# }
-# ",
+    paste0(
+      "var tips = ['", paste0(tooltip_Archetype_cards_missing, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+"),
       return_filter_js()
     ),
   filter = "top",
@@ -608,7 +645,7 @@ not_owned_cards %>%
   ) %>% 
   mutate(
     n_quant_base_arch = sum(n_quant_base_arch),
-    missing = max(missing),
+    # missing = max(missing),
     Base_Archetype_count = #paste0(
       n_quant_base_arch/Base_Archetype_count
      # "(",Base_Archetype_count,")")
@@ -622,6 +659,7 @@ not_owned_cards %>%
  ) %>% 
   select(
     -c(
+      missing,
       Number_of_card_missing_in_deck,
       Number_of_distinct_card_missing_in_deck
       )
@@ -631,6 +669,19 @@ not_owned_cards %>%
 
 ```
 
+
+```{r tooltip_base_Archetype_cards_missing}
+tooltip_base_Archetype_cards_missing <- c(
+  "Link to scry fall",
+  "Card name",
+  "Base archetype name",
+  "Number of copies of the card",
+  "Percent of deck in the base archetype with missing cards",
+  "Number of deck with this card missing",
+  "Max number of copy of the card missing in the archetype",
+  "Card Color"
+)
+```
 
 ```{r}
  # print(
@@ -670,13 +721,13 @@ add_link_to_a_column(
      base_archetype_not_owned),
              "colors"), "_", " "),
   callback = DT::JS(
-#     paste0(
-#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
-#     header = table.columns().header();
-# for (var i = 0; i < tips.length; i++) {
-#   $(header[i]).attr('title', tips[i]);
-# }
-# ",
+    paste0(
+      "var tips = ['", paste0(tooltip_base_Archetype_cards_missing, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+"),
       return_filter_js()
     ),
   filter = "top",
@@ -688,7 +739,7 @@ rownames = FALSE,
      searchCols = list(
     NULL,NULL,NULL,
     list(search = '["Any"]' ),
-    NULL, NULL,
+    NULL, 
     list(search = '10 ...'),
     NULL
   ),

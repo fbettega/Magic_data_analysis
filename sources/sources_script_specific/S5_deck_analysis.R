@@ -609,7 +609,7 @@ print_result_total_script_deck_ana <- function(
             ),
             by = c("Mainboard_CardName" = "CardName")
           ) %>%
-          inner_join(
+          left_join(
             scryfall_db %>%
               select(id, scryfall_uri),
             by = join_by(
@@ -705,7 +705,7 @@ print_result_total_script_deck_ana <- function(
           ),
           by = c("Sideboard_CardName" = "CardName")
         ) %>%
-        inner_join(
+         left_join(
           scryfall_db %>%
             select(id, scryfall_uri),
           by = join_by(
