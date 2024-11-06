@@ -405,7 +405,7 @@ for (var i = 0; i < tips.length; i++) {
   options = list(
   dom = "ltipr",
     searchCols = list(
-    NULL,NULL,NULL,NULL,NULL,NULL,
+    NULL,NULL,NULL,NULL,NULL,NULL,NULL,
     list(search = '... 0.3')
   ),
   autoWidth = TRUE,

@@ -3,11 +3,7 @@ title: "Collection Tracker"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-library(binom)
-library("rjson")
-library(kableExtra)
 library(tidyverse)
-library(scryr)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 conflicted::conflicts_prefer(dplyr::filter)
