@@ -2,6 +2,5 @@
 *
 # Except this file
 !.gitignore
-!mtg_data/
-!ml_model/
-!intermediate_result/
+!proximity_data/
+!parser_outpout/

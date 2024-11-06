@@ -274,7 +274,7 @@ error = function(e) {
   # cancer shutdown use : 
   # system("shutdown -a")
   print(paste0("shutdown cause of error"))
-  system("shutdown /s /t 60")
+  # system("shutdown /s /t 60")
 
 }
 )
