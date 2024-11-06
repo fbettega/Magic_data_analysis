@@ -3,11 +3,7 @@ title: "Archetype definition and other debug results"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-library(binom)
-library("rjson")
-library(kableExtra)
 library(tidyverse)
-library(scryr)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 conflicted::conflicts_prefer(dplyr::filter)
@@ -228,10 +224,10 @@ Just list all distinct cards in format with boolean if match or not with my scry
 
 ```{r scryfall_db_matching_datareading}
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
-   filter(
-     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-     )
-
+filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+)
 
 test_scry_fall_on_all_cards <- 
   rbind(

@@ -5,12 +5,8 @@ title: "Best decks"
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 #     theme: united  # many options for theme, this one is my favorite.
-library(pander)
-library("rjson")
 library(tidyverse)
-library(glmnet)
-library(rFSA)
-library("hdi")
+library(hdi)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 conflicted::conflicts_prefer(purrr::discard)
@@ -29,7 +25,8 @@ options(kableExtra.auto_format = FALSE)
 
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
     filter(
-        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
+        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
     )
 
 # sample size minimum pour etre un groupe

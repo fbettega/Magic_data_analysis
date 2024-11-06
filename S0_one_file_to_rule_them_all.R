@@ -33,7 +33,6 @@ git2r::config(
 #   "ArchetypeParser/MTGODecklistCache_J/"
 #   )
 
-
 deck_list_repo_base <-  git2r::repository("ArchetypeParser/MTGODecklistCache_B/")
 deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache_J/")
 deck_list_format <- git2r::repository("ArchetypeParser/MTGOFormatData/")
@@ -44,18 +43,13 @@ pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
 
 
-# deck_list_repo_test <-  git2r::repository("ArchetypeParser/MTGODecklistCache/")
-# fetch <- git2r::fetch(deck_list_repo_test,name = "jiliac")
-
-
 tictoc::tic("Scryfall update data")
  
 
 
-
 scryfall_update <- update_scryfall_data(
   "../scry_fall_to_csv/",
-  reupdate = Reupdate_scryfall_db #TRUE FALSE
+  reupdate = Reupdate_scryfall_db
 )
 
 
@@ -237,6 +231,7 @@ rmarkdown::render(
   envir = new.env(),
   output_dir = "outpout/"
 )
+
 rmarkdown::render(
   input = "sources/README.rmd",
   envir = new.env(),
@@ -273,16 +268,13 @@ tictoc::tic.clearlog()
 system("shutdown /s /t 30")
 },
 error = function(e) {
-  
-    
-  
   error_message <- paste("Une erreur s'est produite :", e$message, "\n")
   write(error_message, file = "outpout/erreur_log.txt")
   
   # cancer shutdown use : 
   # system("shutdown -a")
   print(paste0("shutdown cause of error"))
-  system("shutdown /s /t 60")
+  # system("shutdown /s /t 60")
 
 }
 )
@@ -307,7 +299,7 @@ error = function(e) {
 # eddit_yaml(format_date_en_cours)
 # # # debug purpose
 # quarto::quarto_render(
-#   "rmd_files/5_Deck_analysis.qmd",
+#   "rmd_files/6_best_deck.qmd",
 #   output_format = "html",
 #   profile = "basic",
 #   as_job = FALSE

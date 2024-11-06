@@ -3,10 +3,8 @@ title: "Cards winrate"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-library("rjson")
-library(kableExtra)
 library(tidyverse)
-library(htmltools)
+
 
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 source("../sources/sources_script_specific/S3_Card_win_rate_table.R", local = TRUE)
@@ -33,9 +31,10 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 filter_archetype_count <- 10#50
 
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
-   filter(
-     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-     )
+filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+)
 
 df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
     # include filter bad deck

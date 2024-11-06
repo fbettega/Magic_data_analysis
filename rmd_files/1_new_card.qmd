@@ -3,23 +3,14 @@ title: "New cards analysis"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-# Note globale
-# probablement reformater le code des CI plus présentations en un fonction renvoyant X colonnes WR upper and lower
-# Reflechir a passer en shiny
-#
-# ajouter une colonne nombre de deck
-library(binom)
-library("rjson")
-library(kableExtra)
-library(tidyverse)
-library(scryr)
 
+library(tidyverse)
 
 source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
 source("../sources/sources_script_specific/S1new_cards.R", local = TRUE)
 conflicted::conflicts_prefer(dplyr::filter)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
-refetch_cards_new_set <- FALSE
+
 ```
 
 
@@ -41,9 +32,10 @@ df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.
 ```
 ```{r scry_fall_db_reading}
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
-   filter(
-     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-     )
+filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+)
 ```
 
 

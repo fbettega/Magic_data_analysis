@@ -4,14 +4,12 @@ title: "Presence"
 
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-library("rjson")
-library(lubridate)
-library(kableExtra)
+
 library(tidyverse)
 library(plotly)
-# devtools::install_github("hoesler/rwantshue")
-library("rwantshue")
-library(htmltools)
+library(rwantshue)
+
+
 conflicted::conflicts_prefer(purrr::discard)
 # css: TOC.css
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
@@ -849,9 +847,10 @@ tooltips_deck_new_cards <- c(
 
 ```{r read_modern_db}
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
-   filter(
-     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-     )
+filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+)
 ```
 
 

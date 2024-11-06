@@ -3,13 +3,10 @@ title: "Matchup matrix"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-library("rjson")
-library(lubridate)
-library(kableExtra)
 library(tidyverse)
 library(plotly)
-library("rwantshue")
-library(ggfittext)
+library(rwantshue)
+# library(ggfittext)
 # css: TOC.css
 source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
 source("../sources/sources_script_specific/S4_matrix_WR.R", local = TRUE)

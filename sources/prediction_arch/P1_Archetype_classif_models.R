@@ -1,14 +1,9 @@
-library("rjson")
-# library(factoextra)
-# library(distances)
-# library(SSLR)
-# library(FactoMineR)
-# prévoir un regroupement automatique au dela de ce que j'ai fait
+library(rjson)
 library(tidyverse)
 library(tidymodels)
 library(future)
 library(baguette)
-library("xgboost")
+library(xgboost)
 source("sources/S2_Source_mtg_new_card.R",local = TRUE)
 
 # format_param <- format_date_en_cours$format_param

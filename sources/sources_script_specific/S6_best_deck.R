@@ -196,7 +196,7 @@ table_generator_sub_fun <- function(
               min_number
             ),
         base_deck_cards = TRUE
-      ) %>% select(-c(mean_number, min_number, max_number))
+      ) 
       
       
       
@@ -237,11 +237,16 @@ table_generator_sub_fun <- function(
               max_number, "]"
             ),
         base_deck_cards = FALSE
-      ) %>%
-      select(-c(mean_number, min_number, max_number))
+      ) 
     
-      Table_main_side <- rbind(base_cards_table,variables_cards_table)
-      
+      Table_main_side <- rbind(base_cards_table,variables_cards_table) %>% 
+        group_by(Main_or_side) %>% 
+        mutate(number_of_base_cards = sum(min_number * as.numeric(base_deck_cards)),
+               Main_or_side = paste0(Main_or_side, " : ",number_of_base_cards)) %>% 
+        ungroup() %>% 
+        select(-c(mean_number, min_number, max_number,number_of_base_cards))
+        
+    
     title_table <- paste0(
       "Top ", top_x_rank,
       " best performing ",ifelse(

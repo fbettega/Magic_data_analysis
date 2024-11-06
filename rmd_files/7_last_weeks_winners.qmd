@@ -3,11 +3,9 @@ title: "Last winners"
 ---
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE}
-library(pander)
-library("rjson")
 library(tidyverse)
 library(plotly)
-library("rwantshue")
+library(rwantshue)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
@@ -35,9 +33,10 @@ big_mtgo_tournament <- str_replace_all(
 )
 
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
-    filter(
-        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal"
-    )
+ filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+)
 ```
 
 ```{r initial_data_loading}

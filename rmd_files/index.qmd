@@ -292,11 +292,13 @@ title_table_proximity <- paste0(
   )
 
 proximty_classif  %>% 
-          select(Archetype_proximity,value) %>%
+  filter(groupe) %>% 
+          select(Archetype.x,
+Archetype.y) %>%
   gt::gt() %>% 
    cols_label(
-    Archetype_proximity = md("**Total archetype name**"),
-    value = md("**Base archetype name group**")
+    Archetype.x = md("**Total archetype name**"),
+    Archetype.y = md("**Base archetype name group**")
   ) %>%
   gt::cols_align(
     align = c("center"),

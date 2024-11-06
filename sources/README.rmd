@@ -27,8 +27,21 @@ Result are avaible [here](https://mtg-modern.serveur-du-placard.xyz/)
 ## Dependencies
 ### Github repo and script
 The initial json is obtained from the [badaro parser](https://github.com/Badaro/MTGOArchetypeParser).   
+
+
+Normally the pull of the necessary github repo is automatic (to clone the repos concerned, simply uncomment the git clone lines in the ‘S0_one_file_to_rule_them_all.R’ file).
+**Currently the automatic github pull does not work because to obtain results similar to mine it is necessary to merge in Archetype parser the decklist cach repo of [Badaro](https://github.com/Badaro) and [Jiliac](https://github.com/Jiliac).**
+
+
+
 To get scryfall data in csv i use my own script you can find it [here](https://github.com/fbettega/fetch_scryfall_data_to_csv) file generated should be put in  *Modern_data_analysis\data\mtg_data*.  
 
+### Packages
+
+tidyverse  
+plotly   
+rwantshue (from devtools::install_github("hoesler/rwantshue"))  
+hdi  
 
 
 
