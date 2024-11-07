@@ -3,7 +3,10 @@
 
 list.of.packages <- readRDS("data/list_of_packages.rds")
 
-
+# library(tidyverse)
+# list.of.packages <- rbind(list.of.packages ,data.frame(
+#   package = c("future", "tidymodels", "baguette", "xgboost")
+#   ) %>% mutate(source = "Cran"))
 # readr::write_rds(list.of.packages,"data/list_of_packages.rds")
 
 

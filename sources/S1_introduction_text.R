@@ -22,14 +22,6 @@ pander::pandoc.p("")
 pander::pandoc.p("")
 
 
-
-
-
-
-
-
-
-
 ################################################################################
 ################################################################################
 #######################  Intro of script 2  ####################################
@@ -56,12 +48,6 @@ The presence of different cards in the format. Leagues are includes in this part
 pander::pandoc.p(Introduction_char_vec_par_2_1)
 pander::pandoc.p("")
 pander::pandoc.p("")
-
-
-
-
-
-
 
 
 ################################################################################
@@ -91,11 +77,14 @@ pander::pandoc.p("")
 Introduction_char_vec_par_4_1 <- paste0(
   "This chapter focuses on the data for which we know the result of each match and the Archetype of the opponent.\n
   In order to be included, an archetype must be represented more than ", Archetype_cut_of_4, " times in the dataset.\n
-- Matrix considers the matches as a whole (for example, a 2-1 score counts as 1 game won).\n
+
+\t- Matrix considers the matches as a whole (for example, a 2-1 score counts as 1 game won).\n
+
+\t-For each tournament, a bar graph shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n
 
 They are built on the following model (additionnal information in matrix tooltip): \n\n
-- A complete matrix with all the information.\n
 - The confidence interval graphs show the averages and 95% confidence intervals (calculated using the Agresti-Coull method). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.\n
+- A complete matrix with all the information.\n
 - A matrix presenting only the matchups with a confidence interval of less than 50%.\n
 The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time.\n
 In order to determine an expected number of victories 2 criteria are used the average winrate and the lower bounds of the confidence interval.**Please note that this part is still under construction as some decks with too few matchups are included**.\n"
@@ -106,21 +95,20 @@ pander::pandoc.p("")
 pander::pandoc.p("")
 
 
-
-
-
-
-
-
 ################################################################################
 ################################################################################
 #######################  Intro of script 5  ####################################
 ## ---- Introduction_chunk_5_Deck_analysis
 
 Introduction_char_vec_par_5_1 <- paste0(
-  "This analysis attempts to use regression to determine the cards with the best performance.\n
+  "This analysis attempts to use regression to determine the cards with the best performance inside archetype or base archetype.\n
 A binomial regression is initially trained on a set of decks. In order to be included in this analysis the archetype must be present at least ", filter_archetype_count_5, " times in the dataset.\n
-In order to be considered a card must be included at least ", min_sample_size_5, " times in either the main deck or the sideboards, one or the other being considered separately. In models comparing the number of copies of each card, when a number of copies is less than ", min_sample_size_5, " it is grouped with an adjacent number of copies. For example, a card that is present 32 times in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4 copies would lead to the following result 1/2 : 232 and 3/4 : 62. The formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have been grouped together.\n"
+In order to be considered a card must be included at least ", min_sample_size_5, " times in either the main deck or the sideboards, one or the other being considered separately.
+  In models comparing the number of copies of each card, when a number of copies is less than ", min_sample_size_5, " it is grouped with an adjacent number of copies. 
+  For example, a card that is present 32 times in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4 copies would lead to the following result 1/2 : 232 and 3/4 : 62. 
+  The formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have been grouped together.\n
+                                          **Be careful, this part leads to results that I'm not really sure of. The interpretation of the regression coefficients seems really questionable, particularly in relation to the collinearity problem and the very large number of variables with sometimes small sample sizes. I would therefore encourage you to be very careful.**\n
+  "
 )
 
 
@@ -151,9 +139,15 @@ pander::pandoc.p("")
 
 
 
-Introduction_char_vec_par_6_1 <- paste0("This analysis attempts to use regression to determine the decks with the best performance.\n
-A binomial regression is initially trained on a set of decks. In order to be included in this analysis the archetype must be present at least ", filter_archetype_count_6, " times in the dataset.\n
-In order to be considered a card must be included at least ", min_sample_size_6, " times in either the main deck or the sideboards, one or the other being considered separately. In models comparing the number of copies of each card, when a number of copies is less than ", min_sample_size_6, " it is grouped with an adjacent number of copies. For example, a card that is present 32 times in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4 copies would lead to the following result 1/2 : 232 and 3/4 : 62. The formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have been grouped together. ")
+Introduction_char_vec_par_6_1 <- paste0("This analysis attempts to use regression to determine the decks with the best performance inside archetype or base archetype.\n
+A binomial regression is initially trained on a set of decks.
+In order to be included in this analysis the archetype must be present at least ", filter_archetype_count_6, " times in the dataset.\n
+In order to be considered a card must be included at least ", min_sample_size_6, " times in either the main deck or the sideboards, one or the other being considered separately.
+                                        In models comparing the number of copies of each card, when a number of copies is less than ", min_sample_size_6, " it is grouped with an adjacent number of copies.
+                                        For example, a card that is present 32 times in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4 copies would lead to the following result 1/2 : 232 and 3/4 : 62.
+                                        The formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have been grouped together. 
+                                        **Be careful, this part leads to results that I'm not really sure of. The interpretation of the regression coefficients seems really questionable, particularly in relation to the collinearity problem and the very large number of variables with sometimes small sample sizes. I would therefore encourage you to be very careful.**
+                                        ")
 
 
 # see above for part 2
@@ -186,10 +180,12 @@ pander::pandoc.p("")
 
 
 Introduction_char_vec_par_7_1 <- paste0(
-  "Presentation of the Top 8 and presence in major tournaments (number of players > ",
-  min_tournament_size_7, ") over the last ", last_week_number_7, " weeks."
+  "This chapter is divided by week over the last ", last_week_number_7, " weeks.
+  For each week the different tournaments with more than", min_tournament_size_7, "players.",
+  
+  "\t-For each tournament, a bar graph shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n
+  \t- A table shows the top8 decks, their basic archetype Archetype the player (which is a link to the decklist), and the decklist itself.\n"
 )
-
 
 pander::pandoc.p(Introduction_char_vec_par_7_1)
 pander::pandoc.p("")

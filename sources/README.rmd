@@ -46,12 +46,12 @@ List of package below :
 
 ```{r}
 list.of.packages <- readr::read_rds("../data/list_of_packages.rds")
-list.of.packages %>% 
-  knitr::kable(format = "pipe")
+# list.of.packages %>% 
+#   knitr::kable(format = "pipe")
 ```
 
 
-`r cat(list.of.packages, sep = "\n")`  
+`r cat(list.of.packages$package, sep = "\n")`  
 
 
 ## format includes
