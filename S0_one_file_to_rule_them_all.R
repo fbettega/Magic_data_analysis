@@ -5,11 +5,22 @@ Reupdate_scryfall_db <- FALSE #TRUE FALSE
 # Try catch because script is long allow shutdown if error
 tryCatch(
 {
+
 format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
 log_df <- read.csv("other_file/log_run.csv")
 
 
 tictoc::tic("total")
+
+
+# install.packages if some missing
+sys.source(
+  "sources/S3_install_packages.R",
+  envir = define_env(NULL),
+  toplevel.env = define_env(NULL)
+)
+
+
 git2r::config(
   global = TRUE,
   user.name = "fbettega",
@@ -32,6 +43,8 @@ git2r::config(
 #   "https://github.com/Jiliac/MTGODecklistCache.git",
 #   "ArchetypeParser/MTGODecklistCache_J/"
 #   )
+
+
 
 deck_list_repo_base <-  git2r::repository("ArchetypeParser/MTGODecklistCache_B/")
 deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache_J/")
@@ -274,7 +287,7 @@ error = function(e) {
   # cancer shutdown use : 
   # system("shutdown -a")
   print(paste0("shutdown cause of error"))
-  # system("shutdown /s /t 60")
+  system("shutdown /s /t 60")
 
 }
 )
@@ -304,6 +317,7 @@ error = function(e) {
 #   profile = "basic",
 #   as_job = FALSE
 # )
+
 # quarto::quarto_render(
 #   "rmd_files/1_1_collection_analysis.qmd",
 #   output_format = "html",

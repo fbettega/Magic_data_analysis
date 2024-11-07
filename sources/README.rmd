@@ -25,23 +25,33 @@ Personal verion of magic metagame analysis
 Result are avaible [here](https://mtg-modern.serveur-du-placard.xyz/)
 
 ## Dependencies
+**Warning**: I've tried to make this script as reproducible as possible, but as it wasn't my initial intention, some of the details may be missing.  I may have forgotten some packages or folders that are necessary for the script to work properly.    
 ### Github repo and script
 The initial json is obtained from the [badaro parser](https://github.com/Badaro/MTGOArchetypeParser).   
 
 
-Normally the pull of the necessary github repo is automatic (to clone the repos concerned, simply uncomment the git clone lines in the ‘S0_one_file_to_rule_them_all.R’ file).
+Normally the pull of the necessary github repo is automatic (to clone the repos concerned, simply uncomment the git clone lines in the  [S0_one_file_to_rule_them_all.R file](./S0_one_file_to_rule_them_all.R) ).
 
 **Currently the automatic github pull does not work because to obtain results similar to mine it is necessary to merge in Archetype parser the decklist cach repo of [Badaro](https://github.com/Badaro/MTGODecklistCache) and [Jiliac](https://github.com/Jiliac/MTGODecklistCache/).**
 Format data pull is automatic but can also be found [here](https://github.com/Badaro/MTGOFormatData) 
+
 To get scryfall data in csv i use my own script you can find it [here](https://github.com/fbettega/fetch_scryfall_data_to_csv) file generated should be put in  *Modern_data_analysis\data\mtg_data*.  
 
 ### Packages
 
-tidyverse  
-plotly   
-rwantshue (from devtools::install_github("hoesler/rwantshue"))  
-hdi  
+Install packages script can be found [here](../data/list_of_packages.rds) 
 
+List of package below :  
+
+
+```{r}
+list.of.packages <- readr::read_rds("../data/list_of_packages.rds")
+list.of.packages %>% 
+  knitr::kable(format = "pipe")
+```
+
+
+`r cat(list.of.packages, sep = "\n")`  
 
 
 ## format includes
@@ -95,4 +105,6 @@ A quarto book for each format define above
 
 
 ## Warning
-**Grid Search can be really long aroud 3 days for me**
+**Grid Search can be really long around 3 days for me**  
+A downloadable version of the grid search results for each model is available [here](https://mtg-modern.serveur-du-placard.xyz/grid_dl/grid.zip) **Warning aroud 4 Go**.
+

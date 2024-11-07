@@ -26,13 +26,6 @@ update_scryfall_data <- function(
 
 
 
-
-
-
-
-
-
-
 run_command_from_dir <- function(cmd, dir_cmd) {
   # Current working directory
   cur <- getwd()

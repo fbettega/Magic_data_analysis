@@ -4,30 +4,22 @@ title: "Overview of results"
 
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
-# knitr::opts_chunk$set(
-#   echo = FALSE,
-#   message = FALSE,
-#   warning = FALSE,
-#    cache = TRUE
-# )
 library(tidyverse)
 library(gt)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 knitr::read_chunk("../sources/S1_introduction_text.R")
-# a faire
-# Cards by matchup when possible
+
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
+
 ```
 
 
-# Archetype definition
-[Modify version of archetype definition](https://github.com/fbettega/Modern_FB_archetype) initial definition [from Badaro](https://github.com/Badaro/MTGOFormatData)
 
 
-**Acknowledgements**
-Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.
-Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.
-Thanks to [Jiliac](https://github.com/Jiliac) for integrating Qonfused data and maintaining Format data.  
+# Acknowledgements
+Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.  
+Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.  
+Thanks to [Jiliac](https://github.com/Jiliac) for integrating Qonfused data and maintaining Format data.   
 
 ```{r data_reading}
 proportion_format_fun <- function(nb,tot){

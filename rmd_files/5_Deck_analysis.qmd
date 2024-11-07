@@ -87,7 +87,6 @@ Main_res_Archetype <- Generate_and_format_model_result(
 ```
 
 ```{r result_archetype_sideboard}
-
 Side_res_Archetype <- Generate_and_format_model_result(
   df_base_fun = df_export,
   min_arch_presence_fun = filter_archetype_count_5,
