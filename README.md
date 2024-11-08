@@ -9,9 +9,12 @@ Result are avaible [here](https://mtg-modern.serveur-du-placard.xyz/)
 **Warning**: I’ve tried to make this script as reproducible as possible,
 but as it wasn’t my initial intention, some of the details may be
 missing. I may have forgotten some packages or folders that are
-necessary for the script to work properly.  
-\### Github repo and script The initial json is obtained from the
-[badaro parser](https://github.com/Badaro/MTGOArchetypeParser).
+necessary for the script to work properly.
+
+### Github repo and script
+
+The initial json is obtained from the [badaro
+parser](https://github.com/Badaro/MTGOArchetypeParser).
 
 Normally the pull of the necessary github repo is automatic (to clone
 the repos concerned, simply uncomment the git clone lines in the
@@ -33,9 +36,40 @@ generated should be put in \*Modern_data_analysis\_data\*.
 ### Packages
 
 Install packages script can be found
-[here](../data/list_of_packages.rds)
+[here](../sources/S3_install_packages.R)
 
 List of package below :
+
+| package    |
+|:-----------|
+| quarto     |
+| tidyverse  |
+| plotly     |
+| devtools   |
+| hdi        |
+| purrr      |
+| scryr      |
+| rlang      |
+| tictoc     |
+| proxyC     |
+| knitr      |
+| scales     |
+| htmltools  |
+| DT         |
+| conflicted |
+| bslib      |
+| flextable  |
+| gtsummary  |
+| car        |
+| gtools     |
+| caret      |
+| lubridate  |
+| kableExtra |
+| rwantshue  |
+| future     |
+| tidymodels |
+| baguette   |
+| xgboost    |
 
 ## format includes
 

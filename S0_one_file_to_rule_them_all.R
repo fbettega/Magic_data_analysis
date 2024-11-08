@@ -299,7 +299,7 @@ error = function(e) {
 # 
 # ## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
 # 
-# i <- 2
+# i <- 3
 # format_date_en_cours <- format_date_en_cours_fulltable[i, ]
 # readr::write_rds(
 #   format_date_en_cours,
