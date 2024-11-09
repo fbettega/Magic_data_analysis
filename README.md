@@ -31,7 +31,7 @@ pull is automatic but can also be found
 
 To get scryfall data in csv i use my own script you can find it
 [here](https://github.com/fbettega/fetch_scryfall_data_to_csv) file
-generated should be put in \*Modern_data_analysis\_data\*.
+generated should be put in ’Modern_data_analysis\_data’.
 
 ### Packages
 

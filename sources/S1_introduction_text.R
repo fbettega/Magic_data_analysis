@@ -107,8 +107,8 @@ In order to be considered a card must be included at least ", min_sample_size_5,
   In models comparing the number of copies of each card, when a number of copies is less than ", min_sample_size_5, " it is grouped with an adjacent number of copies. 
   For example, a card that is present 32 times in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4 copies would lead to the following result 1/2 : 232 and 3/4 : 62. 
   The formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have been grouped together.\n
-                                          **Be careful, this part leads to results that I'm not really sure of. The interpretation of the regression coefficients seems really questionable, particularly in relation to the collinearity problem and the very large number of variables with sometimes small sample sizes. I would therefore encourage you to be very careful.**\n
-  "
+**Be careful, this part leads to results that I'm not really sure of. The interpretation of the regression coefficients seems really questionable, particularly in relation to the collinearity problem and the very large number of variables with sometimes small sample sizes. I would therefore encourage you to be very careful.**\n
+"
 )
 
 
@@ -143,11 +143,10 @@ Introduction_char_vec_par_6_1 <- paste0("This analysis attempts to use regressio
 A binomial regression is initially trained on a set of decks.
 In order to be included in this analysis the archetype must be present at least ", filter_archetype_count_6, " times in the dataset.\n
 In order to be considered a card must be included at least ", min_sample_size_6, " times in either the main deck or the sideboards, one or the other being considered separately.
-                                        In models comparing the number of copies of each card, when a number of copies is less than ", min_sample_size_6, " it is grouped with an adjacent number of copies.
-                                        For example, a card that is present 32 times in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4 copies would lead to the following result 1/2 : 232 and 3/4 : 62.
-                                        The formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have been grouped together. 
-                                        **Be careful, this part leads to results that I'm not really sure of. The interpretation of the regression coefficients seems really questionable, particularly in relation to the collinearity problem and the very large number of variables with sometimes small sample sizes. I would therefore encourage you to be very careful.**
-                                        ")
+In models comparing the number of copies of each card, when a number of copies is less than ", min_sample_size_6, " it is grouped with an adjacent number of copies.
+For example, a card that is present 32 times in 1 copy 200 times in 2 copies, 15 times in 3 copies and 47 times in 4 copies would lead to the following result 1/2 : 232 and 3/4 : 62.
+The formulation 2-4 indicates that the numbers of copies 2, 3 and 4 have been grouped together. 
+**Be careful, this part leads to results that I'm not really sure of. The interpretation of the regression coefficients seems really questionable, particularly in relation to the collinearity problem and the very large number of variables with sometimes small sample sizes. I would therefore encourage you to be very careful.**")
 
 
 # see above for part 2
@@ -182,9 +181,8 @@ pander::pandoc.p("")
 Introduction_char_vec_par_7_1 <- paste0(
   "This chapter is divided by week over the last ", last_week_number_7, " weeks.
   For each week the different tournaments with more than", min_tournament_size_7, "players.",
-  
-  "\t-For each tournament, a bar graph shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n
-  \t- A table shows the top8 decks, their basic archetype Archetype the player (which is a link to the decklist), and the decklist itself.\n"
+  "-For each tournament, a bar graph shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n
+- A table shows the top8 decks, their basic archetype Archetype the player (which is a link to the decklist), and the decklist itself.\n"
 )
 
 pander::pandoc.p(Introduction_char_vec_par_7_1)

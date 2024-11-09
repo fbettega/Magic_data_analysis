@@ -7,6 +7,8 @@ tryCatch(
 {
 
 format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
+
+
 log_df <- read.csv("other_file/log_run.csv")
 
 
@@ -257,7 +259,7 @@ rmarkdown::render(
 
 if (file.exists("other_file/ssh_key/id_rsa")) {
   session <- ssh::ssh_connect(
-    "francois@176.31.183.129", 
+    "francois@176.31.183.129",
     keyfile = "other_file/ssh_key/id_rsa"
     )
   ssh::scp_upload(
@@ -296,7 +298,8 @@ error = function(e) {
 # ################################################################################
 # ############### easy debug just init with one format to run script #############
 # format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
-# 
+# library(yaml)
+# source("sources/S0_source_init.R")
 # ## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
 # 
 # i <- 3
@@ -312,12 +315,11 @@ error = function(e) {
 # eddit_yaml(format_date_en_cours)
 # # # debug purpose
 # quarto::quarto_render(
-#   "rmd_files/6_best_deck.qmd",
+#   "rmd_files/4_matrix_WR.qmd",
 #   output_format = "html",
 #   profile = "basic",
-#   as_job = FALSE
+#   as_job = TRUE
 # )
-
 # quarto::quarto_render(
 #   "rmd_files/1_1_collection_analysis.qmd",
 #   output_format = "html",

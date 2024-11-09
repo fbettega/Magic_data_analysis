@@ -65,11 +65,44 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 
+```{r creating_data_of_total_75}
+def_export_total_75 <- 
+  rbind(
+  df_export %>% 
+        unnest_longer(Sideboard) %>%
+        unnest_wider(Sideboard, names_sep = "_") %>% 
+          rename(
+          CardName = Sideboard_CardName,
+          Count = Sideboard_Count) %>% 
+  select(-Mainboard),
+df_export %>%
+        unnest_longer(Mainboard) %>%
+        unnest_wider(Mainboard, names_sep = "_") %>% 
+  rename(CardName = Mainboard_CardName,
+        Count = Mainboard_Count)
+  %>% 
+  select(-Sideboard)
+) %>% 
+  group_by(id,CardName) %>% 
+  mutate(Count = sum(Count)) %>% 
+  distinct() %>% 
+  nest(Mainboard = c(CardName,Count)) %>% 
+  mutate(
+Sideboard = "useless"
+)
+
+```
+
+
 ```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
 ```
 
 
+Model produce odds ratio, an odds ratio greater than 1 indicates that the condition or event is more likely to occur in the first cards count. And an odds ratio less than 1 indicates that the condition or event is less likely to occur in the first cards count.
 
+If the probabilities of the event in each of the groups of cards count are p1 (first group 4 copy of a cards) and p2 (second group 0-3 copy of the cards), then the odds ratio is:
+
+$$OR = \frac{p_1/(1-p_1)}{p_2/(1-p_2)}$$
 
 # Archetype
 
@@ -100,6 +133,19 @@ Side_res_Archetype <- Generate_and_format_model_result(
 
 
 
+```{r result_archetype_total_75}
+Total_75_res_Archetype <- Generate_and_format_model_result(
+  df_base_fun = def_export_total_75,
+  min_arch_presence_fun = filter_archetype_count_5,
+  deck_or_side = "Mainboard", # "Mainboard" "Sideboard" "All
+  type_of_archetype = "Archetype", # "Archetype" "Base_Archetype"
+  land_name_fun = Land_modern,
+  min_number_of_cards = min_sample_size_5,
+  db_scryfall_fun_par = modern_DB_card
+)
+```
+
+
 ```{r print_result_arch, results='asis'}
 #, out.width="100%"
 if (is_inside_knitr()) {
@@ -109,6 +155,7 @@ if (is_inside_knitr()) {
     print_result_total_script_deck_ana(
       res_main = Main_res_Archetype,
       res_side = Side_res_Archetype,
+      res_75 = Total_75_res_Archetype,
       scryfall_db = modern_DB_card,
       iteration = x
     )
@@ -130,8 +177,6 @@ Main_res_base_archetype <- Generate_and_format_model_result(
   min_number_of_cards = min_sample_size_5,
   db_scryfall_fun_par = modern_DB_card
 )
-
-
 ```
 
 ```{r result_base_archetype_side_board}
@@ -146,14 +191,30 @@ Side_res_base_archetype <- Generate_and_format_model_result(
 )
 ```
 
+
+```{r result_base_archetype_total_75}
+Total_75_res_base_archetype <- Generate_and_format_model_result(
+  df_base_fun = def_export_total_75,
+  min_arch_presence_fun = filter_archetype_count_5,
+  deck_or_side = "Mainboard", # "Mainboard" "Sideboard" "All
+  type_of_archetype = "Base_Archetype", # "Archetype" "Base_Archetype"
+  land_name_fun = Land_modern,
+  min_number_of_cards = min_sample_size_5,
+  db_scryfall_fun_par = modern_DB_card
+)
+```
+
+
 ```{r print_result_base_arch, results='asis'}
 #, out.width="100%"
 
 if (is_inside_knitr()) {
   res_base_arch <- lapply(sort(Main_res_base_archetype$list_archetype), function(x) {
+
     print_result_total_script_deck_ana(
       res_main = Main_res_base_archetype,
       res_side = Side_res_base_archetype,
+      res_75 = Total_75_res_base_archetype,
       scryfall_db = modern_DB_card,
       iteration = x
     )

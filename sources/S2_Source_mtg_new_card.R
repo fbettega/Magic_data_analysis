@@ -14,6 +14,16 @@
 # }
 
 ################################################################################
+######################## Format proportion   ###################################
+proportion_format_fun <- function(nb,tot){
+  percent = round(nb*100/tot,1)
+  res <- paste0(nb,"/",tot,"(",percent,"%)")
+  return(res)
+}
+
+
+
+################################################################################
 ######################## collapse following number separate by / ###############
 findIntRuns <- function(run) {
   run <- sort(run)

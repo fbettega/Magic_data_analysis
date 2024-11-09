@@ -515,7 +515,8 @@ Df_expected_of_week_sum <- rbind(
       Week,
       levels = c(1:max(df_base_all_data$Week), "All")
     )
-  )
+  ) %>% 
+  arrange(Week)
 
 
 Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>%
@@ -548,6 +549,7 @@ Presence_for_best_deck_plot <- rbind(
   ) %>%
   group_by(Week) %>%
   mutate(
+    Week_deck_number = sum(n),
     presence_percent = n / sum(n)
   )
 
@@ -560,7 +562,16 @@ colors_scales_presence <- scheme$hex(
 
 plot_archetype_spaghetti <- (
   ggplot(
-    Presence_for_best_deck_plot,
+    Presence_for_best_deck_plot %>% 
+      mutate(
+        week = Week,
+        Week_label = 
+        paste0(
+      "Week : ", Week, "<br>",
+        "N total deck :<br>",Week_deck_number
+                    )
+    
+      ),
     aes(
       x = Week,
       y = presence_percent,
@@ -575,6 +586,16 @@ plot_archetype_spaghetti <- (
   ) +
     geom_line() +
     geom_point() +
+  scale_x_discrete(
+    "Week",
+    breaks = unique(Presence_for_best_deck_plot$Week),
+    labels = paste0(
+      "Week : ", levels(Presence_for_best_deck_plot$Week), "<br>",
+        # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
+        "N total deck :<br>", Presence_for_best_deck_plot %>%  arrange(Week) %>%  select(Week,Week_deck_number) %>% distinct() %>% 
+  pull(Week_deck_number)
+                    )
+  ) +
     scale_color_manual(
       values = colors_scales_presence
     ) +
@@ -776,6 +797,7 @@ Presence_Base_Archetype_for_best_deck_plot <- rbind(
   ) %>%
   group_by(Week) %>%
   mutate(
+    Week_deck_number = sum(n),
     presence_percent = n / sum(n)
   )
 
@@ -803,6 +825,19 @@ plot_Base_Archetype_spaghetti <- (
   ) +
     geom_line() +
     geom_point() +
+  scale_x_discrete(
+    "Week",
+    breaks = unique(Presence_Base_Archetype_for_best_deck_plot$Week),
+    labels = paste0(
+      "Week : ", levels(Presence_Base_Archetype_for_best_deck_plot$Week), "<br>",
+        # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
+        "N total deck :<br>", Presence_Base_Archetype_for_best_deck_plot %>% 
+        arrange(Week) %>%  
+        select(Week,Week_deck_number) %>% 
+        distinct() %>% 
+  pull(Week_deck_number)
+  )
+  ) +
     scale_color_manual(
       values = colors_scales_presence
     ) +
@@ -875,15 +910,7 @@ DT::datatable(
     select(Base_Archetype,`Week All`,everything()),
   filter = "top", rownames = FALSE,
   callback = DT::JS(
-    #         paste0(
-    #         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
-    #     header = table.columns().header();
-    # for (var i = 0; i < tips.length; i++) {
-    #   $(header[i]).attr('title', tips[i]);
-    # }
-    # ",
     return_filter_js()
-    # )
   ),
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_Base_Archetype_wide_expected_of_week_sum)),
   caption = htmltools::tags$caption(

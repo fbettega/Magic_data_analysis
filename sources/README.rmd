@@ -38,11 +38,11 @@ Normally the pull of the necessary github repo is automatic (to clone the repos 
 **Currently the automatic github pull does not work because to obtain results similar to mine it is necessary to merge in Archetype parser the decklist cach repo of [Badaro](https://github.com/Badaro/MTGODecklistCache) and [Jiliac](https://github.com/Jiliac/MTGODecklistCache/).**
 Format data pull is automatic but can also be found [here](https://github.com/Badaro/MTGOFormatData) 
 
-To get scryfall data in csv i use my own script you can find it [here](https://github.com/fbettega/fetch_scryfall_data_to_csv) file generated should be put in  *Modern_data_analysis\data\mtg_data*.  
+To get scryfall data in csv i use my own script you can find it [here](https://github.com/fbettega/fetch_scryfall_data_to_csv) file generated should be put in  'Modern_data_analysis\data\mtg_data'.   
 
 ### Packages
 
-Install packages script can be found [here](../sources/S3_install_packages.R) 
+Install packages script can be found [here](../sources/S3_install_packages.R)  
 
 List of package below :  
 

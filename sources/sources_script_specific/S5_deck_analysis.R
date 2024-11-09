@@ -560,213 +560,161 @@ Generate_and_format_model_result <-
   }
 ################################################################################
 
+
+################################################################################
+############## function that print result for main side or all  ################
+print_main_side <- function(
+    res_encours_fun,
+    iteration_print ,
+    print_count_string,
+    type,
+    Df_with_cardname
+    ){
+  
+
+
+# Inserts Month titles
+
+# Section contents
+pander::pandoc.header(type, level = 3)
+pander::pandoc.p("")
+
+if (iteration_print %in% names(res_encours_fun$Base_cards_and_base_count_res)) {
+  
+  colname_deck_list <- res_encours_fun$Base_cards_and_base_count_res[[iteration_print]] %>% 
+    select(ends_with("_CardName")) %>% 
+    colnames() %>% 
+    str_remove("_CardName")
+  
+  pander::pandoc.header("Base Cards", level = 4)
+  pander::pandoc.p("")
+  pander::pandoc.p("Cards Always in deck with nearly fix count")
+  pander::pandoc.p(print_count_string)
+
+  pander::pandoc.p("")
+  flextable::flextable_to_rmd(
+    flextable::flextable(
+      res_encours_fun$Base_cards_and_base_count_res[[iteration_print]] %>%
+        mutate(
+          WR = paste0(round(((Wins / (Wins + Losses)) - Archetype_winrate) * 100, 2), " %"),
+          Not_most_common_count = total_number_of_copie - most_common_count,
+          Card_not_in_deck = Archetype_count - total_number_of_copie
+        ) %>%
+        select(
+          !!rlang::sym(paste0(colname_deck_list, "_CardName")), WR, !!rlang::sym(paste0(colname_deck_list, "_Count")),
+          most_common_quantity, Card_not_in_deck, Not_most_common_count
+        )  %>%
+        left_join(
+          join_with_scryfall(
+            Df_with_cardname =   .,
+            cardname_col = paste0(colname_deck_list, "_CardName"),
+            scry_fall_df = Df_with_cardname
+          ),
+          by = join_by(!!rlang::sym(paste0(colname_deck_list, "_CardName")) == CardName)
+        ) %>%
+        left_join(
+          Df_with_cardname %>%
+            select(id, scryfall_uri),
+          by = join_by(
+            scry_fall_id == id
+          )
+        ) %>%
+        select(-scry_fall_id)
+    ) %>%
+      flextable::compose(j = paste0(colname_deck_list, "_CardName"),
+                          value = flextable::as_paragraph(
+                            flextable::hyperlink_text(x = !!rlang::sym(paste0(colname_deck_list, "_CardName")), url = scryfall_uri)
+                          )
+      ) %>%
+      flextable::delete_columns( j = "scryfall_uri") %>%
+      flextable::align(align = "center", part = "all")
+  )
+}
+if (iteration_print %in% names(res_encours_fun$uncomon_card_format_model_res)) {
+  pander::pandoc.header("Variable Cards", level = 4)
+  pander::pandoc.p("")
+  pander::pandoc.p("Cards not always in deck using binomial regression for WR")
+  pander::pandoc.p("")
+  # open navpills
+  pander::pandoc.p("::: {.panel-tabset .nav-pills}")
+  if (!is.null(res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$Model_any)) {
+    pander::pandoc.header("Any", level = 5)
+
+    flextable::flextable_to_rmd(
+      res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$Model_any
+    )
+  }
+  pander::pandoc.p("")
+  pander::pandoc.p("")
+  if (!is.null(res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$Model_count)) {
+    pander::pandoc.header("Count", level = 5)
+    flextable::flextable_to_rmd(
+      res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$Model_count
+    )
+  }
+  pander::pandoc.p("")
+  if (!is.null(res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$model_ridge)) {
+    pander::pandoc.header("Ridge", level = 5)
+    print(
+      htmltools::tagList(
+        res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$model_ridge
+      )
+    )
+  }
+  # close nav pill
+  pander::pandoc.p(":::")
+}
+# adding also empty lines, to be sure that this is valid Markdown
+pander::pandoc.p("")
+pander::pandoc.p("")
+
+}
+
+
+
+
+
+
+
 print_result_total_script_deck_ana <- function(
     res_main,
     res_side,
+    res_75,
     scryfall_db,
     iteration) {
   temp_df_to_print <- res_main$Df_base_number_to_print_res %>%
     filter(Archetype == iteration)
-
 
   print_count_string <- paste0(
     "Number of deck : ", temp_df_to_print %>%
       pull(Archetype_count), " for ", temp_df_to_print$Wins,
     " wins over ", temp_df_to_print$Wins + temp_df_to_print$Losses, " rounds"
   )
-
-  # Inserts Month titles
+  
   pander::pandoc.header(iteration, level = 2)
-  # Section contents
-  pander::pandoc.header("Main deck", level = 3)
   pander::pandoc.p("")
-
-
-  if (iteration %in% names(res_main$Base_cards_and_base_count_res)) {
-    pander::pandoc.header("Base Cards", level = 4)
-    pander::pandoc.p("")
-    pander::pandoc.p("Cards Always in deck with nearly fix count")
-    pander::pandoc.p(print_count_string)
-
-    pander::pandoc.p("")
-    flextable::flextable_to_rmd(
-      flextable::flextable(
-        res_main$Base_cards_and_base_count_res[[iteration]] %>%
-          mutate(
-            WR = paste0(round(((Wins / (Wins + Losses)) - Archetype_winrate) * 100, 2), " %"),
-            Not_most_common_count = total_number_of_copie - most_common_count,
-            Card_not_in_deck = Archetype_count - total_number_of_copie
-          ) %>%
-          select(
-            Mainboard_CardName, WR, Mainboard_Count,
-            most_common_quantity, Card_not_in_deck, Not_most_common_count
-          )  %>%      
-          left_join(
-            join_with_scryfall(
-              Df_with_cardname =   .,
-              cardname_col = "Mainboard_CardName",
-              scry_fall_df = scryfall_db
-            ),
-            by = c("Mainboard_CardName" = "CardName")
-          ) %>%
-          left_join(
-            scryfall_db %>%
-              select(id, scryfall_uri),
-            by = join_by(
-              scry_fall_id == id
-            )
-          ) %>%
-          select(-scry_fall_id) 
-      ) %>% 
-        flextable::compose( j = "Mainboard_CardName",
-          value = flextable::as_paragraph(
-            flextable::hyperlink_text(x = Mainboard_CardName, url = scryfall_uri)
-          )
-        ) %>% 
-        flextable::delete_columns( j = "scryfall_uri") %>% 
-        flextable::align(align = "center", part = "all")
-    )
-  }
-
-
-  if (iteration %in% names(res_main$uncomon_card_format_model_res)) {
-    pander::pandoc.header("Variable Cards", level = 4)
-    pander::pandoc.p("")
-    pander::pandoc.p("Cards not always in deck using binomial regression for WR")
-    pander::pandoc.p("")
-    # open navpills
-    pander::pandoc.p("::: {.panel-tabset .nav-pills}")
-    if (!is.null(res_main$uncomon_card_format_model_res[[iteration]]$Model_any)) {
-      pander::pandoc.header("Any", level = 5)
-
-      flextable::flextable_to_rmd(
-        res_main$uncomon_card_format_model_res[[iteration]]$Model_any
-      )
-    }
-
-    pander::pandoc.p("")
-    pander::pandoc.p("")
-    if (!is.null(res_main$uncomon_card_format_model_res[[iteration]]$Model_count)) {
-      pander::pandoc.header("Count", level = 5)
-      flextable::flextable_to_rmd(
-        res_main$uncomon_card_format_model_res[[iteration]]$Model_count
-      )
-    }
-    pander::pandoc.p("")
-    if (!is.null(res_main$uncomon_card_format_model_res[[iteration]]$model_ridge)) {
-      pander::pandoc.header("Ridge", level = 5)
-      print(
-        htmltools::tagList(
-          res_main$uncomon_card_format_model_res[[iteration]]$model_ridge
-        )
-      )
-      
-    }
-    # close nav pill
-    pander::pandoc.p(":::")
-  }
-  # adding also empty lines, to be sure that this is valid Markdown
-  pander::pandoc.p("")
-  pander::pandoc.p("")
-
-  pander::pandoc.header("Side Board", level = 3)
-  pander::pandoc.p("")
-
-
-  if (iteration %in% names(res_side$Base_cards_and_base_count_res)) {
-    pander::pandoc.header("Base Cards", level = 4)
-    pander::pandoc.p("")
-    pander::pandoc.p("Cards Always in deck with nearly fix count")
-    pander::pandoc.p(print_count_string)
-    pander::pandoc.p("")
-    flextable::flextable_to_rmd(
-      flextable::flextable(
-        res_side$Base_cards_and_base_count_res[[iteration]] %>%
-          mutate(
-            WR = paste0(
-              round(
-                ((Wins / (Wins + Losses)) - Archetype_winrate) * 100, 2
-              ),
-              " %"
-            ),
-            Not_most_common_count = total_number_of_copie - most_common_count,
-            Card_not_in_deck = Archetype_count - total_number_of_copie
-          ) %>%
-          select(
-            Sideboard_CardName, WR, Sideboard_Count,
-            most_common_quantity, Card_not_in_deck, Not_most_common_count
-          )
-       %>%      
-        left_join(
-          join_with_scryfall(
-            Df_with_cardname =   .,
-            cardname_col = "Sideboard_CardName",
-            scry_fall_df = scryfall_db
-          ),
-          by = c("Sideboard_CardName" = "CardName")
-        ) %>%
-         left_join(
-          scryfall_db %>%
-            select(id, scryfall_uri),
-          by = join_by(
-            scry_fall_id == id
-          )
-        ) %>%
-        select(-scry_fall_id) 
-    ) %>% 
-      flextable::compose( j = "Sideboard_CardName",
-                          value = flextable::as_paragraph(
-                            flextable::hyperlink_text(x = Sideboard_CardName, url = scryfall_uri)
-                          )
-      ) %>% 
-      flextable::delete_columns( j = "scryfall_uri") %>% 
-      flextable::align(align = "center", part = "all")
-    )
-  }
-
-  if (iteration %in% names(res_side$uncomon_card_format_model_res)) {
-    pander::pandoc.header("Variable Cards", level = 4)
-    pander::pandoc.p("")
-    pander::pandoc.p("Cards not always in deck using binomial regression for WR")
-    pander::pandoc.p("")
-    # open navpills
-    pander::pandoc.p("::: {.panel-tabset .nav-pills}")
-    if (!is.null(
-      res_side$uncomon_card_format_model_res[[iteration]]$Model_any
-    )) {
-      pander::pandoc.header("Any", level = 5)
-      flextable::flextable_to_rmd(
-        res_side$uncomon_card_format_model_res[[iteration]]$Model_any
-
-      )
-    }
-    pander::pandoc.p("")
-    if (!is.null(
-      res_side$uncomon_card_format_model_res[[iteration]]$Model_count
-    )) {
-      pander::pandoc.header("Count", level = 5)
-      flextable::flextable_to_rmd(
-        res_side$uncomon_card_format_model_res[[iteration]]$Model_count
-      )
-    }
-    pander::pandoc.p("")
-    if (!is.null(
-      res_side$uncomon_card_format_model_res[[iteration]]$model_ridge
-    )
-    ) {
-      pander::pandoc.header("Ridge", level = 5)
-
-      print(htmltools::tagList(res_side$uncomon_card_format_model_res[[iteration]]$model_ridge))
-    }
-    # close nav pill
-    pander::pandoc.p(":::")
-  }
-  # adding also empty lines, to be sure that this is valid Markdown
-  pander::pandoc.p("")
-  pander::pandoc.p("")
-
-
-
-  pander::pandoc.p("")
-  pander::pandoc.p("")
+  
+  print_main_side(
+    res_encours_fun = res_main ,
+    iteration_print = iteration,
+    print_count_string = print_count_string,
+    type = "Main deck",
+    Df_with_cardname = scryfall_db
+  )
+  
+  print_main_side(
+    res_encours_fun = res_side ,
+    iteration_print = iteration,
+    print_count_string = print_count_string,
+    type = "Side Board",
+    Df_with_cardname = scryfall_db
+  )
+  
+  print_main_side(
+    res_encours_fun = res_75 ,
+    iteration_print = iteration,
+    print_count_string = print_count_string,
+    type = "Total 75",
+    Df_with_cardname = scryfall_db
+  )
 }

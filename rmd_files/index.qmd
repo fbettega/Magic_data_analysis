@@ -14,21 +14,21 @@ params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.r
 ```
 
 
-
+**<span style="color: red;">Please note that this document is not optimised and is difficult to read on mobile.</span>**
 
 # Acknowledgements
 Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.  
 Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.  
 Thanks to [Jiliac](https://github.com/Jiliac) for integrating Qonfused data and maintaining Format data.   
 
+
+
+
+# Data include
+
+This book contains data in `r params$format_param` format since `r params$date_cutoff`. If the period in question contains ban announcements, decks containing non-legal cards have been excluded, as have the associated matchups. Decks containing more than 30 copies of a single card have also been excluded. For decklist analyses, only decks valid for the format have been included (number of main deck cards > 60 and number of side cards <= 15).
+
 ```{r data_reading}
-proportion_format_fun <- function(nb,tot){
-  percent = round(nb*100/tot,1)
-  res <- paste0(nb,"/",tot,"(",percent,"%)")
-  return(res)
-}
-
-
 df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds"))
 
 Table_with_arch_count_and_sub_count <- df_export %>%

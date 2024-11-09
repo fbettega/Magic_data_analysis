@@ -66,7 +66,9 @@ log_df_fun <- function(
   log_df_fun_en_cours <- rbind(
     log_df_fun,
     data.frame(
-      date_run = as.character(as.Date(Sys.time())),
+      date_run = as.character(
+        Sys.time()
+        ),
       format = format_fun,
       log_txt = tictoc_res
     )
