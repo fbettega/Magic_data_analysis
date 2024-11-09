@@ -114,7 +114,7 @@ In order to be considered a card must be included at least ", min_sample_size_5,
 
 Introduction_char_vec_par_5_2 <-
   paste0(
-    "**Templates are created separately for the maindeck and the sideboard according to the following scheme :**\n\n",
+    "**Templates are created separately for the maindeck and the sideboard and maindeck and side board pull together (Total 75) according to the following scheme :**\n\n",
     "- **Base Cards** cards systematically present in decks with an almost fixed number of copies less than ", min_sample_size_5,
     " decks that do not have the most common number of copies. \n",
     " decks with zero copies are grouped with the majority class)  contained in the decks, for which the number of copies varies, quasibinomial regression models are created using the wins and losses of each deck : \n
