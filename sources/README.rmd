@@ -15,8 +15,8 @@ knitr::opts_chunk$set(
 	warning = FALSE
 )
 library(tidyverse)
+source("../data/mtg_data/sources/global_mtg_sources.R")
 ```
-
 
 
 # Modern_data_analysis

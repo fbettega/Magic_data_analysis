@@ -6,6 +6,7 @@ title: "Overview of results"
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 library(tidyverse)
 library(gt)
+source("../data/mtg_data/sources/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 knitr::read_chunk("../sources/S1_introduction_text.R")
 
@@ -270,7 +271,7 @@ Table_with_arch_count_and_sub_count  %>%
 
 
 ## Proximity aggregation
-If the median jaccard distance between 2 archetypes is smaller than the 3 quartiles of the internal distance within the archetype, these 2 archetypes will be grouped together.
+If the median [jaccard](https://en.wikipedia.org/wiki/Jaccard_index) distance between 2 archetypes is smaller than the 3 quartiles of the internal distance within the archetype, these 2 archetypes will be grouped together.
 The table below shows the grouped archetypes:
 
 ```{r proximity_table_print,results='asis'}

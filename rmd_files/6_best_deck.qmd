@@ -17,6 +17,7 @@ conflicted::conflicts_prefer(dplyr::arrange)
 
 
 source("../sources/S2_Source_mtg_new_card.R")
+source("../data/mtg_data/sources/global_mtg_sources.R")
 source("../sources/sources_script_specific/S5_6_model_deck.R")
 source("../sources/sources_script_specific/S6_best_deck.R")
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")

@@ -10,10 +10,11 @@ library(future)
 # library(baguette)
 # library("xgboost")
 source("sources/S2_Source_mtg_new_card.R",local = TRUE)
+source("data/mtg_data/sources/global_mtg_sources.R")
 # library("ggdendro")
 
 # format_param <- format_date_en_cours$format_param
-# date_cut <- format_date_en_cours$date_cutoff
+
 
 grouping_close_df <- function(
     df = Grouping_dist_matrix
@@ -142,6 +143,7 @@ long_dist_mat <- (
 
 
 
+
 df_archetype_count <- data_wide %>%
   mutate(    Archetype = as.character(Archetype)) %>% 
   group_by(Archetype) %>% 
@@ -248,7 +250,10 @@ resulting_distance_mat_with_all_group <- grouping_cards_recursive(
 
 
 res_proximity_joins <- df_export_pre_60_filter %>% 
-  left_join(resulting_distance_mat_with_all_group,by = join_by(Archetype == value)) %>% 
+  left_join(
+    resulting_distance_mat_with_all_group,
+            by = join_by(Archetype == value)
+    ) %>% 
   mutate(
     Archetype = ifelse(!is.na(Archetype_proximity),Archetype_proximity,Archetype),
     Base_Archetype = ifelse(ReferenceArchetype_Archetype != "Unknown",
@@ -274,54 +279,26 @@ res_proximity_joins <- df_export_pre_60_filter %>%
 
 
 
-Debug_resulting_distance_mat_with_all_group <- 
-  # resulting_distance_mat_with_all_group %>% 
-  # left_join(
-  #   long_dist_mat %>% 
-  #     filter(Archetype.x == Archetype.y) %>% 
-  #     select(-Archetype.y) %>% 
-  #     group_by(Archetype.x) %>% 
-  #     summarize(
-  #       Q3 = quantile(value ,0.75),
-  #       .groups = "drop"
-  #     ) %>% 
-  #     rename_all(~paste0("self_",.)) %>% 
-  #     rename(Archetype = self_Archetype.x),
-  #           by =  join_by(
-  #             Archetype_proximity == Archetype )
-  #           ) %>% 
-  # left_join(
-  #   long_dist_mat %>%
-  #             group_by(Archetype.x ,Archetype.y) %>% 
-  #             summarize(
-  #               # count = n(),
-  #               Q2 = quantile(value ,0.5),
-  #               .groups = "drop"
-  #             ),
-  #   by =  join_by(
-  #     Archetype_proximity == Archetype.x,
-  #     value == Archetype.y
-  #     )
-  #           ) %>% 
-  # mutate(
-  #   Q3_compare_Median = self_Q3 - Q2
-  # )
-  
-
- long_dist_mat %>% 
+Debug_resulting_distance_mat_with_all_group <- long_dist_mat %>% 
     filter(Archetype.x == Archetype.y) %>% 
     select(-Archetype.y) %>% 
     group_by(Archetype.x) %>% 
     summarize(
+      n = n_distinct(rowname),
+      self_value = median_quantile_paste(
+        x = value,
+        round_val = 1
+        ),
       Q3 = quantile(value ,0.75),
       .groups = "drop"
     ) %>% 
     rename_all(~paste0("self_",.)) %>% 
   right_join(
     long_dist_mat %>%
-      group_by(Archetype.x ,Archetype.y) %>% 
+      group_by(Archetype.y) %>% 
+      mutate(n.y = n_distinct(name)) %>% 
+      group_by(Archetype.x ,Archetype.y,n.y) %>% 
       summarize(
-        # count = n(),
         Q2 = quantile(value ,0.5),
         .groups = "drop"
       ),
@@ -342,7 +319,10 @@ Debug_resulting_distance_mat_with_all_group <-
       Archetype.y == value        
       )
              ) %>% 
-  mutate(groupe = ifelse(is.na(groupe),FALSE,TRUE))
+  mutate(groupe = ifelse(is.na(groupe),FALSE,TRUE)) %>% 
+  rename(n.x = self_n) %>% 
+  relocate(n.y,.after = n.x ) %>% 
+  select(-self_Q3)
 
 
 write.csv(
@@ -351,5 +331,112 @@ write.csv(
   row.names = FALSE)
 
 write_rds(res_proximity_joins ,paste0("data/",format_param,"_data_meta_en_cours.rds"))
+
+
+
+################################################################################
+
+
+###################################################################################
+# some random test of improving proximity aggregation 
+
+
+# mean_distance_betwwen_arch <- long_dist_mat %>% 
+#   group_by(Archetype.x , Archetype.y) %>% 
+#   summarise(
+#     sum_dist = mean(value),
+#     n = n(),
+#     .groups = "drop"
+#   )
+# 
+# 
+# a <- inner_join(
+#   mean_distance_betwwen_arch,
+#   mean_distance_betwwen_arch,
+#   by = join_by(
+#     Archetype.x == Archetype.y,
+#     Archetype.y == Archetype.x      
+#                )
+#   
+# ) %>% 
+#   rowwise() %>% 
+#   mutate(
+#   test = (sum_dist.x + sum_dist.y)/(n.x * n.y)
+# )
+
+# https://en.wikipedia.org/wiki/Hausdorff_distance
+
+# Hausdorff_distance <- long_dist_mat %>% 
+#   # get previous aggregation 
+#   left_join(
+#     resulting_distance_mat_with_all_group ,
+#     by = join_by(Archetype.x == value)
+#             ) %>% 
+#   mutate(
+#     Archetype.x = ifelse(is.na(Archetype_proximity) , 
+#                          Archetype.x, Archetype_proximity )
+#     ) %>% 
+#   select(-Archetype_proximity) %>% 
+#   left_join(
+#       resulting_distance_mat_with_all_group ,
+#       by = join_by(Archetype.y == value)
+#     ) %>% 
+#   mutate(
+#     Archetype.y = ifelse(is.na(Archetype_proximity) , 
+#                          Archetype.y, Archetype_proximity )
+#   ) %>% 
+#   select(-Archetype_proximity) %>%
+#   group_by(Archetype.y,rowname) %>% 
+#   mutate(min_x_to_y = min(value ) ) %>% 
+#   ungroup() %>% 
+#   group_by(Archetype.x,name) %>% 
+#   mutate(min_y_to_x = min(value ) ) %>% 
+#   ungroup() %>% 
+#   group_by(Archetype.x,Archetype.y) %>% 
+#   summarise(
+#     max_dist_x_to_y = max(min_x_to_y),
+#     max_dist_y_to_x = max(min_y_to_x),
+#     max = pmax(max_dist_x_to_y,max_dist_y_to_x),
+#     .groups = "drop"
+#   ) 
+# 
+# 
+# a <- Hausdorff_distance %>% 
+#   filter(Archetype.x != Archetype.y) %>% 
+#   left_join(
+# Hausdorff_distance %>% 
+#   filter(Archetype.x == Archetype.y) %>% 
+#   select(Archetype.x,max) %>% 
+#   rename(self_Hausdorff = max),
+# by = join_by(Archetype.x)
+# ) %>% 
+#   mutate(test = max  - self_Hausdorff) %>% 
+#   left_join(
+#     Debug_resulting_distance_mat_with_all_group %>% 
+#       select(Archetype.x,Archetype.y, n.x ,  n.y),
+#     by = join_by(Archetype.x, Archetype.y)
+#   )
+
+
+
+
+
+# core n % des decks qui contiennent n % des cartes 
+
+# a <- data_wide %>%
+#   filter(Archetype != "Unknown") %>%
+#   column_to_rownames("id") %>% 
+#   group_by(Archetype) %>% 
+#   summarise_all(
+#     
+#     
+#   )
+
+
+
+
+
+
+
 
 

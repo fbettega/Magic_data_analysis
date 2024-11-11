@@ -7,6 +7,7 @@ library(tidyverse)
 
 
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
+source("../data/mtg_data/sources/global_mtg_sources.R")
 source("../sources/sources_script_specific/S3_Card_win_rate_table.R", local = TRUE)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 conflicted::conflicts_prefer(dplyr::filter)

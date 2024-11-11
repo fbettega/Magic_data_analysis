@@ -5,7 +5,7 @@ title: "Archetype definition and other debug results"
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 library(tidyverse)
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
-
+source("../data/mtg_data/sources/global_mtg_sources.R")
 conflicted::conflicts_prefer(dplyr::filter)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 ```
@@ -176,7 +176,9 @@ proximty_classif <- read.csv(
 tooltips_proximity <- c(
   "Final Archetype name",
   "Initial Archetype name",
-  "Third quartile (75%) of distance between deck inside the final archetype",
+  "Number of deck in Archetype.x",
+  "Number of deck in Archetype.y",
+  "Median [first quartile ; third quartile (75%)] of distance between deck inside the final archetype",
   "Median of distance between final and initial archetype",
   "Delta between last Q3 and Q2 (last two columns)",
   "Boolean TRUE if Final Archetype is group with initial archetype "
@@ -204,14 +206,17 @@ for (var i = 0; i < tips.length; i++) {
   options = list(
   dom = "ltipr"  ,
   searchCols = list(
-    NULL,NULL,NULL,NULL,NULL,
+    NULL,NULL,
+    NULL,NULL,
+    NULL,NULL,
+    NULL,
     list(search = '["true"]' )
   ),
   autoWidth = TRUE,
   pageLength = 25)  ,
-  escape=FALSE
+  escape = FALSE
   ) %>% 
-    DT::formatRound(c(3:5), digits = 2)
+    DT::formatRound(c(6:7), digits = 2)
   )
 
 ```

@@ -45,9 +45,6 @@ git2r::config(
 #   "https://github.com/Jiliac/MTGODecklistCache.git",
 #   "ArchetypeParser/MTGODecklistCache_J/"
 #   )
-
-
-
 deck_list_repo_base <-  git2r::repository("ArchetypeParser/MTGODecklistCache_B/")
 deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache_J/")
 deck_list_format <- git2r::repository("ArchetypeParser/MTGOFormatData/")
@@ -295,35 +292,5 @@ error = function(e) {
 )
 
 
-# ################################################################################
-# ############### easy debug just init with one format to run script #############
-# format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
-# library(yaml)
-# source("sources/S0_source_init.R")
-# ## 1 modern 2 legacy 3 pauper 4 pioneer 5 vintage
-# 
-# i <- 3
-# format_date_en_cours <- format_date_en_cours_fulltable[i, ]
-# readr::write_rds(
-#   format_date_en_cours,
-#   "data/intermediate_result/temp_format_encours_for_param.rds"
-# )
-# ################################################################################
-# 
-# log_df <- read.csv("other_file/log_run.csv")
-# 
-# eddit_yaml(format_date_en_cours)
-# # # debug purpose
-# quarto::quarto_render(
-#   "rmd_files/4_matrix_WR.qmd",
-#   output_format = "html",
-#   profile = "basic",
-#   as_job = TRUE
-# )
-# quarto::quarto_render(
-#   "rmd_files/1_1_collection_analysis.qmd",
-#   output_format = "html",
-#   profile = "fb",
-#   as_job = FALSE
-# )
+
 

@@ -406,15 +406,6 @@ name_list_of_df_with_arch <- function(list) {
   
   return(list)
 }
-# simple function that name list
-name_list_of_model_with_string <- function(list, string) {
-  names(list) <- string
-  return(list)
-}
-
-
-
-
 #################################################################################
 # function that create all models from a prepare df
 

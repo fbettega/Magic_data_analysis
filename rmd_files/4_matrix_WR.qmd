@@ -9,6 +9,7 @@ library(rwantshue)
 # library(ggfittext)
 # css: TOC.css
 source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
+source("../data/mtg_data/sources/global_mtg_sources.R")
 source("../sources/sources_script_specific/S4_matrix_WR.R", local = TRUE)
 params <- read_rds("../data/intermediate_result/temp_format_encours_for_param.rds")
 conflicted::conflicts_prefer(dplyr::filter)
@@ -588,11 +589,14 @@ plot_archetype_spaghetti <- (
     geom_point() +
   scale_x_discrete(
     "Week",
-    breaks = unique(Presence_for_best_deck_plot$Week),
+    # breaks = levels(Presence_for_best_deck_plot$Week),
     labels = paste0(
       "Week : ", levels(Presence_for_best_deck_plot$Week), "<br>",
         # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
-        "N total deck :<br>", Presence_for_best_deck_plot %>%  arrange(Week) %>%  select(Week,Week_deck_number) %>% distinct() %>% 
+        "N total deck :<br>", Presence_for_best_deck_plot %>%
+        arrange(Week) %>%  
+        select(Week,Week_deck_number) %>% 
+        distinct(Week,.keep_all = TRUE) %>% 
   pull(Week_deck_number)
                     )
   ) +
@@ -827,16 +831,16 @@ plot_Base_Archetype_spaghetti <- (
     geom_point() +
   scale_x_discrete(
     "Week",
-    breaks = unique(Presence_Base_Archetype_for_best_deck_plot$Week),
+    # breaks = levels(Presence_for_best_deck_plot$Week),
     labels = paste0(
       "Week : ", levels(Presence_Base_Archetype_for_best_deck_plot$Week), "<br>",
         # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
-        "N total deck :<br>", Presence_Base_Archetype_for_best_deck_plot %>% 
+        "N total deck :<br>", Presence_Base_Archetype_for_best_deck_plot %>%
         arrange(Week) %>%  
         select(Week,Week_deck_number) %>% 
-        distinct() %>% 
+        distinct(Week,.keep_all = TRUE) %>% 
   pull(Week_deck_number)
-  )
+                    )
   ) +
     scale_color_manual(
       values = colors_scales_presence

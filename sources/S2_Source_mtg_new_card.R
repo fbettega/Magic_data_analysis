@@ -1,3 +1,7 @@
+
+
+
+
 ################################################################################
 ######################## group common elements in list #########################
 # commonElements <-  function(l,o=list(l[[1]])){
@@ -87,9 +91,11 @@ prett_fun_classif <- function(df, colname_deck_list) {
 }
 
 ####################### print_quantile #################################
-median_quantile_paste <- function(x, Q1 = 0.25,Q2 = 0.75) paste0(
-  median(x)," [",quantile(x,Q1),";",quantile(x,Q2),"]"
-)
+median_quantile_paste <- function(x, Q1 = 0.25,Q2 = 0.75, round_val = Inf) {
+  paste0(
+ round( median(x),round_val)," [",round(quantile(x,Q1),round_val),";",round(quantile(x,Q2),round_val),"]"
+  )
+  }
 
 
 value_to_string_with_mean_min_max <- function(x){
@@ -1163,10 +1169,7 @@ gates_land_list <- c(
 }
 ################################################################################
 
-################################################################################
-#######################  Not in function  ######################################
-`%notin%` <- Negate(`%in%`)
-################################################################################
+
 
 ################################################################################
 #######################  Remove NULL from nested list  #########################
@@ -1973,84 +1976,6 @@ filter_archetype_count_6 <- 50
 min_tournament_size_7 <- 64
 last_week_number_7 <- 3
 
-################################################################################
-# function that get scry fall id from a df with card_name
-
-join_with_scryfall <- function(
-    Df_with_cardname,
-    cardname_col ,
-    scry_fall_df 
-){
-  df_with_card_name_to_match_fun <- Df_with_cardname %>% #modify 
-    select(
-      #modify 
-      all_of(cardname_col)
-    ) %>% 
-    rename(CardName = !!cardname_col) %>% 
-    distinct()
-  
-  
-  
-  initial_match <-  df_with_card_name_to_match_fun %>%
-    left_join(
-      scry_fall_df,
-      by = c(
-        #modify 
-        "CardName" = "name"
-      )
-    ) %>% 
-    select(
-      #modify 
-      CardName,id) %>%
-    filter(!is.na(id))
-  
-  
-  match_double_face <-  df_with_card_name_to_match_fun  %>% 
-    filter(CardName %notin% initial_match$CardName) %>% 
-    # select(-id) %>%
-    left_join(
-      scry_fall_df %>%
-        filter(id %notin% initial_match$id) %>%
-        mutate(
-          name = str_remove(name,"\\s+//.*$")
-        ),
-      by = c("CardName" = "name")
-    ) %>% 
-    select(
-      #modify 
-      CardName,id
-      ) %>%
-    filter(!is.na(id))
-  
-  
-  room_matching <- df_with_card_name_to_match_fun %>% 
-    filter(CardName %notin% c(initial_match$CardName,match_double_face$CardName)) %>% 
-    mutate(
-      CardName_temp = str_replace(CardName,"&&","//")
-    )  %>% 
-    # select(-id) %>%
-    left_join(
-      scry_fall_df,
-      by = c("CardName_temp" = "name")
-    )  %>% 
-    select(
-      #modify 
-      CardName,id
-    )
-  
-  
-  
-  
-  res <- rbind(
-    initial_match,
-    match_double_face,
-    room_matching
-  ) %>% 
-    rename(scry_fall_id = id)
-  
-  
-  return(res)
-}
 
 
 ################################################################################

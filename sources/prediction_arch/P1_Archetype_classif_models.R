@@ -5,7 +5,7 @@ library(future)
 library(baguette)
 library(xgboost)
 source("sources/S2_Source_mtg_new_card.R",local = TRUE)
-
+source("data/mtg_data/sources/global_mtg_sources.R")
 # format_param <- format_date_en_cours$format_param
 # date_cut <- format_date_en_cours$date_cutoff
 
