@@ -4,8 +4,9 @@ title: "Archetype definition and other debug results"
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 library(tidyverse)
+source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
-source("../data/mtg_data/sources/global_mtg_sources.R")
+
 conflicted::conflicts_prefer(dplyr::filter)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 ```

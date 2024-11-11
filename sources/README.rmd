@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 	warning = FALSE
 )
 library(tidyverse)
-source("../data/mtg_data/sources/global_mtg_sources.R")
+source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 ```
 
 

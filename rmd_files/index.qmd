@@ -6,7 +6,7 @@ title: "Overview of results"
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 library(tidyverse)
 library(gt)
-source("../data/mtg_data/sources/global_mtg_sources.R")
+source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 knitr::read_chunk("../sources/S1_introduction_text.R")
 

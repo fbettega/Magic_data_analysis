@@ -13,8 +13,8 @@ source_here()
 
 conflicted::conflicts_prefer(purrr::discard)
 # css: TOC.css
+source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
-source("../data/mtg_data/sources/global_mtg_sources.R")
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 
 loaded_base_data <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds"))
