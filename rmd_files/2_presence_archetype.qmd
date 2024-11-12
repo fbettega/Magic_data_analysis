@@ -214,12 +214,25 @@ Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`
 
 ```{r print_spagheti_arch}
 #| column: screen
+
+    num_archetypes <- length(levels(spaghetti_plot_df$Archetype))
+    # scheme <- iwanthue(seed = 42, force_init = TRUE)
+    colors_scales_presence <- scheme$hex(ceiling(num_archetypes / 2))  # Diviser le nombre de couleurs par 2
+    
+    # Associer chaque Archetype avec une couleur et un style de ligne
+    archetype_levels <- levels(spaghetti_plot_df$Archetype)
+    archetype_styles <- rep(c("solid", "dashed"), length.out = num_archetypes)
+    colors_for_archetypes <- rep(colors_scales_presence, each = 2, length.out = num_archetypes)
+
+
+
 plot_archetype_spaghetti <- (ggplot(
   spaghetti_plot_df ,
   aes(
     x = Week,
     y = Archetype_percent,
     color = Archetype,
+     linetype = Archetype,
     text = paste(
       "Archetype: ", Archetype," (", Count_arch,")","<br>", # Archetype name
       "Archetype percent: ", round(Archetype_percent * 100, 2), " %", "<br>",
@@ -228,8 +241,8 @@ plot_archetype_spaghetti <- (ggplot(
     group = 1
   )
 ) +
-  geom_line() +
-  geom_point() +
+    geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
+    geom_point(size = 2) +  # Ajuster la taille des points
   scale_x_continuous("Week",
     breaks = unique(spaghetti_plot_df$Week),
     labels = paste0(
@@ -239,9 +252,15 @@ plot_archetype_spaghetti <- (ggplot(
                     
                     )
   ) +
-  scale_color_manual(
-    values = colors_scales_presence_arch
-  ) +
+    scale_color_manual(
+        values = setNames(colors_for_archetypes, archetype_levels)
+    ) +
+    scale_linetype_manual(
+        values = setNames(archetype_styles, archetype_levels)  # Appliquer le style de ligne
+    ) +
+      theme(
+axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+) +
   ylab("Archetype presence") +
   scale_y_continuous(labels = function(x) scales::percent(x))
 ) %>%
@@ -271,12 +290,24 @@ Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`
 
 ```{r print_spagheti_base_arch}
 #| column: screen
+
+num_base_archetypes <- length(levels(spaghetti_plot_df$Base_Archetype))
+colors_scales_base_arch_presence <- scheme$hex(ceiling(num_base_archetypes / 2))  # Diviser le nombre de couleurs par 2
+
+# Associer chaque Archetype avec une couleur et un style de ligne
+base_archetype_levels <- levels(spaghetti_plot_df$Base_Archetype)
+base_archetype_styles <- rep(c("solid", "dashed"), length.out = num_base_archetypes)
+colors_for_base_archetypes <- rep(colors_scales_base_arch_presence, each = 2, length.out = num_base_archetypes)
+
+
+
 plot_base_archetype_spaghetti <- (ggplot(
   spaghetti_plot_df,
   aes(
     x = Week,
     y = Base_Archetype_percent,
     color = Base_Archetype,
+    linetype = Base_Archetype,
     text = paste(
       "Archetype: ", Base_Archetype," (", Count_base_arch,")", "<br>", # Archetype name
       "Archetype percent: ", round(Base_Archetype_percent * 100, 2), " %", "<br>",
@@ -285,8 +316,8 @@ plot_base_archetype_spaghetti <- (ggplot(
     group = 1
   )
 ) +
-  geom_line() +
-  geom_point() +
+    geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
+    geom_point(size = 2) +  # Ajuster la taille des points
   scale_x_continuous("Week",
     breaks = unique(spaghetti_plot_df$Week),
     labels = paste0(
@@ -295,9 +326,15 @@ plot_base_archetype_spaghetti <- (ggplot(
         "N total deck : ", unique(spaghetti_plot_df$Week_deck_number)
                     
                     )
-  ) +
-  scale_color_manual(
-    values = colors_scales_presence_base_arch
+  )     +
+    scale_color_manual(
+        values = setNames(colors_for_base_archetypes, base_archetype_levels)
+    ) +
+    scale_linetype_manual(
+        values = setNames(base_archetype_styles, base_archetype_levels)  # Appliquer le style de ligne
+    ) +
+  theme(
+    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
   ) +
   ylab("Archetype presence") +
   scale_y_continuous(labels = function(x) scales::percent(x))
@@ -484,22 +521,32 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
 
 
 ```{r print_ci_plot_arch}
-#| column: screen
+# <!-- #| column: screen -->
 
-(ggplot(data = df_Ci_by_all_week
-       ) +
-  geom_point(
-    aes(
-      y = Arch_winrate,
-      x = Archetype,
-      text = paste(
+Archetype_ci_df_plot_lines_df <- data.frame(
+    yintercept = c(
+        mean(df_Ci_by_all_week$Arch_winrate),
+        mean(df_Ci_by_all_week$Arch_winrate - df_Ci_by_all_week$CI_Arch_winrate),
+        mean(df_Ci_by_all_week$Arch_winrate + df_Ci_by_all_week$CI_Arch_winrate)
+    ),
+    line_type = c("Average Winrate",  "Lower CI", "Upper CI")
+)
+
+
+(ggplot(data = df_Ci_by_all_week,aes( 
+  text = paste(
       "Archetype: ", Archetype, "<br>", # Archetype name
       "Winrate: ", 
       round(Arch_winrate * 100, 1), " %",
       "[",round((Arch_winrate + CI_Arch_winrate) * 100, 2),";",
       round((Arch_winrate - CI_Arch_winrate) * 100, 2),"]", "<br>",
       sep = ""
-    ),
+    ))
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate,
+      x = Archetype
       ),
     position = position_dodge(0.75)
     )  +
@@ -510,11 +557,17 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
         ),
       position = position_dodge(width = .75), width = .01
       )  +
-     geom_hline(yintercept = mean(df_Ci_by_all_week$Arch_winrate), linetype="dashed", color = "red") +
     geom_hline(
-      yintercept= c(mean(df_Ci_by_all_week$Arch_winrate - df_Ci_by_all_week$CI_Arch_winrate),
-                    mean(df_Ci_by_all_week$Arch_winrate + df_Ci_by_all_week$CI_Arch_winrate)), 
-      linetype="dashed", color = "blue") +
+        data = Archetype_ci_df_plot_lines_df,
+        aes(yintercept = yintercept, color = line_type),
+        linetype = "dashed"
+    ) +
+    scale_color_manual(
+        name = "Legend",
+        values = c("Average Winrate" = "red", 
+                   "Lower CI" = "blue", 
+                   "Upper CI" = "blue")
+    )  +
     scale_x_discrete(
         label = paste0(
             "<span style='font-size:", 17 , "px;'> <b>",
@@ -539,11 +592,20 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
         ),
         # guide = guide_axis(n.dodge=3)
     ) +
-  coord_flip()
+  coord_flip()+
+    theme(
+        legend.position = c(0.85, 0.15),
+        legend.background = element_rect(fill = "white", color = "black")
+    )
   )  %>%
   ggplotly(
-    tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
-  ) %>% bslib::card(full_screen = TRUE)
+    tooltip = c("text"),
+    height = 50 * nrow(df_Ci_by_all_week)
+# height = (480 * ratio_plot), width = (820 * ratio_plot)
+)  %>%
+    plotly::layout(
+        legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
+    ) %>% bslib::card(full_screen = TRUE)
 ```
 
 
@@ -652,22 +714,34 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
 
 
 ```{r print_ci_plot_base_arch}
-#| column: screen
+# <!-- #| column: screen -->
 
-(ggplot(data = df_base_arch_Ci_by_all_week
-       ) +
-  geom_point(
-    aes(
-      y = Arch_winrate,
-      x = Base_Archetype,
-      text = paste(
+base_Archetype_ci_df_plot_lines_df <- data.frame(
+    yintercept = c(
+        mean(df_base_arch_Ci_by_all_week$Arch_winrate),
+        mean(df_base_arch_Ci_by_all_week$Arch_winrate - df_base_arch_Ci_by_all_week$CI_Arch_winrate),
+        mean(df_base_arch_Ci_by_all_week$Arch_winrate + df_base_arch_Ci_by_all_week$CI_Arch_winrate)
+    ),
+    line_type = c("Average Winrate",  "Lower CI", "Upper CI")
+)
+
+
+
+
+(ggplot(data = df_base_arch_Ci_by_all_week,
+        aes(text = paste(
       "Archetype: ", Base_Archetype, "<br>", # Archetype name
       "Winrate: ", 
       round(Arch_winrate * 100, 1), " %",
       "[",round((Arch_winrate + CI_Arch_winrate) * 100, 2),";",
       round((Arch_winrate - CI_Arch_winrate) * 100, 2),"]", "<br>",
       sep = ""
-    ),
+    ))
+       ) +
+  geom_point(
+    aes(
+      y = Arch_winrate,
+      x = Base_Archetype
       ),
     position = position_dodge(0.75)
     )  +
@@ -678,11 +752,17 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
         ),
       position = position_dodge(width = .75), width = .01
       )  +
-     geom_hline(yintercept = mean(df_base_arch_Ci_by_all_week$Arch_winrate), linetype="dashed", color = "red") +
-    geom_hline(
-      yintercept= c(mean(df_base_arch_Ci_by_all_week$Arch_winrate - df_base_arch_Ci_by_all_week$CI_Arch_winrate),
-                    mean(df_base_arch_Ci_by_all_week$Arch_winrate + df_base_arch_Ci_by_all_week$CI_Arch_winrate)), 
-      linetype="dashed", color = "blue") +
+  geom_hline(
+    data = base_Archetype_ci_df_plot_lines_df,
+    aes(yintercept = yintercept, color = line_type),
+    linetype = "dashed"
+  ) +
+  scale_color_manual(
+    name = "Legend",
+    values = c("Average Winrate" = "red", 
+               "Lower CI" = "blue", 
+               "Upper CI" = "blue")
+  )  +
     scale_x_discrete(
         label = paste0(
             "<span style='font-size:", 17 , "px;'> <b>",
@@ -707,10 +787,19 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
         ),
         # guide = guide_axis(n.dodge=3)
     ) +
-  coord_flip()
+  coord_flip() +
+  theme(
+    legend.position = c(0.85, 0.15),
+    legend.background = element_rect(fill = "white", color = "black")
+  )
   )  %>%
   ggplotly(
-    tooltip = c("text"), height = (480 * ratio_plot), width = (820 * ratio_plot)
+    tooltip = c("text"),
+    height = 50 * nrow(df_base_arch_Ci_by_all_week)
+    # height = (480 * ratio_plot), width = (820 * ratio_plot)
+  )  %>%
+  plotly::layout(
+    legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
   ) %>% bslib::card(full_screen = TRUE)
 ```
 :::

@@ -2,6 +2,8 @@ library(yaml)
 source("sources/S0_source_init.R")
 Reupdate_scryfall_db <- FALSE #TRUE FALSE
 
+reparse_arch <- TRUE  #TRUE FALSE
+
 # Try catch because script is long allow shutdown if error
 tryCatch(
 {
@@ -129,16 +131,16 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
 
   tictoc::toc(log = TRUE, quiet = TRUE)
   
+  
+  
   log_df <- log_df_fun(
     log_df_fun = log_df,
     format_fun = format_date_en_cours$format_param,
     tictoc_res = paste0(tictoc::tic.log(format = TRUE))
   )
-    
   tictoc::tic.clearlog()
 
-
-
+if(reparse_arch){
   tictoc::tic(paste0("Training archetype : ", format_date_en_cours$format_param))
 
   sys.source(
@@ -189,7 +191,7 @@ for (i in 1:nrow(format_date_en_cours_fulltable)) {
     tictoc_res = paste0(tictoc::tic.log(format = TRUE))
   )
   tictoc::tic.clearlog()
-  
+}  
   
   # quarto::quarto_render("rmd_files/", output_format = "html", as_job = FALSE)
   
@@ -252,8 +254,6 @@ rmarkdown::render(
 
 
 
-
-
 if (file.exists("other_file/ssh_key/id_rsa")) {
   session <- ssh::ssh_connect(
     "francois@176.31.183.129",
@@ -275,18 +275,16 @@ log_df <- log_df_fun(
 
 tictoc::tic.clearlog()
 # system("shutdown -s")
-# cancer shutdown use : 
-# system("shutdown -a")
-# system("shutdown /s /t 30")
+# cancel shutdown use : system("shutdown -a")
+system("shutdown /s /t 30")
 },
 error = function(e) {
   error_message <- paste("Une erreur s'est produite :", e$message, "\n")
   write(error_message, file = "outpout/erreur_log.txt")
   
-  # cancer shutdown use : 
-  # system("shutdown -a")
+  # cancel shutdown use : system("shutdown -a")
   print(paste0("shutdown cause of error"))
-  # system("shutdown /s /t 60")
+  system("shutdown /s /t 60")
 
 }
 )

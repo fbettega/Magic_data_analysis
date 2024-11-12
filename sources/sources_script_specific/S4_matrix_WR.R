@@ -13,27 +13,6 @@ plot_presence_modify_for_matchup_matrix_fun <- function(
     plot_scaling = 2.25
     
 ) {
-  # browser()
-  
-
-
-  
-  
-# Debug 
-# any(
-# is.na(
-#   full_join(  df_base %>%
-#     group_by(Player) %>%
-#     summarise(n = n()),
-#   df_base %>%
-#     group_by(Matchups_Opponent ) %>%
-#     summarise(n = n()) %>%
-#     rename(Player = Matchups_Opponent),
-#   by = join_by(Player, n))
-#   )
-#   )
-#   
-  
   df_plot_presence <- df_base %>% 
     mutate(
       win = as.numeric(Matchups_Wins > Matchups_Losses),
@@ -155,8 +134,7 @@ plot_win_rate_mat <- function(
     Cut_of_number_of_data = 0,
     simplify_tab_ratio = 0,
     only_signif = FALSE,
-    tiles_size = 1,
-    size_multiplier = 5) {
+    tiles_size = 1) {
   marges <- list(
     l = 0, # marge gauche
     r = 50, # marge droite (par exemple)
@@ -174,6 +152,22 @@ plot_win_rate_mat <- function(
     Df_winrate_format_filter_base_fun <- Df_winrate_format_filter_base_fun %>%
       filter(!!rlang::sym(paste0("CI_WR_sign_diff_0_", group_column)))
   }
+  
+  # Calculer le nombre de lignes et colonnes
+  num_rows <- length(unique(Df_winrate_format_filter_base_fun$Archetype)) # MODIFICATION
+  num_cols <- length(unique(Df_winrate_format_filter_base_fun$Matchups_OpponentArchetype)) # MODIFICATION
+  
+  # Augmenter le facteur pour des dimensions plus grandes
+  plot_height <- max(600, num_rows * 80)   # MODIFICATION
+  plot_width <- max(800, num_cols * 80)    # MODIFICATION
+  
+  # Garder une taille de texte suffisamment lisible
+  text_size <- min(12, 17 - 0.055 * num_rows) # MODIFICATION
+  
+  # Ajustement dynamique de la taille des tuiles en fonction de la densité
+  tile_scale <- min(0.5, 1 - 0.02 * num_rows) # MODIFICATION
+  
+  
   
   # browser()
   
@@ -259,7 +253,7 @@ plot_win_rate_mat <- function(
   
   
   label_x <- paste0(
-    "<span style='font-size:", 17 - size_multiplier, "px;'> <b>",
+    "<span style='font-size:",1+text_size, "px;'> <b>",
     Df_winrate_format_filter_fun %>%
       pull(Archetype) %>%
       unique(),
@@ -279,7 +273,7 @@ plot_win_rate_mat <- function(
   
   
   label_y <- paste0(
-    "<span style='font-size:", 17 - size_multiplier, "px;'> <b>",
+    "<span style='font-size:",1+text_size, "px;'> <b>",
     Df_winrate_format_filter_fun %>%
       pull(Archetype) %>%
       unique(),
@@ -321,8 +315,8 @@ plot_win_rate_mat <- function(
       geom_tile(
         color = "white",
         stat = "identity",
-        height = tiles_size,
-        width = tiles_size
+        height = tiles_size * tile_scale, 
+        width = tiles_size * tile_scale
       ) +
       scale_fill_gradient2(
         midpoint = 0.5, low = "red", mid = "white",
@@ -345,6 +339,7 @@ plot_win_rate_mat <- function(
             round(!!rlang::sym(paste0("WR_", group_column)) * 100, 1)
           )
         ),
+        size = text_size / 3  #  Ajuste la taille du texte
       ) +
       scale_x_discrete(
         label = rev(label_x),
@@ -388,12 +383,15 @@ plot_win_rate_mat <- function(
           legend.position = "none",
           panel.border = element_blank(),
           panel.grid.major = element_blank(),
-          axis.text.x = element_text(angle = 315)
+          axis.text.x = element_text(angle = 45, hjust = 1), # MODIFICATION,
+          axis.text = element_text(size = text_size/1.8) #  Ajuste la taille des étiquettes de l'axe
         ) 
     ) %>%
       ggplotly(
         tooltip = c("text"),
-        height = (480 * size_multiplier), width = (640 * size_multiplier)
+        # height = (480 * size_multiplier), width = (640 * size_multiplier)
+        height = plot_height,  #  Utilisation de la hauteur calculée dynamiquement
+        width = plot_width     #  Utilisation de la largeur calculée dynamiquement
       ) %>%
       plotly::layout(margin = marges)
   } else {

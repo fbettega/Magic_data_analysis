@@ -253,7 +253,7 @@ For example, a score of 2-1 counts as 1 game won.
 ### Total matrix  
 
 ```{r res_arch_matrix}
-plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 2.8)
+plot_win_rate_mat(Df_win_rate_matrix_format, "matches")
 ```
 
 ### Only significative CI
@@ -261,14 +261,14 @@ plot_win_rate_mat(Df_win_rate_matrix_format, "matches", size_multiplier = 2.8)
 ```{r only_signif_mat_arch}
 plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
   # simplify_tab_ratio = 0.5,
-  only_signif = TRUE, size_multiplier = 2.8
+  only_signif = TRUE
 ) %>% bslib::card(full_screen = TRUE)
 ```
 :::
 
 ## CI plot 
 ```{r res_ci_plot_arch}
-#| column: screen
+# <!-- #| column: screen -->
 Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
   mutate(
     Archetype = factor(
@@ -277,22 +277,32 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
   ) %>% 
   arrange(Archetype)
 
+Archetype_ci_df_plot_lines_df <- data.frame(
+    yintercept = c(
+        mean(Archetype_ci_df_plot$Arch_winrate_matches),
+        mean(Archetype_ci_df_plot$Arch_winrate_matches - Archetype_ci_df_plot$CI_Arch_winrate_matches),
+        mean(Archetype_ci_df_plot$Arch_winrate_matches + Archetype_ci_df_plot$CI_Arch_winrate_matches)
+    ),
+    line_type = c("Average Winrate",  "Lower CI", "Upper CI")
+)
 
 
-
-(ggplot(data = Archetype_ci_df_plot ) +
-  geom_point(
-    aes(
-      y = Arch_winrate_matches,
-      x = Archetype,
-      text = paste(
+gg_ciplot_arch <- ggplot(data = Archetype_ci_df_plot,
+                         aes(
+                           text = paste(
         "Archetype: ", Archetype, "<br>", # Archetype name
         "Winrate: ",
         round(Arch_winrate_matches * 100, 1), " %",
         "[", round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2), ";",
         round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2), "]", "<br>",
         sep = ""
-      ),
+      )
+      ) 
+      ) +
+  geom_point(
+    aes(
+      y = Arch_winrate_matches,
+      x = Archetype
     ),
     position = position_dodge(0.75)
   ) +
@@ -304,14 +314,17 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
     ),
     position = position_dodge(width = .75), width = .01
   ) +
-  geom_hline(yintercept = mean(Archetype_ci_df_plot$Arch_winrate_matches), linetype = "dashed", color = "red") +
-  geom_hline(
-    yintercept = c(
-      mean(Archetype_ci_df_plot$Arch_winrate_matches - Archetype_ci_df_plot$CI_Arch_winrate_matches),
-      mean(Archetype_ci_df_plot$Arch_winrate_matches + Archetype_ci_df_plot$CI_Arch_winrate_matches)
-    ),
-    linetype = "dashed", color = "blue"
-  ) +
+    geom_hline(
+        data = Archetype_ci_df_plot_lines_df,
+        aes(yintercept = yintercept, color = line_type),
+        linetype = "dashed"
+    ) +
+    scale_color_manual(
+        name = "Legend",
+        values = c("Average Winrate" = "red", 
+                   "Lower CI" = "blue", 
+                   "Upper CI" = "blue")
+    )  +
       scale_x_discrete(
         label = paste0(
     "<span style='font-size:", 17 , "px;'> <b>",
@@ -334,15 +347,21 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
       )
 
   ),
-        # guide = guide_axis(n.dodge=3)
-      )
-    +
+      )    +
+  ylab("Winrate") +
   coord_flip()
-) %>%
+
+
+
+gg_ciplot_arch %>%
   ggplotly(
-    tooltip = c("text"), height = (480 * (ratio_plot)), width = (820 * ratio_plot)
-  ) %>%
-  bslib::card(full_screen = TRUE)
+    tooltip = c("text"),
+      height = 50 * nrow(Archetype_ci_df_plot) #(480 * (ratio_plot+1)), width = (820 * (ratio_plot+1))
+  )  %>%
+    layout(
+        legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
+    ) %>%
+    bslib::card(full_screen = TRUE)
 ```
 
 
@@ -356,7 +375,7 @@ For example, a score of 2-1 counts as 1 game won.
 ### Total matrix  
 
 ```{r res_base_arch_matrix}
-plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches", size_multiplier = 4)
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches")
 ```
 
 ### Only significative CI
@@ -364,7 +383,7 @@ plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches", size_multiplie
 ```{r base_arch_only_signif_mat_arch}
 plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
   # simplify_tab_ratio = 0.5,
-  only_signif = TRUE, size_multiplier = 4
+  only_signif = TRUE
 ) %>% bslib::card(full_screen = TRUE)
 ```
 
@@ -373,7 +392,7 @@ plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
 
 ## CI plot 
 ```{r res_ci_plot_base_arch}
-#| column: screen
+# <!-- #| column: screen -->
 base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch_format) %>%
     mutate(
         Archetype = factor(
@@ -382,20 +401,30 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
     ) %>% 
     arrange(Archetype)
 
-(ggplot(data = base_Archetype_ci_df_plot
-  ) +
-  geom_point(
-    aes(
-      y = Arch_winrate_matches,
-      x = Archetype,
-      text = paste(
+
+base_Archetype_ci_df_plot_lines_df <- data.frame(
+  yintercept = c(
+    mean(base_Archetype_ci_df_plot$Arch_winrate_matches),
+    mean(base_Archetype_ci_df_plot$Arch_winrate_matches - base_Archetype_ci_df_plot$CI_Arch_winrate_matches),
+    mean(base_Archetype_ci_df_plot$Arch_winrate_matches + base_Archetype_ci_df_plot$CI_Arch_winrate_matches)
+  ),
+  line_type = c("Average Winrate", "Lower CI", "Upper CI")
+)
+
+
+gg_ciplot_base_arch <- ggplot(data = base_Archetype_ci_df_plot,aes(  text = paste(
         "Archetype: ", Archetype, "<br>", # Archetype name
         "Winrate: ",
         round(Arch_winrate_matches * 100, 1), " %",
         "[", round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2), ";",
         round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2), "]", "<br>",
         sep = ""
-      ),
+      ))
+  ) +
+  geom_point(
+    aes(
+      y = Arch_winrate_matches,
+      x = Archetype,
     ),
     position = position_dodge(0.75)
   ) +
@@ -407,14 +436,18 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
     ),
     position = position_dodge(width = .75), width = .01
   ) +
-  geom_hline(yintercept = mean(base_Archetype_ci_df_plot$Arch_winrate_matches), linetype = "dashed", color = "red") +
   geom_hline(
-    yintercept = c(
-      mean(base_Archetype_ci_df_plot$Arch_winrate_matches - base_Archetype_ci_df_plot$CI_Arch_winrate_matches),
-      mean(base_Archetype_ci_df_plot$Arch_winrate_matches + base_Archetype_ci_df_plot$CI_Arch_winrate_matches)
-    ),
-    linetype = "dashed", color = "blue"
+    data = base_Archetype_ci_df_plot_lines_df,
+    aes(yintercept = yintercept, color = line_type),
+    linetype = "dashed"
   ) +
+  scale_color_manual(
+    name = "Legend",
+    values = c("Average Winrate" = "red", 
+               "Lower CI" = "blue", 
+               "Upper CI" = "blue")
+  )  +
+  ylab("Winrate") +
     scale_x_discrete(
         label = paste0(
             "<span style='font-size:", 17 , "px;'> <b>",
@@ -439,10 +472,21 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
         ),
         # guide = guide_axis(n.dodge=3)
     ) +
-  coord_flip()
-) %>%
+  coord_flip() +
+  theme(
+    legend.position = c(0.85, 0.15),
+    legend.background = element_rect(fill = "white", color = "black")
+  )
+
+
+
+gg_ciplot_base_arch %>%
   ggplotly(
-    tooltip = c("text"), height = (480 * (ratio_plot+1)), width = (820 * (ratio_plot+1))
+    tooltip = c("text"),
+    height = 50 * nrow(base_Archetype_ci_df_plot) #(480 * (ratio_plot+1)), width = (820 * (ratio_plot+1))
+  )  %>%
+  layout(
+    legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
   ) %>%
   bslib::card(full_screen = TRUE)
 ```
@@ -554,11 +598,15 @@ Presence_for_best_deck_plot <- rbind(
     presence_percent = n / sum(n)
   )
 
+# Génération du schéma de couleurs réduit de moitié
+num_archetypes <- length(levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype))
 scheme <- iwanthue(seed = 42, force_init = TRUE)
-# Plot color scales
-colors_scales_presence <- scheme$hex(
-  length(levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype))
-)
+colors_scales_presence <- scheme$hex(ceiling(num_archetypes / 2))  # Diviser le nombre de couleurs par 2
+
+# Associer chaque Archetype avec une couleur et un style de ligne
+archetype_levels <- levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype)
+archetype_styles <- rep(c("solid", "dashed"), length.out = num_archetypes)
+colors_for_archetypes <- rep(colors_scales_presence, each = 2, length.out = num_archetypes)
 
 
 plot_archetype_spaghetti <- (
@@ -577,6 +625,7 @@ plot_archetype_spaghetti <- (
       x = Week,
       y = presence_percent,
       color = Matchups_OpponentArchetype,
+linetype = Matchups_OpponentArchetype,
       text = paste(
         "Archetype: ", Matchups_OpponentArchetype, "<br>", # Archetype name
         "n : ", n, " (", round(presence_percent * 100, 2), " %)", "<br>",
@@ -585,8 +634,8 @@ plot_archetype_spaghetti <- (
       group = 1
     )
   ) +
-    geom_line() +
-    geom_point() +
+    geom_line(size = 1) +
+    geom_point(size = 2) +
   scale_x_discrete(
     "Week",
     # breaks = levels(Presence_for_best_deck_plot$Week),
@@ -601,13 +650,17 @@ plot_archetype_spaghetti <- (
                     )
   ) +
     scale_color_manual(
-      values = colors_scales_presence
+        values = setNames(colors_for_archetypes, archetype_levels)
+    ) +
+    scale_linetype_manual(
+        values = setNames(archetype_styles, archetype_levels)  # Appliquer le style de ligne
     ) +
     ylab("Archetype presence") +
     scale_y_continuous(labels = function(x) scales::percent(x)) +
     theme(
       axis.title = element_blank(),
-      panel.border = element_blank()
+      panel.border = element_blank(),
+      axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
     )
 ) %>%
   ggplotly(tooltip = c("text"), height = (450 * 2.5), width = (850 * 2.5)) %>%
@@ -805,11 +858,17 @@ Presence_Base_Archetype_for_best_deck_plot <- rbind(
     presence_percent = n / sum(n)
   )
 
+# Génération du schéma de couleurs réduit de moitié
+num_base_archetypes <- length(levels(Presence_Base_Archetype_for_best_deck_plot$Matchups_OpponentBase_Archetype))
 scheme <- iwanthue(seed = 42, force_init = TRUE)
-# Plot color scales
-colors_scales_presence <- scheme$hex(
-  length(levels(Presence_Base_Archetype_for_best_deck_plot$Matchups_OpponentBase_Archetype))
-)
+colors_scales_base_arch_presence <- scheme$hex(ceiling(num_base_archetypes / 2))  # Diviser le nombre de couleurs par 2
+
+# Associer chaque Archetype avec une couleur et un style de ligne
+base_archetype_levels <- levels(Presence_Base_Archetype_for_best_deck_plot$Matchups_OpponentBase_Archetype)
+base_archetype_styles <- rep(c("solid", "dashed"), length.out = num_base_archetypes)
+colors_for_base_archetypes <- rep(colors_scales_base_arch_presence, each = 2, length.out = num_base_archetypes)
+
+
 
 
 plot_Base_Archetype_spaghetti <- (
@@ -818,7 +877,8 @@ plot_Base_Archetype_spaghetti <- (
     aes(
       x = Week,
       y = presence_percent,
-      color = Matchups_OpponentBase_Archetype,
+          color = Matchups_OpponentBase_Archetype,
+      linetype = Matchups_OpponentBase_Archetype,  # Ajout du style de ligne
       text = paste(
         "Archetype: ", Matchups_OpponentBase_Archetype, "<br>", # Archetype name
         "n : ", n, " (", round(presence_percent * 100, 2), " %)", "<br>",
@@ -827,8 +887,8 @@ plot_Base_Archetype_spaghetti <- (
       group = 1
     )
   ) +
-    geom_line() +
-    geom_point() +
+    geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
+    geom_point(size = 2) +  # Ajuster la taille des points
   scale_x_discrete(
     "Week",
     # breaks = levels(Presence_for_best_deck_plot$Week),
@@ -841,15 +901,19 @@ plot_Base_Archetype_spaghetti <- (
         distinct(Week,.keep_all = TRUE) %>% 
   pull(Week_deck_number)
                     )
-  ) +
+  )  +
     scale_color_manual(
-      values = colors_scales_presence
+      values = setNames(colors_for_base_archetypes, base_archetype_levels)
+    ) +
+    scale_linetype_manual(
+      values = setNames(base_archetype_styles, base_archetype_levels)  # Appliquer le style de ligne
     ) +
     ylab("Archetype presence") +
     scale_y_continuous(labels = function(x) scales::percent(x)) +
     theme(
       axis.title = element_blank(),
-      panel.border = element_blank()
+      panel.border = element_blank(),
+         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
     )
 ) %>%
   ggplotly(tooltip = c("text"), height = (450 * 2.5), width = (850 * 2.5)) %>%
