@@ -9,8 +9,6 @@ library(tidyverse)
 library(plotly)
 library(rwantshue)
 
-source_here()
-
 conflicted::conflicts_prefer(purrr::discard)
 # css: TOC.css
 source("../sources/MTG_function_base_FB/global_mtg_sources.R")

@@ -277,7 +277,7 @@ tictoc::tic.clearlog()
 # system("shutdown -s")
 # cancer shutdown use : 
 # system("shutdown -a")
-system("shutdown /s /t 30")
+# system("shutdown /s /t 30")
 },
 error = function(e) {
   error_message <- paste("Une erreur s'est produite :", e$message, "\n")
@@ -286,7 +286,7 @@ error = function(e) {
   # cancer shutdown use : 
   # system("shutdown -a")
   print(paste0("shutdown cause of error"))
-  system("shutdown /s /t 60")
+  # system("shutdown /s /t 60")
 
 }
 )
