@@ -1,7 +1,7 @@
 git checkout master
 git remote add jiliac ../MTGODecklistCache_J
 git fetch jiliac
-git merge jiliac/master
+git pull
 
 
 # normalement devrait fonctionner

@@ -574,6 +574,7 @@ Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>%
 
 
 
+
 ```{r spagheti_plot_arch_compute}
 Presence_for_best_deck_plot <- rbind(
   Df_Expected_number_of_win_by_week %>%
@@ -595,85 +596,41 @@ Presence_for_best_deck_plot <- rbind(
   group_by(Week) %>%
   mutate(
     Week_deck_number = sum(n),
-    presence_percent = n / sum(n)
+    presence_percent = n / sum(n),
+    join_week = as.character(Week)
+  ) %>% 
+  rename(
+    Archetype = Matchups_OpponentArchetype,
+    Archetype_percent = presence_percent,
+    Count_arch = n
+    ) %>% 
+  left_join(df_base_all_data %>% group_by(Week) %>% 
+  summarise(
+    Date = min(Date)
+            ) %>% 
+    mutate(Week = as.character(Week)),
+  by = join_by(join_week == Week)
+  ) %>% 
+  select(-join_week)
+
+plot_archetype_spaghetti <- function_plot_spaghetti_plot(  
+  df_fun_spaghetti_plot = Presence_for_best_deck_plot,
+  scheme_color_sheme_fun  = scheme,
+  Arch_or_base_arch = "Archetype" , #"Base_Archetype" "Archetype"
+  hide_treshold = 0.025,
+  ratio_plot_fun = ratio_plot
   )
-
-# Génération du schéma de couleurs réduit de moitié
-num_archetypes <- length(levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype))
-scheme <- iwanthue(seed = 42, force_init = TRUE)
-colors_scales_presence <- scheme$hex(ceiling(num_archetypes / 2))  # Diviser le nombre de couleurs par 2
-
-# Associer chaque Archetype avec une couleur et un style de ligne
-archetype_levels <- levels(Presence_for_best_deck_plot$Matchups_OpponentArchetype)
-archetype_styles <- rep(c("solid", "dashed"), length.out = num_archetypes)
-colors_for_archetypes <- rep(colors_scales_presence, each = 2, length.out = num_archetypes)
+```
 
 
-plot_archetype_spaghetti <- (
-  ggplot(
-    Presence_for_best_deck_plot %>% 
-      mutate(
-        week = Week,
-        Week_label = 
-        paste0(
-      "Week : ", Week, "<br>",
-        "N total deck :<br>",Week_deck_number
-                    )
-    
-      ),
-    aes(
-      x = Week,
-      y = presence_percent,
-      color = Matchups_OpponentArchetype,
-linetype = Matchups_OpponentArchetype,
-      text = paste(
-        "Archetype: ", Matchups_OpponentArchetype, "<br>", # Archetype name
-        "n : ", n, " (", round(presence_percent * 100, 2), " %)", "<br>",
-        sep = ""
-      ),
-      group = 1
-    )
-  ) +
-    geom_line(size = 1) +
-    geom_point(size = 2) +
-  scale_x_discrete(
-    "Week",
-    # breaks = levels(Presence_for_best_deck_plot$Week),
-    labels = paste0(
-      "Week : ", levels(Presence_for_best_deck_plot$Week), "<br>",
-        # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
-        "N total deck :<br>", Presence_for_best_deck_plot %>%
-        arrange(Week) %>%  
-        select(Week,Week_deck_number) %>% 
-        distinct(Week,.keep_all = TRUE) %>% 
-  pull(Week_deck_number)
-                    )
-  ) +
-    scale_color_manual(
-        values = setNames(colors_for_archetypes, archetype_levels)
-    ) +
-    scale_linetype_manual(
-        values = setNames(archetype_styles, archetype_levels)  # Appliquer le style de ligne
-    ) +
-    ylab("Archetype presence") +
-    scale_y_continuous(labels = function(x) scales::percent(x)) +
-    theme(
-      axis.title = element_blank(),
-      panel.border = element_blank(),
-      axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
-    )
-) %>%
-  ggplotly(tooltip = c("text"), height = (450 * 2.5), width = (850 * 2.5)) %>%
+```{r print_spagheti_plot_arch}
+#| column: screen
+plot_archetype_spaghetti %>%
   plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
     title = list(text = "")
-  ))
-```
-
-```{r print_spagheti_plot_arch}
-#| column: screen
-plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
+  )) %>% bslib::card(full_screen = TRUE)
 ```
 
 
@@ -855,78 +812,46 @@ Presence_Base_Archetype_for_best_deck_plot <- rbind(
   group_by(Week) %>%
   mutate(
     Week_deck_number = sum(n),
-    presence_percent = n / sum(n)
+    presence_percent = n / sum(n),
+    join_week = as.character(Week)
+  ) %>% 
+  rename(
+    Base_Archetype = Matchups_OpponentBase_Archetype,
+    Base_Archetype_percent = presence_percent,
+    Count_base_arch = n
+    ) %>% 
+  left_join(df_base_all_data %>% group_by(Week) %>% 
+  summarise(
+    Date = min(Date)
+            ) %>% 
+    mutate(Week = as.character(Week)),
+  by = join_by(join_week == Week)
+  ) %>% 
+  mutate(Date = ifelse(is.na(Date) & Week == "All",Sys.Date(),Date)) %>% 
+  select(-join_week)
+```
+
+```{r}
+plot_Base_Archetype_spaghetti <- function_plot_spaghetti_plot(  
+  df_fun_spaghetti_plot = Presence_Base_Archetype_for_best_deck_plot,
+  scheme_color_sheme_fun  = scheme,
+  Arch_or_base_arch = "Base_Archetype" , #"Base_Archetype" "Archetype"
+  hide_treshold = 0.025,
+  ratio_plot_fun = ratio_plot
   )
-
-# Génération du schéma de couleurs réduit de moitié
-num_base_archetypes <- length(levels(Presence_Base_Archetype_for_best_deck_plot$Matchups_OpponentBase_Archetype))
-scheme <- iwanthue(seed = 42, force_init = TRUE)
-colors_scales_base_arch_presence <- scheme$hex(ceiling(num_base_archetypes / 2))  # Diviser le nombre de couleurs par 2
-
-# Associer chaque Archetype avec une couleur et un style de ligne
-base_archetype_levels <- levels(Presence_Base_Archetype_for_best_deck_plot$Matchups_OpponentBase_Archetype)
-base_archetype_styles <- rep(c("solid", "dashed"), length.out = num_base_archetypes)
-colors_for_base_archetypes <- rep(colors_scales_base_arch_presence, each = 2, length.out = num_base_archetypes)
+```
 
 
 
 
-plot_Base_Archetype_spaghetti <- (
-  ggplot(
-    Presence_Base_Archetype_for_best_deck_plot,
-    aes(
-      x = Week,
-      y = presence_percent,
-          color = Matchups_OpponentBase_Archetype,
-      linetype = Matchups_OpponentBase_Archetype,  # Ajout du style de ligne
-      text = paste(
-        "Archetype: ", Matchups_OpponentBase_Archetype, "<br>", # Archetype name
-        "n : ", n, " (", round(presence_percent * 100, 2), " %)", "<br>",
-        sep = ""
-      ),
-      group = 1
-    )
-  ) +
-    geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
-    geom_point(size = 2) +  # Ajuster la taille des points
-  scale_x_discrete(
-    "Week",
-    # breaks = levels(Presence_for_best_deck_plot$Week),
-    labels = paste0(
-      "Week : ", levels(Presence_Base_Archetype_for_best_deck_plot$Week), "<br>",
-        # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
-        "N total deck :<br>", Presence_Base_Archetype_for_best_deck_plot %>%
-        arrange(Week) %>%  
-        select(Week,Week_deck_number) %>% 
-        distinct(Week,.keep_all = TRUE) %>% 
-  pull(Week_deck_number)
-                    )
-  )  +
-    scale_color_manual(
-      values = setNames(colors_for_base_archetypes, base_archetype_levels)
-    ) +
-    scale_linetype_manual(
-      values = setNames(base_archetype_styles, base_archetype_levels)  # Appliquer le style de ligne
-    ) +
-    ylab("Archetype presence") +
-    scale_y_continuous(labels = function(x) scales::percent(x)) +
-    theme(
-      axis.title = element_blank(),
-      panel.border = element_blank(),
-         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
-    )
-) %>%
-  ggplotly(tooltip = c("text"), height = (450 * 2.5), width = (850 * 2.5)) %>%
+```{r spagheti_plot_base_arch_print}
+#| column: screen
+plot_Base_Archetype_spaghetti %>%
   plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
     title = list(text = "")
-  ))
-```
-
-```{r spagheti_plot_base_arch_print}
-#| column: screen
-plot_Base_Archetype_spaghetti %>% bslib::card(full_screen = TRUE)
+  )) %>% bslib::card(full_screen = TRUE)
 ```
 
 

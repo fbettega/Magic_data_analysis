@@ -169,37 +169,18 @@ spaghetti_plot_df <- Presence_df_base %>%
   distinct() %>% 
   group_by(Week) %>% 
     mutate(Date = min(as_date(Date))) %>% 
-  ungroup()
-
-
-
-Low_Arch_spaghetti <- as.character(
-  spaghetti_plot_df %>%
-  distinct(Week, Archetype, Archetype_percent) %>%
-  group_by(Archetype) %>%
-  # old based on mean presence
-  # summarise(Archetype_percent = sum(Archetype_percent) / max(Week), ) %>%
-  # now based on max presence
-  summarise(Archetype_percent = max(Archetype_percent)) %>%
-   filter(Archetype_percent < 0.025) %>% pull(Archetype)
-)
-
-
-Low_base_Arch_spaghetti <- as.character(
-  spaghetti_plot_df %>%
-  distinct(Week, Base_Archetype, Base_Archetype_percent) %>%
-  group_by(Base_Archetype) %>%
-  # old based on mean presence
-  # summarise(Base_Archetype_percent = sum(Base_Archetype_percent) / max(Week), ) %>%
-  # now based on max presence
-  summarise(Base_Archetype_percent = max(Base_Archetype_percent)) %>%
-  
-  filter(Base_Archetype_percent < 0.025) %>% pull(Base_Archetype)
+  ungroup() %>%
+  mutate(
+    Week = factor(
+      Week,
+      levels = c(1:max(Presence_df_base$Week))
+    )
   )
 
 ratio_plot <- 3
 
 ```
+
 
 
 
@@ -214,72 +195,13 @@ Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`
 
 ```{r print_spagheti_arch}
 #| column: screen
-
-    num_archetypes <- length(levels(spaghetti_plot_df$Archetype))
-    # scheme <- iwanthue(seed = 42, force_init = TRUE)
-    colors_scales_presence <- scheme$hex(ceiling(num_archetypes / 2))  # Diviser le nombre de couleurs par 2
-    
-    # Associer chaque Archetype avec une couleur et un style de ligne
-    archetype_levels <- levels(spaghetti_plot_df$Archetype)
-    archetype_styles <- rep(c("solid", "dashed"), length.out = num_archetypes)
-    colors_for_archetypes <- rep(colors_scales_presence, each = 2, length.out = num_archetypes)
-
-
-
-plot_archetype_spaghetti <- (ggplot(
-  spaghetti_plot_df ,
-  aes(
-    x = Week,
-    y = Archetype_percent,
-    color = Archetype,
-     linetype = Archetype,
-    text = paste(
-      "Archetype: ", Archetype," (", Count_arch,")","<br>", # Archetype name
-      "Archetype percent: ", round(Archetype_percent * 100, 2), " %", "<br>",
-      sep = ""
-    ),
-    group = 1
+plot_archetype_spaghetti <- function_plot_spaghetti_plot(  
+  df_fun_spaghetti_plot = spaghetti_plot_df,
+  scheme_color_sheme_fun  = scheme,
+  Arch_or_base_arch = "Archetype" , #"Base_Archetype" "Archetype"
+  hide_treshold = 0.025,
+  ratio_plot_fun = ratio_plot
   )
-) +
-    geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
-    geom_point(size = 2) +  # Ajuster la taille des points
-  scale_x_continuous("Week",
-    breaks = unique(spaghetti_plot_df$Week),
-    labels = paste0(
-      "Week : ", unique(spaghetti_plot_df$Week), "<br>",
-        unique(spaghetti_plot_df$Date), "<br>",
-        "N total deck : ", unique(spaghetti_plot_df$Week_deck_number)
-                    
-                    )
-  ) +
-    scale_color_manual(
-        values = setNames(colors_for_archetypes, archetype_levels)
-    ) +
-    scale_linetype_manual(
-        values = setNames(archetype_styles, archetype_levels)  # Appliquer le style de ligne
-    ) +
-      theme(
-axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
-) +
-  ylab("Archetype presence") +
-  scale_y_continuous(labels = function(x) scales::percent(x))
-) %>%
-  ggplotly(
-    tooltip = c("text") , height = (480 * ratio_plot), width = (850 * ratio_plot)
-    )
-
-
-plot_archetype_spaghetti$x$data <- lapply(
-  plot_archetype_spaghetti$x$data, function(y) {
-    if (y$name %in% Low_Arch_spaghetti) {
-      y$visible <- "legendonly"
-    }
-
-
-    return(y)
-  }
-)
-
 
 plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
 ```
@@ -290,73 +212,23 @@ Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`
 
 ```{r print_spagheti_base_arch}
 #| column: screen
-
-num_base_archetypes <- length(levels(spaghetti_plot_df$Base_Archetype))
-colors_scales_base_arch_presence <- scheme$hex(ceiling(num_base_archetypes / 2))  # Diviser le nombre de couleurs par 2
-
-# Associer chaque Archetype avec une couleur et un style de ligne
-base_archetype_levels <- levels(spaghetti_plot_df$Base_Archetype)
-base_archetype_styles <- rep(c("solid", "dashed"), length.out = num_base_archetypes)
-colors_for_base_archetypes <- rep(colors_scales_base_arch_presence, each = 2, length.out = num_base_archetypes)
-
-
-
-plot_base_archetype_spaghetti <- (ggplot(
-  spaghetti_plot_df,
-  aes(
-    x = Week,
-    y = Base_Archetype_percent,
-    color = Base_Archetype,
-    linetype = Base_Archetype,
-    text = paste(
-      "Archetype: ", Base_Archetype," (", Count_base_arch,")", "<br>", # Archetype name
-      "Archetype percent: ", round(Base_Archetype_percent * 100, 2), " %", "<br>",
-      sep = ""
-    ),
-    group = 1
+plot_base_archetype_spaghetti <- function_plot_spaghetti_plot(  
+  df_fun_spaghetti_plot = spaghetti_plot_df,
+  scheme_color_sheme_fun  = scheme,
+  Arch_or_base_arch = "Base_Archetype"  , #"Base_Archetype" "Archetype"
+  hide_treshold = 0.025,
+  ratio_plot_fun = ratio_plot
   )
-) +
-    geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
-    geom_point(size = 2) +  # Ajuster la taille des points
-  scale_x_continuous("Week",
-    breaks = unique(spaghetti_plot_df$Week),
-    labels = paste0(
-      "Week : ", unique(spaghetti_plot_df$Week), "<br>",
-        unique(spaghetti_plot_df$Date), "<br>",
-        "N total deck : ", unique(spaghetti_plot_df$Week_deck_number)
-                    
-                    )
-  )     +
-    scale_color_manual(
-        values = setNames(colors_for_base_archetypes, base_archetype_levels)
-    ) +
-    scale_linetype_manual(
-        values = setNames(base_archetype_styles, base_archetype_levels)  # Appliquer le style de ligne
-    ) +
-  theme(
-    axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
-  ) +
-  ylab("Archetype presence") +
-  scale_y_continuous(labels = function(x) scales::percent(x))
-) %>%
-  ggplotly(tooltip = c("text"), height = (480 * ratio_plot), width = (850 * ratio_plot))
-
-
-
-plot_base_archetype_spaghetti$x$data <- lapply(
-  plot_base_archetype_spaghetti$x$data, function(y) {
-    if (y$name %in% Low_base_Arch_spaghetti) {
-      y$visible <- "legendonly"
-    }
-
-
-    return(y)
-  }
-)
 
 plot_base_archetype_spaghetti %>% 
   bslib::card(full_screen = TRUE)
 ```
+
+
+
+
+
+
 
 
 

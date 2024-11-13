@@ -1553,17 +1553,144 @@ DF_presence_fun <- function(
 
 ################################################################################
 
+################################################################################
+######  Function that plot presence of over week as line #######################
+function_plot_spaghetti_plot <- function(
+    df_fun_spaghetti_plot,
+    scheme_color_sheme_fun  = scheme,
+    Arch_or_base_arch , #"Base_Archetype" "Archetype"
+    hide_treshold = 0.025,
+    ratio_plot_fun = ratio_plot
+){
+  # Archetype Count_arch Archetype_percent
+  num_levels_in_fun <- length(levels(df_fun_spaghetti_plot[[Arch_or_base_arch]]))
+  # Associer chaque Archetype avec une couleur et un style de ligne
+  Color_sheme_fun_df <- tibble(
+    archetype_levels = levels(df_fun_spaghetti_plot[[Arch_or_base_arch]]),
+    type_styles = rep(c("solid", "dashed"), length.out = num_levels_in_fun),
+    colors_for_archetypes = rep(
+      scheme_color_sheme_fun$hex(ceiling(num_levels_in_fun / 2)) , 
+      each = 2, length.out = num_levels_in_fun)
+  )
+  
+  
+  
+  Low_spaghetti <- as.character(
+    df_fun_spaghetti_plot %>%
+      distinct(
+        Week,
+        !!rlang::sym(Arch_or_base_arch),
+        !!rlang::sym(paste0(Arch_or_base_arch,"_percent"))
+      ) %>%
+      group_by(!!rlang::sym(Arch_or_base_arch)) %>%
+      summarise(
+        max_percent = 
+          max(!!rlang::sym(paste0(Arch_or_base_arch,"_percent")
+          )
+          )
+      ) %>%
+      filter(max_percent < hide_treshold) %>% 
+      pull(!!rlang::sym(Arch_or_base_arch))
+  )
+  
+  
+  if (Arch_or_base_arch == "Base_Archetype"){
+    plot_base_spaghetti <- 
+      ggplot(
+        df_fun_spaghetti_plot,
+        aes(
+          x = Week,
+          y = Base_Archetype_percent,
+          color = Base_Archetype,
+          linetype = Base_Archetype,
+          text = paste(
+            "Archetype: ", Base_Archetype," (", Count_base_arch,")", "<br>", # Archetype name
+            "Archetype percent: ", round(Base_Archetype_percent * 100, 2), " %", "<br>",
+            sep = ""
+          ),
+          group = 1
+        )
+      )
+  } else if (Arch_or_base_arch == "Archetype"){
+    plot_base_spaghetti <- 
+      ggplot(
+        df_fun_spaghetti_plot,
+        aes(
+          x = Week,
+          y = Archetype_percent,
+          color = Archetype,
+          linetype = Archetype,
+          text = paste(
+            "Archetype: ", Archetype," (", Count_arch,")", "<br>", # Archetype name
+            "Archetype percent: ", round(Archetype_percent * 100, 2), " %", "<br>",
+            sep = ""
+          ),
+          group = 1
+        )
+      ) 
+  }
+  plot_spaghetti_res <- 
+    (plot_base_spaghetti +
+       geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
+       geom_point(size = 2) +  # Ajuster la taille des points
+       scale_x_discrete(
+         "Week",
+         # breaks = levels(Presence_for_best_deck_plot$Week),
+         labels = paste0(
+           "Week : ", as.character(unique(df_fun_spaghetti_plot$Week)), "<br>",
+           # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
+           "N total deck :<br>", df_fun_spaghetti_plot %>%
+             arrange(Week) %>%  
+             select(Week,Week_deck_number) %>% 
+             distinct(Week,.keep_all = TRUE) %>% 
+             pull(Week_deck_number)
+         )
+       ) +
+       scale_color_manual(
+         values = setNames(
+           Color_sheme_fun_df$colors_for_archetypes, Color_sheme_fun_df$archetype_levels)
+       ) +
+       scale_linetype_manual(
+         values = setNames(Color_sheme_fun_df$type_styles, Color_sheme_fun_df$archetype_levels)  # Appliquer le style de ligne
+       ) +
+       theme(
+         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+       ) +
+       ylab(
+         paste0(str_replace(Arch_or_base_arch,"_"," "),
+                   " presence")
+         ) +
+       scale_y_continuous(labels = function(x) scales::percent(x))
+    ) %>%
+    ggplotly(tooltip = c("text"), height = (480 * ratio_plot_fun), width = (850 * ratio_plot_fun))
+  
+  
+  plot_spaghetti_res$x$data <- lapply(
+    plot_spaghetti_res$x$data, function(y) {
+      if (y$name %in% Low_spaghetti) {
+        y$visible <- "legendonly"
+      }
+      
+      
+      return(y)
+    }
+  )
+  
+  return(
+    plot_spaghetti_res 
+  )
+  
+}
+
 
 ################################################################################
 ######  Function that plot presence of archetype used in 2 and 7  ##############
-
 plot_presence_fun <- function(
     df_base,
     color_scheme,
     time_limit = Inf,
     compare_time_limit = NULL,
     plot_scaling = 2.25
-    
     ) {
   # browser()
   
@@ -1571,7 +1698,7 @@ plot_presence_fun <- function(
     df_base, time_limit, compare_time_limit
   )
   if (!is.null(compare_time_limit)) {
-    Plot_presence <- (
+    base_Plot_presence  <- #(
       ggplot(
         df_plot_presence,
         aes(
@@ -1579,8 +1706,6 @@ plot_presence_fun <- function(
           y = prop.table(stat(count)),
           fill = Base_Archetype,
           label = scales::percent(prop.table(stat(count))),
-          # Delta_rank = Delta_rank,
-          # Delta_percent_arch = Delta_percent_arch,
           text = paste(
             "Archetype: ", Archetype, "<br>", # Archetype name
             "Base Archetype: ", Base_Archetype, "<br>", # Base Archetype name
@@ -1592,51 +1717,9 @@ plot_presence_fun <- function(
             sep = ""
           )
         )
-      ) +
-        geom_bar() +
-        geom_text(
-          aes(
-            label = paste0(
-              round(prop.table(stat(count)) * 100, 1),
-              " % "
-            ),
-            y = prop.table(stat(count)) + 0.008,
-            group = 1
-          ),
-          stat = "count",
-          position = position_dodge2(width = 0.9),
-          size = 5
-        ) +
-        # geom_text(
-        #   aes(
-        #     label = paste0(Delta_rank," ",Delta_percent_arch," %"),
-        #     y = ,
-        #     group = 1
-        #       ),
-        #   stat = "identity",
-        #   position = position_dodge2(width = 0.9),
-        #   size = 3
-        #   ) +
-        scale_y_continuous(labels = scales::percent) +
-        coord_flip() +
-        theme(
-          legend.position = "none",
-          axis.title.x = element_blank()
-        ) +
-        scale_fill_manual(
-          values = color_scheme[
-            levels(
-              as.factor(df_base$Base_Archetype)
-            ) %in%
-              levels(df_plot_presence$Base_Archetype)
-          ]
-        )
-    ) %>%
-      ggplotly(
-        tooltip = c("text"), height = (480 * plot_scaling), width = (820 * plot_scaling)
-               )
+      )
   } else {
-    Plot_presence <- (
+    base_Plot_presence <- #(
       ggplot(
         df_plot_presence,
         aes(
@@ -1655,38 +1738,40 @@ plot_presence_fun <- function(
             sep = ""
           )
         )
-      ) +
-        geom_bar() +
-        geom_text(
-          aes(
-            label = paste0(round(prop.table(stat(count)) * 100, 1), " %"),
-            y = prop.table(stat(count)) + 0.008,
-            group = 1
-          ),
-          stat = "count",
-          position = position_dodge2(width = 0.9),
-          size = 5
-        ) +
-        scale_y_continuous(labels = scales::percent) +
-        coord_flip() +
-        theme(
-          legend.position = "none",
-          axis.title.x = element_blank()
-        ) +
-        scale_fill_manual(
-          values = color_scheme[
-            levels(
-              as.factor(df_base$Base_Archetype)
-            ) %in%
-              levels(df_plot_presence$Base_Archetype)
-          ]
-        )
-    ) %>%
-      ggplotly(
-        tooltip = c("text"), height = (480 * plot_scaling), width = (820 * plot_scaling)
-               )
+      )
   }
   
+  Plot_presence <- (base_Plot_presence  +
+    geom_bar() +
+    geom_text(
+      aes(
+        label = paste0(round(prop.table(stat(count)) * 100, 1), " %"),
+        y = prop.table(stat(count)) + 0.008,
+        group = 1
+      ),
+      stat = "count",
+      position = position_dodge2(width = 0.9),
+      size = 5
+    ) +
+    scale_y_continuous(labels = scales::percent) +
+    coord_flip() +
+    theme(
+      legend.position = "none",
+      axis.title.x = element_blank()
+    ) +
+    scale_fill_manual(
+      values = color_scheme[
+        levels(
+          as.factor(df_base$Base_Archetype)
+        ) %in%
+          levels(df_plot_presence$Base_Archetype)
+      ]
+    )
+    ) %>%
+      ggplotly(
+        tooltip = c("text"),
+        height = (480 * plot_scaling), width = (820 * plot_scaling)
+      )
   # Truc compliqué pour enlever l'overlay du texte
   Plot_presence$x$data[[which(
     sapply(Plot_presence$x$data, function(x) {
@@ -1698,11 +1783,18 @@ plot_presence_fun <- function(
 }
 
 
+
+
+
+
+
+
+
+
+
+
 ################################################################################
 ######  Function that agreg cards with not enought count df in 5 and 6  ########
-
-
-
 Agreg_count_by_cards <- function(df,
                                  cols_choice,
                                  min_sample_size_fun ) {
