@@ -394,91 +394,16 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
 
 ```{r print_ci_plot_arch}
 # <!-- #| column: screen -->
-
-Archetype_ci_df_plot_lines_df <- data.frame(
-    yintercept = c(
-        mean(df_Ci_by_all_week$Arch_winrate),
-        mean(df_Ci_by_all_week$Arch_winrate - df_Ci_by_all_week$CI_Arch_winrate),
-        mean(df_Ci_by_all_week$Arch_winrate + df_Ci_by_all_week$CI_Arch_winrate)
-    ),
-    line_type = c("Average Winrate",  "Lower CI", "Upper CI")
+arch_ci_plot_final <- Generate_CI_plot_fun(
+    df_ci_fun_param = df_Ci_by_all_week,
+    win_rate_fun_par = "Arch_winrate",
+    CI_fun_par = "CI_Arch_winrate",
+    Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
 )
 
-
-(ggplot(data = df_Ci_by_all_week,aes( 
-  text = paste(
-      "Archetype: ", Archetype, "<br>", # Archetype name
-      "Winrate: ", 
-      round(Arch_winrate * 100, 1), " %",
-      "[",round((Arch_winrate + CI_Arch_winrate) * 100, 2),";",
-      round((Arch_winrate - CI_Arch_winrate) * 100, 2),"]", "<br>",
-      sep = ""
-    ))
-       ) +
-  geom_point(
-    aes(
-      y = Arch_winrate,
-      x = Archetype
-      ),
-    position = position_dodge(0.75)
-    )  +
-      geom_errorbar(aes(
-        x = Archetype,
-        ymin = Arch_winrate + CI_Arch_winrate,
-                        ymax = Arch_winrate - CI_Arch_winrate
-        ),
-      position = position_dodge(width = .75), width = .01
-      )  +
-    geom_hline(
-        data = Archetype_ci_df_plot_lines_df,
-        aes(yintercept = yintercept, color = line_type),
-        linetype = "dashed"
-    ) +
-    scale_color_manual(
-        name = "Legend",
-        values = c("Average Winrate" = "red", 
-                   "Lower CI" = "blue", 
-                   "Upper CI" = "blue")
-    )  +
-    scale_x_discrete(
-        label = paste0(
-            "<span style='font-size:", 17 , "px;'> <b>",
-            df_Ci_by_all_week %>%
-                pull(Archetype) %>%
-                unique(),
-            "</b> </span>",
-            "<br /> n : ", df_Ci_by_all_week %>%
-                pull(
-                    Archetype_count   
-                ),
-            "<br /> ", df_Ci_by_all_week %>%
-                mutate(temp_ci = paste0(
-                    round(Arch_winrate * 100, 1), " %",
-                    "[", round((Arch_winrate + CI_Arch_winrate) * 100, 2), ";",
-                    round((Arch_winrate - CI_Arch_winrate) * 100, 2), "]")
-                ) %>% 
-                pull(
-                    temp_ci
-                )
-            
-        ),
-        # guide = guide_axis(n.dodge=3)
-    ) +
-  coord_flip()+
-    theme(
-        legend.position = c(0.85, 0.15),
-        legend.background = element_rect(fill = "white", color = "black")
-    )
-  )  %>%
-  ggplotly(
-    tooltip = c("text"),
-    height = 50 * nrow(df_Ci_by_all_week)
-# height = (480 * ratio_plot), width = (820 * ratio_plot)
-)  %>%
-    plotly::layout(
-        legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
-    ) %>% bslib::card(full_screen = TRUE)
+arch_ci_plot_final
 ```
+
 
 
 
@@ -587,94 +512,23 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
 
 ```{r print_ci_plot_base_arch}
 # <!-- #| column: screen -->
-
-base_Archetype_ci_df_plot_lines_df <- data.frame(
-    yintercept = c(
-        mean(df_base_arch_Ci_by_all_week$Arch_winrate),
-        mean(df_base_arch_Ci_by_all_week$Arch_winrate - df_base_arch_Ci_by_all_week$CI_Arch_winrate),
-        mean(df_base_arch_Ci_by_all_week$Arch_winrate + df_base_arch_Ci_by_all_week$CI_Arch_winrate)
-    ),
-    line_type = c("Average Winrate",  "Lower CI", "Upper CI")
+base_arch_ci_plot_final <- Generate_CI_plot_fun(
+    df_ci_fun_param = df_base_arch_Ci_by_all_week,
+    win_rate_fun_par = "Arch_winrate",
+    CI_fun_par = "CI_Arch_winrate",
+    Arch_or_base_arch = "Base_Archetype" #"Base_Archetype" "Archetype"
 )
-
-
-
-
-(ggplot(data = df_base_arch_Ci_by_all_week,
-        aes(text = paste(
-      "Archetype: ", Base_Archetype, "<br>", # Archetype name
-      "Winrate: ", 
-      round(Arch_winrate * 100, 1), " %",
-      "[",round((Arch_winrate + CI_Arch_winrate) * 100, 2),";",
-      round((Arch_winrate - CI_Arch_winrate) * 100, 2),"]", "<br>",
-      sep = ""
-    ))
-       ) +
-  geom_point(
-    aes(
-      y = Arch_winrate,
-      x = Base_Archetype
-      ),
-    position = position_dodge(0.75)
-    )  +
-      geom_errorbar(aes(
-        x = Base_Archetype,
-        ymin = Arch_winrate + CI_Arch_winrate,
-                        ymax = Arch_winrate - CI_Arch_winrate
-        ),
-      position = position_dodge(width = .75), width = .01
-      )  +
-  geom_hline(
-    data = base_Archetype_ci_df_plot_lines_df,
-    aes(yintercept = yintercept, color = line_type),
-    linetype = "dashed"
-  ) +
-  scale_color_manual(
-    name = "Legend",
-    values = c("Average Winrate" = "red", 
-               "Lower CI" = "blue", 
-               "Upper CI" = "blue")
-  )  +
-    scale_x_discrete(
-        label = paste0(
-            "<span style='font-size:", 17 , "px;'> <b>",
-            df_base_arch_Ci_by_all_week %>%
-                pull(Base_Archetype) %>%
-                unique(),
-            "</b> </span>",
-            "<br /> n : ", df_base_arch_Ci_by_all_week %>%
-                pull(
-                    Base_Archetype_count   
-                ),
-            "<br /> ", df_base_arch_Ci_by_all_week %>%
-                mutate(temp_ci = paste0(
-                    round(Arch_winrate * 100, 1), " %",
-                    "[", round((Arch_winrate + CI_Arch_winrate) * 100, 2), ";",
-                    round((Arch_winrate - CI_Arch_winrate) * 100, 2), "]")
-                ) %>% 
-                pull(
-                    temp_ci
-                )
-            
-        ),
-        # guide = guide_axis(n.dodge=3)
-    ) +
-  coord_flip() +
-  theme(
-    legend.position = c(0.85, 0.15),
-    legend.background = element_rect(fill = "white", color = "black")
-  )
-  )  %>%
-  ggplotly(
-    tooltip = c("text"),
-    height = 50 * nrow(df_base_arch_Ci_by_all_week)
-    # height = (480 * ratio_plot), width = (820 * ratio_plot)
-  )  %>%
-  plotly::layout(
-    legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
-  ) %>% bslib::card(full_screen = TRUE)
+base_arch_ci_plot_final
 ```
 :::
+
+
+
+
+
+
+
+
 
 
 # Number of copy of each cards 

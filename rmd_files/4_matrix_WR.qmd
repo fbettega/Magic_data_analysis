@@ -275,93 +275,17 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
       Archetype,
       levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
   ) %>% 
-  arrange(Archetype)
+  arrange(Archetype) %>% 
+  mutate(Archetype_count = paste0(number_of_matches ,"(",number_of_games ,")")            )
 
-Archetype_ci_df_plot_lines_df <- data.frame(
-    yintercept = c(
-        mean(Archetype_ci_df_plot$Arch_winrate_matches),
-        mean(Archetype_ci_df_plot$Arch_winrate_matches - Archetype_ci_df_plot$CI_Arch_winrate_matches),
-        mean(Archetype_ci_df_plot$Arch_winrate_matches + Archetype_ci_df_plot$CI_Arch_winrate_matches)
-    ),
-    line_type = c("Average Winrate",  "Lower CI", "Upper CI")
+arch_ci_plot_final <- Generate_CI_plot_fun(
+    df_ci_fun_param = Archetype_ci_df_plot,
+    win_rate_fun_par = "Arch_winrate_matches",
+    CI_fun_par = "CI_Arch_winrate_matches",
+    Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
 )
 
-
-gg_ciplot_arch <- ggplot(data = Archetype_ci_df_plot,
-                         aes(
-                           text = paste(
-        "Archetype: ", Archetype, "<br>", # Archetype name
-        "Winrate: ",
-        round(Arch_winrate_matches * 100, 1), " %",
-        "[", round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2), ";",
-        round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2), "]", "<br>",
-        sep = ""
-      )
-      ) 
-      ) +
-  geom_point(
-    aes(
-      y = Arch_winrate_matches,
-      x = Archetype
-    ),
-    position = position_dodge(0.75)
-  ) +
-  geom_errorbar(
-    aes(
-      x = Archetype,
-      ymin = Arch_winrate_matches + CI_Arch_winrate_matches,
-      ymax = Arch_winrate_matches - CI_Arch_winrate_matches
-    ),
-    position = position_dodge(width = .75), width = .01
-  ) +
-    geom_hline(
-        data = Archetype_ci_df_plot_lines_df,
-        aes(yintercept = yintercept, color = line_type),
-        linetype = "dashed"
-    ) +
-    scale_color_manual(
-        name = "Legend",
-        values = c("Average Winrate" = "red", 
-                   "Lower CI" = "blue", 
-                   "Upper CI" = "blue")
-    )  +
-      scale_x_discrete(
-        label = paste0(
-    "<span style='font-size:", 17 , "px;'> <b>",
-    Archetype_ci_df_plot %>%
-      pull(Archetype) %>%
-      unique(),
-    "</b> </span>",
-    "<br /> n : ", Archetype_ci_df_plot %>%
-      pull(
-        number_of_matches  
-      ),
-    "<br /> ", Archetype_ci_df_plot %>%
-      mutate(temp_ci = paste0(
-        round(Arch_winrate_matches * 100, 1), " %",
-        "[", round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2), ";",
-        round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2), "]")
-        ) %>% 
-      pull(
-        temp_ci
-      )
-
-  ),
-      )    +
-  ylab("Winrate") +
-  coord_flip()
-
-
-
-gg_ciplot_arch %>%
-  ggplotly(
-    tooltip = c("text"),
-      height = 50 * nrow(Archetype_ci_df_plot) #(480 * (ratio_plot+1)), width = (820 * (ratio_plot+1))
-  )  %>%
-    layout(
-        legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
-    ) %>%
-    bslib::card(full_screen = TRUE)
+arch_ci_plot_final
 ```
 
 
@@ -399,97 +323,22 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
             Archetype,
             levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
     ) %>% 
-    arrange(Archetype)
+    arrange(Archetype ) %>% 
+  mutate(Archetype_count = paste0(number_of_matches ,"(",number_of_games ,")")            )
 
 
-base_Archetype_ci_df_plot_lines_df <- data.frame(
-  yintercept = c(
-    mean(base_Archetype_ci_df_plot$Arch_winrate_matches),
-    mean(base_Archetype_ci_df_plot$Arch_winrate_matches - base_Archetype_ci_df_plot$CI_Arch_winrate_matches),
-    mean(base_Archetype_ci_df_plot$Arch_winrate_matches + base_Archetype_ci_df_plot$CI_Arch_winrate_matches)
-  ),
-  line_type = c("Average Winrate", "Lower CI", "Upper CI")
+base_arch_ci_plot_final <- Generate_CI_plot_fun(
+    df_ci_fun_param = base_Archetype_ci_df_plot,
+    win_rate_fun_par = "Arch_winrate_matches",
+    CI_fun_par = "CI_Arch_winrate_matches",
+    Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
 )
 
-
-gg_ciplot_base_arch <- ggplot(data = base_Archetype_ci_df_plot,aes(  text = paste(
-        "Archetype: ", Archetype, "<br>", # Archetype name
-        "Winrate: ",
-        round(Arch_winrate_matches * 100, 1), " %",
-        "[", round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2), ";",
-        round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2), "]", "<br>",
-        sep = ""
-      ))
-  ) +
-  geom_point(
-    aes(
-      y = Arch_winrate_matches,
-      x = Archetype,
-    ),
-    position = position_dodge(0.75)
-  ) +
-  geom_errorbar(
-    aes(
-      x = Archetype,
-      ymin = Arch_winrate_matches + CI_Arch_winrate_matches,
-      ymax = Arch_winrate_matches - CI_Arch_winrate_matches
-    ),
-    position = position_dodge(width = .75), width = .01
-  ) +
-  geom_hline(
-    data = base_Archetype_ci_df_plot_lines_df,
-    aes(yintercept = yintercept, color = line_type),
-    linetype = "dashed"
-  ) +
-  scale_color_manual(
-    name = "Legend",
-    values = c("Average Winrate" = "red", 
-               "Lower CI" = "blue", 
-               "Upper CI" = "blue")
-  )  +
-  ylab("Winrate") +
-    scale_x_discrete(
-        label = paste0(
-            "<span style='font-size:", 17 , "px;'> <b>",
-            base_Archetype_ci_df_plot %>%
-                pull(Archetype) %>%
-                unique(),
-            "</b> </span>",
-            "<br /> n : ", base_Archetype_ci_df_plot %>%
-                pull(
-                    number_of_matches  
-                ),
-            "<br /> ", base_Archetype_ci_df_plot %>%
-                mutate(temp_ci = paste0(
-                    round(Arch_winrate_matches * 100, 1), " %",
-                    "[", round((Arch_winrate_matches + CI_Arch_winrate_matches) * 100, 2), ";",
-                    round((Arch_winrate_matches - CI_Arch_winrate_matches) * 100, 2), "]")
-                ) %>% 
-                pull(
-                    temp_ci
-                )
-            
-        ),
-        # guide = guide_axis(n.dodge=3)
-    ) +
-  coord_flip() +
-  theme(
-    legend.position = c(0.85, 0.15),
-    legend.background = element_rect(fill = "white", color = "black")
-  )
-
-
-
-gg_ciplot_base_arch %>%
-  ggplotly(
-    tooltip = c("text"),
-    height = 50 * nrow(base_Archetype_ci_df_plot) #(480 * (ratio_plot+1)), width = (820 * (ratio_plot+1))
-  )  %>%
-  layout(
-    legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
-  ) %>%
-  bslib::card(full_screen = TRUE)
+base_arch_ci_plot_final
 ```
+
+
+
 
 
 #  Best deck 

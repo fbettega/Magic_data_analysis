@@ -1783,6 +1783,114 @@ plot_presence_fun <- function(
 }
 
 
+################################################################################
+##################      Function that Generate CI plot  ######################## 
+Generate_CI_plot_fun <- function(
+    df_ci_fun_param ,
+    win_rate_fun_par ,
+    CI_fun_par,
+    Arch_or_base_arch 
+){
+  
+  ci_df_plot_lines_df <- data.frame(
+    yintercept = c(
+      mean(df_ci_fun_param[[win_rate_fun_par]]),
+      mean(df_ci_fun_param[[win_rate_fun_par]] - df_ci_fun_param[[CI_fun_par]]),
+      mean(df_ci_fun_param[[win_rate_fun_par]] + df_ci_fun_param[[CI_fun_par]])
+    ),
+    line_type = c("Average Winrate",  "Lower CI", "Upper CI")
+  )
+  
+  resulting_plot <- (
+    ggplot(data = df_ci_fun_param,
+           aes(text = paste(
+             "Archetype: ", !!rlang::sym(Arch_or_base_arch), "<br>", # Archetype name
+             "Winrate: ", 
+             round(!!rlang::sym(win_rate_fun_par) * 100, 1), " %",
+             "[",round((!!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par)) * 100, 2),";",
+             round((!!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)) * 100, 2),"]", "<br>",
+             sep = ""
+           ))
+    ) +
+      geom_point(
+        aes(
+          y = !!rlang::sym(win_rate_fun_par),
+          x = !!rlang::sym(Arch_or_base_arch)
+        ),
+        position = position_dodge(0.75)
+      )  +
+      geom_errorbar(aes(
+        x = !!rlang::sym(Arch_or_base_arch),
+        ymin = !!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par),
+        ymax = !!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)
+      ),
+      position = position_dodge(width = .75), width = .01
+      )  +
+      geom_hline(
+        data = ci_df_plot_lines_df,
+        aes(yintercept = yintercept, color = line_type),
+        linetype = "dashed"
+      ) +
+      scale_color_manual(
+        name = "Legend",
+        values = c("Average Winrate" = "red", 
+                   "Lower CI" = "blue", 
+                   "Upper CI" = "blue")
+      )  +
+      scale_x_discrete(
+        label = paste0(
+          "<span style='font-size:", 17 , "px;'> <b>",
+          df_ci_fun_param %>%
+            pull(!!rlang::sym(Arch_or_base_arch)) %>%
+            unique(),
+          "</b> </span>",
+          "<br /> n : ", df_ci_fun_param %>%
+            pull(
+              !!rlang::sym(paste0(Arch_or_base_arch,"_count")   
+              )),
+          "<br /> ", (df_ci_fun_param %>%
+                        mutate(temp_ci = paste0(
+                          round(!!rlang::sym(win_rate_fun_par) * 100, 1), " %",
+                          "[", round((!!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par)) * 100, 2), ";",
+                          round((!!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)) * 100, 2), "]")
+                        ) %>% 
+                        pull(
+                          temp_ci
+                        )
+          )
+          
+        )
+        # guide = guide_axis(n.dodge=3)
+      ) +
+      coord_flip() +
+      theme(
+        legend.position = c(0.85, 0.15),
+        legend.background = element_rect(fill = "white", color = "black")
+      )
+  )  %>%
+    ggplotly(
+      tooltip = c("text"),
+      height = 50 * nrow(df_ci_fun_param)
+      # height = (480 * ratio_plot), width = (820 * ratio_plot)
+    )  %>%
+    plotly::layout(
+      legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
+    ) %>% bslib::card(full_screen = TRUE)
+  return(resulting_plot)
+  
+}
+
+################################################################################
+
+
+
+
+
+
+
+
+
+
 
 
 
