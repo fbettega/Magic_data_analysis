@@ -25,12 +25,12 @@ sys.source(
 )
 
 
-git2r::config(
-  global = TRUE,
-  user.name = "fbettega",
-  user.email = "francois.bettega@gmail.com",
-  core.longpaths = "TRUE"
-)
+# git2r::config(
+#   global = TRUE,
+#   user.name = "fbettega",
+#   user.email = "francois.bettega@gmail.com",
+#   core.longpaths = "TRUE"
+# )
 
 # deck_list_repo <- git2r::clone(
 #   "https://github.com/Badaro/MTGODecklistCache.git",

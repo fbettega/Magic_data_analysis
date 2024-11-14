@@ -467,19 +467,28 @@ plot_archetype_spaghetti <- function_plot_spaghetti_plot(
   scheme_color_sheme_fun  = scheme,
   Arch_or_base_arch = "Archetype" , #"Base_Archetype" "Archetype"
   hide_treshold = 0.025,
-  ratio_plot_fun = ratio_plot
+  count_arch_var = "Count_arch" # "Count_base_arch" "Count_arch",
+  # ratio_plot_fun = ratio_plot
   )
 ```
 
 
+```{r, results='asis'}
+if(n_distinct(Presence_for_best_deck_plot$Week) >= 15) pander::pandoc.p("::: {.column-screen}")
+```
+
 ```{r print_spagheti_plot_arch}
-#| column: screen
 plot_archetype_spaghetti %>%
   plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
     title = list(text = "")
   )) %>% bslib::card(full_screen = TRUE)
+
+```
+
+```{r, results='asis'}
+if(n_distinct(Presence_for_best_deck_plot$Week) >= 15) pander::pandoc.p(":::")
 ```
 
 
@@ -533,15 +542,7 @@ DT::datatable(
     select(Archetype,`Week All`,everything()),
   filter = "top", rownames = FALSE,
   callback = DT::JS(
-    #         paste0(
-    #         "var tips = ['",paste0(tooltips_deck_base,collapse = "','"),"'],
-    #     header = table.columns().header();
-    # for (var i = 0; i < tips.length; i++) {
-    #   $(header[i]).attr('title', tips[i]);
-    # }
-    # ",
     return_filter_js()
-    # )
   ),
   options = list(dom = "ltipr", autoWidth = TRUE, pageLength = nrow(Df_wide_expected_of_week_sum)),
   caption = htmltools::tags$caption(
@@ -686,21 +687,33 @@ plot_Base_Archetype_spaghetti <- function_plot_spaghetti_plot(
   scheme_color_sheme_fun  = scheme,
   Arch_or_base_arch = "Base_Archetype" , #"Base_Archetype" "Archetype"
   hide_treshold = 0.025,
-  ratio_plot_fun = ratio_plot
+    count_arch_var = "Count_base_arch" # "Count_base_arch" "Count_arch",
+  # ratio_plot_fun = ratio_plotc
   )
+
 ```
 
 
 
+```{r, results='asis'}
+if(n_distinct(Presence_Base_Archetype_for_best_deck_plot$Week) >= 15) pander::pandoc.p("::: {.column-screen}")
+```
+
 
 ```{r spagheti_plot_base_arch_print}
-#| column: screen
+# <!-- #| column: screen -->
+
 plot_Base_Archetype_spaghetti %>%
   plotly::layout(legend = list(
     orientation = "h",
     y = 1.1,
     title = list(text = "")
   )) %>% bslib::card(full_screen = TRUE)
+```
+
+
+```{r, results='asis'}
+if(n_distinct(Presence_Base_Archetype_for_best_deck_plot$Week) >= 15) pander::pandoc.p(":::")
 ```
 
 

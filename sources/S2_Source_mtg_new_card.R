@@ -1559,8 +1559,10 @@ function_plot_spaghetti_plot <- function(
     df_fun_spaghetti_plot,
     scheme_color_sheme_fun  = scheme,
     Arch_or_base_arch , #"Base_Archetype" "Archetype"
-    hide_treshold = 0.025,
-    ratio_plot_fun = ratio_plot
+    week_var = "Week",
+    count_arch_var,
+    Number_deck_by_week_var = "Week_deck_number",
+    hide_treshold = 0.025 #,     ratio_plot_fun = ratio_plot
 ){
   # Archetype Count_arch Archetype_percent
   num_levels_in_fun <- length(levels(df_fun_spaghetti_plot[[Arch_or_base_arch]]))
@@ -1573,77 +1575,64 @@ function_plot_spaghetti_plot <- function(
       each = 2, length.out = num_levels_in_fun)
   )
   
+  # Calcul dynamique de la taille du plot
+  num_weeks <- length(unique(df_fun_spaghetti_plot[[week_var]]))
+  percent_range <- max(df_fun_spaghetti_plot[[paste0(Arch_or_base_arch, "_percent")]], na.rm = TRUE)
+  plot_width <- max(1600,(90 * num_weeks ))
   
   
   Low_spaghetti <- as.character(
     df_fun_spaghetti_plot %>%
       distinct(
-        Week,
+        !!rlang::sym(week_var),
         !!rlang::sym(Arch_or_base_arch),
         !!rlang::sym(paste0(Arch_or_base_arch,"_percent"))
       ) %>%
       group_by(!!rlang::sym(Arch_or_base_arch)) %>%
       summarise(
         max_percent = 
-          max(!!rlang::sym(paste0(Arch_or_base_arch,"_percent")
-          )
+          max(
+            !!rlang::sym(paste0(Arch_or_base_arch,"_percent"))
           )
       ) %>%
       filter(max_percent < hide_treshold) %>% 
       pull(!!rlang::sym(Arch_or_base_arch))
   )
   
-  
-  if (Arch_or_base_arch == "Base_Archetype"){
-    plot_base_spaghetti <- 
-      ggplot(
-        df_fun_spaghetti_plot,
-        aes(
-          x = Week,
-          y = Base_Archetype_percent,
-          color = Base_Archetype,
-          linetype = Base_Archetype,
-          text = paste(
-            "Archetype: ", Base_Archetype," (", Count_base_arch,")", "<br>", # Archetype name
-            "Archetype percent: ", round(Base_Archetype_percent * 100, 2), " %", "<br>",
-            sep = ""
-          ),
-          group = 1
-        )
+  plot_base_spaghetti <- 
+    ggplot(
+      df_fun_spaghetti_plot,
+      aes(
+        x = !!rlang::sym(week_var),
+        y = !!rlang::sym(paste0(Arch_or_base_arch,"_percent")),
+        color = !!rlang::sym(Arch_or_base_arch),
+        linetype = !!rlang::sym(Arch_or_base_arch),
+        text = paste(
+          "Archetype: ", !!rlang::sym(Arch_or_base_arch)," (", !!rlang::sym(count_arch_var),")", "<br>", # Archetype name
+          "Archetype percent: ", round(!!rlang::sym(paste0(Arch_or_base_arch,"_percent")) * 100, 2), " %", "<br>",
+          sep = ""
+        ),
+        group = 1
       )
-  } else if (Arch_or_base_arch == "Archetype"){
-    plot_base_spaghetti <- 
-      ggplot(
-        df_fun_spaghetti_plot,
-        aes(
-          x = Week,
-          y = Archetype_percent,
-          color = Archetype,
-          linetype = Archetype,
-          text = paste(
-            "Archetype: ", Archetype," (", Count_arch,")", "<br>", # Archetype name
-            "Archetype percent: ", round(Archetype_percent * 100, 2), " %", "<br>",
-            sep = ""
-          ),
-          group = 1
-        )
-      ) 
-  }
+    )
+  
+  
   plot_spaghetti_res <- 
     (plot_base_spaghetti +
-       geom_line(size = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
+       geom_line(linewidth = 1) +  # Ajuster la taille des lignes pour une meilleure visibilité
        geom_point(size = 2) +  # Ajuster la taille des points
        scale_x_discrete(
-         "Week",
+         week_var,
          # breaks = levels(Presence_for_best_deck_plot$Week),
          labels = paste0(
-           "Week : ", as.character(unique(df_fun_spaghetti_plot$Week)), "<br>",
+           "Week : ", as.character(unique(df_fun_spaghetti_plot[[week_var]])), "<br>",
            # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
            "N total deck :<br>", df_fun_spaghetti_plot %>%
-             arrange(Week) %>%  
-             select(Week,Week_deck_number) %>% 
-             distinct(Week,.keep_all = TRUE) %>% 
-             pull(Week_deck_number)
+             arrange(!!rlang::sym(week_var)) %>%  
+             select(!!rlang::sym(week_var),!!rlang::sym(Number_deck_by_week_var)) %>% 
+             distinct(!!rlang::sym(week_var),.keep_all = TRUE) %>% 
+             pull(!!rlang::sym(Number_deck_by_week_var))
+           
          )
        ) +
        scale_color_manual(
@@ -1662,7 +1651,12 @@ function_plot_spaghetti_plot <- function(
          ) +
        scale_y_continuous(labels = function(x) scales::percent(x))
     ) %>%
-    ggplotly(tooltip = c("text"), height = (480 * ratio_plot_fun), width = (850 * ratio_plot_fun))
+    ggplotly(
+      tooltip = c("text"), 
+      # height = (480 * ratio_plot_fun), width = (850 * ratio_plot_fun)
+      height = 480 * 2.5, 
+      width = plot_width
+      )
   
   
   plot_spaghetti_res$x$data <- lapply(
@@ -1698,7 +1692,7 @@ plot_presence_fun <- function(
     df_base, time_limit, compare_time_limit
   )
   if (!is.null(compare_time_limit)) {
-    base_Plot_presence  <- #(
+    base_Plot_presence  <- 
       ggplot(
         df_plot_presence,
         aes(
@@ -1719,7 +1713,7 @@ plot_presence_fun <- function(
         )
       )
   } else {
-    base_Plot_presence <- #(
+    base_Plot_presence <- 
       ggplot(
         df_plot_presence,
         aes(
@@ -1740,7 +1734,6 @@ plot_presence_fun <- function(
         )
       )
   }
-  
   Plot_presence <- (base_Plot_presence  +
     geom_bar() +
     geom_text(
@@ -1791,7 +1784,6 @@ Generate_CI_plot_fun <- function(
     CI_fun_par,
     Arch_or_base_arch 
 ){
-  
   ci_df_plot_lines_df <- data.frame(
     yintercept = c(
       mean(df_ci_fun_param[[win_rate_fun_par]]),
@@ -1834,7 +1826,7 @@ Generate_CI_plot_fun <- function(
       scale_color_manual(
         name = "Legend",
         values = c("Average Winrate" = "red", 
-                   "Lower CI" = "blue", 
+                   "Lower CI" = "darkgreen", 
                    "Upper CI" = "blue")
       )  +
       scale_x_discrete(
@@ -1858,9 +1850,7 @@ Generate_CI_plot_fun <- function(
                           temp_ci
                         )
           )
-          
         )
-        # guide = guide_axis(n.dodge=3)
       ) +
       coord_flip() +
       theme(
@@ -1870,33 +1860,15 @@ Generate_CI_plot_fun <- function(
   )  %>%
     ggplotly(
       tooltip = c("text"),
-      height = 50 * nrow(df_ci_fun_param)
-      # height = (480 * ratio_plot), width = (820 * ratio_plot)
+      height = max(650,50 * nrow(df_ci_fun_param))
     )  %>%
     plotly::layout(
       legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
     ) %>% bslib::card(full_screen = TRUE)
   return(resulting_plot)
-  
 }
 
 ################################################################################
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 

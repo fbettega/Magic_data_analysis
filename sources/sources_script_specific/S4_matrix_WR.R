@@ -46,15 +46,10 @@ plot_presence_modify_for_matchup_matrix_fun <- function(
           y = prop.table(stat(count)),
           fill = Base_Archetype,
           label = scales::percent(prop.table(stat(count))),
-          # Delta_rank = Delta_rank,
-          # Delta_percent_arch = Delta_percent_arch,
           text = paste(
             "Archetype: ", Archetype, "<br>", # Archetype name
             "Base Archetype: ", Base_Archetype, "<br>", # Base Archetype name
             "Archetype n : ", "n = ", Archetype_count, " (Matches : ",Archetype_matches,")", "<br>",
-            # "Archetype Win rate: ", Arch_winrate_format, " ", " (", Delta_Arch_win_rate, ")", "<br>",
-            # "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", " (", Delta_based_Arch_win_rate, ")", "<br>",
-            # "Delta Archetype percent: ", Delta_percent_arch, " %", "<br>",
             "Base Archetype count: ", Base_Archetype_count, " (Matches : ",Base_Archetype_matches, ")", "<br>",
             sep = ""
           )
@@ -114,19 +109,7 @@ plot_presence_modify_for_matchup_matrix_fun <- function(
   return(Plot_presence)
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+################################################################################
 
 plot_win_rate_mat <- function(
     Df_winrate_format_fun,
@@ -158,17 +141,14 @@ plot_win_rate_mat <- function(
   num_cols <- length(unique(Df_winrate_format_filter_base_fun$Matchups_OpponentArchetype)) # MODIFICATION
   
   # Augmenter le facteur pour des dimensions plus grandes
-  plot_height <- max(600, num_rows * 80)   # MODIFICATION
-  plot_width <- max(800, num_cols * 80)    # MODIFICATION
+  plot_height <- max(900, num_rows * 80)   # MODIFICATION
+  plot_width <- max(900, num_cols * 80)    # MODIFICATION
   
   # Garder une taille de texte suffisamment lisible
   text_size <- min(12, 17 - 0.055 * num_rows) # MODIFICATION
   
   # Ajustement dynamique de la taille des tuiles en fonction de la densité
   tile_scale <- min(0.5, 1 - 0.02 * num_rows) # MODIFICATION
-  
-  
-  
   # browser()
   
   Df_winrate_format_filter_fun <- Df_winrate_format_filter_base_fun %>%

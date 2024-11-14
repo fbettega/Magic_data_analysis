@@ -193,31 +193,47 @@ ratio_plot <- 3
 Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`  for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
 
 
+
+```{r, results='asis'}
+if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p("::: {.column-screen}")
+```
+
 ```{r print_spagheti_arch}
-#| column: screen
+# <!-- #| column: screen -->
+
 plot_archetype_spaghetti <- function_plot_spaghetti_plot(  
   df_fun_spaghetti_plot = spaghetti_plot_df,
   scheme_color_sheme_fun  = scheme,
   Arch_or_base_arch = "Archetype" , #"Base_Archetype" "Archetype"
   hide_treshold = 0.025,
-  ratio_plot_fun = ratio_plot
+  count_arch_var = "Count_arch" # "Count_base_arch" "Count_arch",
   )
 
-plot_archetype_spaghetti %>% bslib::card(full_screen = TRUE)
+plot_archetype_spaghetti %>%
+  bslib::card(full_screen = TRUE)
 ```
 
+```{r, results='asis'}
+if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p(":::")
+```
 
 ## Base Archetype
 Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)` for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
 
+
+```{r, results='asis'}
+if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p("::: {.column-screen}")
+```
+
+
 ```{r print_spagheti_base_arch}
-#| column: screen
+# <!-- #| column: screen -->
 plot_base_archetype_spaghetti <- function_plot_spaghetti_plot(  
   df_fun_spaghetti_plot = spaghetti_plot_df,
   scheme_color_sheme_fun  = scheme,
   Arch_or_base_arch = "Base_Archetype"  , #"Base_Archetype" "Archetype"
   hide_treshold = 0.025,
-  ratio_plot_fun = ratio_plot
+  count_arch_var = "Count_base_arch" # "Count_base_arch" "Count_arch",
   )
 
 plot_base_archetype_spaghetti %>% 
@@ -225,7 +241,9 @@ plot_base_archetype_spaghetti %>%
 ```
 
 
-
+```{r, results='asis'}
+if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p(":::")
+```
 
 
 
@@ -528,9 +546,6 @@ base_arch_ci_plot_final
 
 
 
-
-
-
 # Number of copy of each cards 
 
 ```{r Base_init_number_of_copy_of_each_cards}
@@ -763,6 +778,9 @@ escape = FALSE
   DT::formatPercentage(c(7,9,12#,10,13
                          ),digits = 1)
 ```
+
+
+
 
 
 

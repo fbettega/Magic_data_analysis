@@ -544,7 +544,7 @@ generate_total_result_of_best_deck <- function(
   
   return(
     list(
-      Archetype_consider = unique(list_of_Model_result_total_fun$All$Archetype),
+      Archetype_consider = sort(unique(list_of_Model_result_total_fun$All$Archetype)),
       resulting_gt_table = list_of_GT_table_for_all_duration
     )
   )
