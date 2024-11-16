@@ -173,9 +173,10 @@ by = c("Main Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "Not most present Main percent", #"link",
-  link_column = "scryfall_uri"
-) %>%
-  select(-scry_fall_id) %>% 
+  link_column = "scryfall_uri",
+        Card_name_col =   "Main Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`Archetype count`)
           ),
@@ -228,9 +229,10 @@ by = c("Main Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "link",#
-  link_column = "scryfall_uri"
+  link_column = "scryfall_uri",
+  Card_name_col =   "Main Card"  
 ) %>%
-  select(-scry_fall_id) %>% 
+  select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`count WR`)
           ),
@@ -301,9 +303,10 @@ by = c("Side Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "Not most present Side percent", #"link",
-  link_column = "scryfall_uri"
-) %>%
-  select(-scry_fall_id) %>% 
+  link_column = "scryfall_uri",
+        Card_name_col =   "Side Card" 
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`Archetype count`)
           ),
@@ -358,9 +361,10 @@ by = c("Side Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "link",#
-  link_column = "scryfall_uri"
-) %>%
-  select(-scry_fall_id) %>% 
+  link_column = "scryfall_uri",
+  Card_name_col =   "Side Card" 
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`count WR`)
           ),
@@ -450,9 +454,10 @@ by = c("Main Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "Not most present Main percent", #"link",
-  link_column = "scryfall_uri"
-) %>%
-  select(-scry_fall_id) %>% 
+  link_column = "scryfall_uri",
+        Card_name_col =   "Main Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`Archetype count`)
           ),
@@ -507,9 +512,10 @@ by = c("Main Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "link",#
-  link_column = "scryfall_uri"
-) %>%
-  select(-scry_fall_id) %>% 
+  link_column = "scryfall_uri",
+        Card_name_col =   "Main Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`count WR`)
           ),
@@ -579,9 +585,10 @@ by = c("Side Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "Not most present Side percent", #"link",
-  link_column = "scryfall_uri"
-) %>%
-  select(-scry_fall_id) %>% 
+  link_column = "scryfall_uri",
+        Card_name_col =   "Side Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`Archetype count`)
           ),
@@ -636,9 +643,10 @@ by = c("Side Card" = "CardName")
 add_link_to_a_column(
   df_add_link_fun =   .,
   column_where_is_add = "link",#
-  link_column = "scryfall_uri"
-) %>%
-  select(-scry_fall_id) %>% 
+  link_column = "scryfall_uri",
+        Card_name_col =   "Side Card" 
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`count WR`)
           ),

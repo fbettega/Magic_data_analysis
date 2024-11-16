@@ -96,6 +96,16 @@ top_8_table_and_plot_prez_generator <- function(
           scry_fall_id == id
         )
       ) %>% 
+      left_join(
+        agregate_land_link(),
+        by = join_by("CardName" == join_name)
+      ) %>%
+      mutate(
+        scryfall_uri = ifelse(
+          is.na(scryfall_uri)
+          & !is.na(search_Link ) ,search_Link ,scryfall_uri
+        )
+      ) %>% 
       select(CardName,
              scryfall_uri
              ) %>% distinct()
@@ -115,6 +125,8 @@ top_8_table_and_plot_prez_generator <- function(
         locations = 
           gt::cells_stub(),
           # gt::cells_body(columns = CardName),
+        
+        # ICI
         fn = function(x) {
           tibble(
             base_name = x
@@ -123,6 +135,9 @@ top_8_table_and_plot_prez_generator <- function(
               Df_combine_join_with_scryfall,
               by = join_by(base_name == CardName)
             ) %>% 
+            
+            
+            
             mutate(
               final_name = ifelse(
                 !is.na(scryfall_uri),

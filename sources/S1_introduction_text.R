@@ -77,7 +77,7 @@ In order to be included, an archetype must be represented more than ", Archetype
 - Matrix considers the matches as a whole (for example, a 2-1 score counts as 1 game won).\n
 - For each tournament, a bar graph shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n\n
 They are built on the following model (additionnal information in matrix tooltip): \n\n
-- The confidence interval graphs show the averages and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.\n
+- The confidence interval graphs show the averages winrates (without miror matchs) and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.\n
 - A complete matrix with all the information.\n
 - A matrix presenting only the matchups with a confidence interval of less than 50%.\n
 The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time.\n

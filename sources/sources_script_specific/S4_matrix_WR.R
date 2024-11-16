@@ -29,58 +29,61 @@ plot_presence_modify_for_matchup_matrix_fun <- function(
       Archetype_matches = sum(win + loose)
     ) %>% 
     ungroup() %>% 
-    group_by(Base_Archetype) %>% 
+    group_by(Archetype,Base_Archetype) %>% 
     mutate(
       Base_Archetype_count = n(),
       Base_Archetype_matches = sum(win + loose)
     ) %>% 
+    # ungroup() %>% 
+    # group_by(Archetype) %>% 
+    mutate(
+      prop = Base_Archetype_count / nrow(.) # Proportions par Base_Archetype
+    ) %>% 
+  ungroup() %>% 
+    select(-c(id,Player,win ,loose)) %>% 
+    distinct() 
+  
+  
+  df_labels <- df_plot_presence %>%
+    group_by(Archetype) %>%
+    summarise(
+      sum_prop = sum(prop) # Toujours égal à 1 ou 100%
+    ) %>%
     ungroup()
   
   
-
-    Plot_presence <- (
+  Plot_presence <- 
+      (
       ggplot(
         df_plot_presence,
         aes(
           x = Archetype,
-          y = prop.table(stat(count)),
+          y = prop,#prop.table(stat(count)),
           fill = Base_Archetype,
-          label = scales::percent(prop.table(stat(count))),
+          # label = scales::percent(prop.table(stat(count))),
           text = paste(
             "Archetype: ", Archetype, "<br>", # Archetype name
             "Base Archetype: ", Base_Archetype, "<br>", # Base Archetype name
-            "Archetype n : ", "n = ", Archetype_count, " (Matches : ",Archetype_matches,")", "<br>",
+            "Archetype n : ", Archetype_count, " (Matches : ",Archetype_matches,")", "<br>",
             "Base Archetype count: ", Base_Archetype_count, " (Matches : ",Base_Archetype_matches, ")", "<br>",
             sep = ""
           )
         )
       ) +
-        geom_bar() +
-        geom_text(
-          aes(
-            label = paste0(
-              round(prop.table(stat(count)) * 100, 1),
-              " % "
+        geom_bar(stat = "identity", position = "stack") +
+          geom_text(
+            data = df_labels,
+            aes(
+              x = Archetype,
+              label = paste0(round(sum_prop * 100, 1), " %"),
+               y = sum_prop + 0.005 # Place les labels au-dessus de la pile
             ),
-            y = prop.table(stat(count)) + 0.008,
-            group = 1
-          ),
-          stat = "count",
-          position = position_dodge2(width = 0.9),
-          size = 5
-        ) +
-        # geom_text(
-        #   aes(
-        #     label = paste0(Delta_rank," ",Delta_percent_arch," %"),
-        #     y = ,
-        #     group = 1
-        #       ),
-        #   stat = "identity",
-        #   position = position_dodge2(width = 0.9),
-        #   size = 3
-        #   ) +
+             # position = position_dodge2(width = 0.0),
+            size = 5,
+            inherit.aes = FALSE
+          ) +
         scale_y_continuous(labels = scales::percent) +
-        coord_flip() +
+         coord_flip() +
         theme(
           legend.position = "none",
           axis.title.x = element_blank()
@@ -95,7 +98,9 @@ plot_presence_modify_for_matchup_matrix_fun <- function(
         )
      )  %>%
       ggplotly(
-        tooltip = c("text"), height = (480 * plot_scaling), width = (820 * plot_scaling)
+        tooltip = c("text"), 
+        height = (480 * plot_scaling), 
+        width = (820 * plot_scaling)
       )
   
   
@@ -120,13 +125,13 @@ plot_win_rate_mat <- function(
     tiles_size = 1) {
   marges <- list(
     l = 0, # marge gauche
-    r = 50, # marge droite (par exemple)
-    b = 50, # marge basse (par exemple)
-    t = 50 # marge haute (par exemple)
+    r = 0, #50 marge droite (par exemple)
+    b = 0, #50 marge basse (par exemple)
+    t = 50 #50 marge haute (par exemple)
   )
 
   Df_winrate_format_filter_base_fun <- Df_winrate_format_fun %>%
-    filter(number_of_games > 0) %>%
+    filter(!!rlang::sym(paste0("number_of_", group_column)) > 0) %>%
     # filtre surement a déplacé pour opti
     filter(Archetype != Matchups_OpponentArchetype) %>%
     filter(!!rlang::sym(paste0("number_of_", group_column)) > Cut_of_number_of_data)
@@ -141,15 +146,17 @@ plot_win_rate_mat <- function(
   num_cols <- length(unique(Df_winrate_format_filter_base_fun$Matchups_OpponentArchetype)) # MODIFICATION
   
   # Augmenter le facteur pour des dimensions plus grandes
-  plot_height <- max(900, num_rows * 80)   # MODIFICATION
-  plot_width <- max(900, num_cols * 80)    # MODIFICATION
+  
+  
+  
+  plot_height <- min(max(900, num_rows * 50),1300)   # MODIFICATION
+  plot_width <- min(max(900, num_cols * 60),1900)    # MODIFICATION
   
   # Garder une taille de texte suffisamment lisible
-  text_size <- min(12, 17 - 0.055 * num_rows) # MODIFICATION
+  text_size <- min(12, 16 - 0.18 * num_rows) # MODIFICATION
   
   # Ajustement dynamique de la taille des tuiles en fonction de la densité
   tile_scale <- min(0.5, 1 - 0.02 * num_rows) # MODIFICATION
-  # browser()
   
   Df_winrate_format_filter_fun <- Df_winrate_format_filter_base_fun %>%
     group_by(Archetype) %>%
@@ -168,7 +175,6 @@ plot_win_rate_mat <- function(
     group_by(Archetype) %>%
     mutate(
       Archetype_presence_matches = sum(number_of_matches),
-      Archetype_presence_games = sum(number_of_games),
       Archetype_WR_matches = winrate_1_data(sum(Win_matches), sum(number_of_matches - Win_matches)),
       Archetype_CI_WR_matches = CI_prop(Archetype_WR_matches, Archetype_presence_matches),
       Archetype_CI_WR_format_matches = paste0(
@@ -179,28 +185,15 @@ plot_win_rate_mat <- function(
           Archetype_CI_WR_matches,
           round_val = 1, limit = c(0, 1)
         )
-      ),
-      Archetype_WR_games = winrate_1_data(sum(Matchups_Wins), sum(Matchups_Losses)),
-      Archetype_CI_WR_games = CI_prop(Archetype_WR_games, Archetype_presence_games),
-      Archetype_CI_WR_format_games = paste0(
-        round(Archetype_WR_games * 100, 1),
-        "%",
-        formating_CI(
-          Archetype_WR_games,
-          Archetype_CI_WR_games,
-          round_val = 1, limit = c(0, 1)
-        )
       )
     ) %>%
     select(
-      -Archetype_WR_games, -Archetype_CI_WR_games,
       -Archetype_WR_matches, -Archetype_CI_WR_matches
     ) %>%
     ungroup() %>%
     group_by(Matchups_OpponentArchetype) %>%
     mutate(
       oppo_Archetype_presence_matches = sum(number_of_matches),
-      oppo_Archetype_presence_games = sum(number_of_games),
       oppo_Archetype_WR_matches = winrate_1_data(sum(number_of_matches - Win_matches), sum(Win_matches)),
       oppo_Archetype_CI_WR_matches = CI_prop(oppo_Archetype_WR_matches, oppo_Archetype_presence_matches),
       oppo_Archetype_CI_WR_format_matches = paste0(
@@ -211,21 +204,9 @@ plot_win_rate_mat <- function(
           oppo_Archetype_CI_WR_matches,
           round_val = 1, limit = c(0, 1)
         )
-      ),
-      oppo_Archetype_WR_games = winrate_1_data(sum(Matchups_Wins), sum(Matchups_Losses)),
-      oppo_Archetype_CI_WR_games = CI_prop(oppo_Archetype_WR_games, oppo_Archetype_presence_games),
-      oppo_Archetype_CI_WR_format_games = paste0(
-        round(oppo_Archetype_WR_games * 100, 1),
-        "%",
-        formating_CI(
-          oppo_Archetype_WR_games,
-          oppo_Archetype_CI_WR_games,
-          round_val = 1, limit = c(0, 1)
-        )
       )
     ) %>%
     select(
-      -oppo_Archetype_WR_games, -oppo_Archetype_CI_WR_games,
       -oppo_Archetype_WR_matches, -oppo_Archetype_CI_WR_matches
     ) %>%
     ungroup()
@@ -233,7 +214,7 @@ plot_win_rate_mat <- function(
   
   
   label_x <- paste0(
-    "<span style='font-size:",1+text_size, "px;'> <b>",
+    "<span style='font-size:",0.5 + text_size, "px;'> <b>",
     Df_winrate_format_filter_fun %>%
       pull(Archetype) %>%
       unique(),
@@ -253,7 +234,7 @@ plot_win_rate_mat <- function(
   
   
   label_y <- paste0(
-    "<span style='font-size:",1+text_size, "px;'> <b>",
+    "<span style='font-size:",0.5 + text_size, "px;'> <b>",
     Df_winrate_format_filter_fun %>%
       pull(Archetype) %>%
       unique(),
@@ -319,16 +300,13 @@ plot_win_rate_mat <- function(
             round(!!rlang::sym(paste0("WR_", group_column)) * 100, 1)
           )
         ),
-        size = text_size / 3  #  Ajuste la taille du texte
+        size = text_size/3  #  Ajuste la taille du texte
       ) +
       scale_x_discrete(
         label = rev(label_x),
-        # guide = guide_axis(n.dodge=3)
       ) +
       scale_y_discrete(
         label = label_y,
-        # sec.axis = dup_axis()
-        # guide = guide_axis(n.dodge = 2)
       ) 
     
     
@@ -373,7 +351,8 @@ plot_win_rate_mat <- function(
         height = plot_height,  #  Utilisation de la hauteur calculée dynamiquement
         width = plot_width     #  Utilisation de la largeur calculée dynamiquement
       ) %>%
-      plotly::layout(margin = marges)
+      plotly::layout(margin = marges) %>%
+      bslib::card(full_screen = TRUE)
   } else {
     plot_en_cours <- NULL
   }
@@ -398,9 +377,13 @@ win_rate_matrix_maker <- function(
   
   
   win_rate_matrix_fun_res <- df_fun %>%
+    group_by(across(all_of(select_col))) %>% 
+    mutate(Number_of_deck = n_distinct(id)) %>% 
+    ungroup() %>% 
     select(
       all_of(select_col),
-      Matchups_Wins, Matchups_Losses
+      Matchups_Wins, Matchups_Losses,
+      Number_of_deck
     ) %>%
     mutate(
       Result = Matchups_Wins > Matchups_Losses,
@@ -408,29 +391,15 @@ win_rate_matrix_maker <- function(
     ) %>%
     group_by(across(all_of(select_col))) %>%
     summarise(
+      Number_of_deck = unique(Number_of_deck),
       number_of_matches = n() - sum(Draw),
       Win_matches = sum(Result),
-      number_of_games = sum(Matchups_Wins) + sum(Matchups_Losses),
-      Matchups_Wins = sum(Matchups_Wins),
-      Matchups_Losses = sum(Matchups_Losses),
+      Matchups_Wins = sum(Result),
+      Matchups_Losses = sum(!Result),
       .groups = "drop"
     ) %>%
     mutate(
       WR_games = winrate_1_data(Matchups_Wins, Matchups_Losses),
-      CI_WR_games = CI_prop(WR_games, number_of_games),
-      CI_WR_sign_games = factor(
-        ifelse(CI_WR_games == 0, "0",
-               ifelse(
-                 ((WR_games - 0.5) + (CI_WR_games)) > 0,
-                 "+",
-                 ifelse(
-                   ((WR_games - 0.5) - (CI_WR_games)) < 0,
-                   "-", "0"
-                 )
-               )
-        ),
-        levels = c("+", "0", "-")
-      ),
       WR_matches = winrate_1_data(Win_matches, (number_of_matches - Win_matches)),
       CI_WR_matches = CI_prop(WR_matches, number_of_matches),
       CI_WR_sign_matches = factor(
@@ -457,32 +426,26 @@ win_rate_matrix_maker <- function(
 
 CI_plot_prepare_df_fun <- function(df_fun) {
   res <- df_fun %>%
+    filter(Archetype != Matchups_OpponentArchetype ) %>% 
     group_by(Archetype) %>%
     summarise(
+      Number_of_deck = sum(Number_of_deck),
       number_of_matches = sum(number_of_matches),
       Win_matches = sum(Win_matches),
-      number_of_games = sum(number_of_games),
       Matchups_Wins = sum(Matchups_Wins),
       .groups = "keep"
     ) %>%
     mutate(
-      Loss_matches = number_of_matches - Win_matches,
-      Matchups_Loss = number_of_games - Matchups_Wins
+      Loss_matches = number_of_matches - Win_matches
     ) %>%
     summarise(
+      Number_of_deck = Number_of_deck,
       number_of_matches = number_of_matches,
-      number_of_games = number_of_games, 
       Arch_winrate_matches = winrate_1_data(
         sum(Win_matches, na.rm = TRUE), sum(Loss_matches, na.rm = TRUE)
       ),
       CI_Arch_winrate_matches = CI_prop(
         Arch_winrate_matches, number_of_matches
-      ),
-      Arch_winrate_games = winrate_1_data(
-        sum(Matchups_Wins, na.rm = TRUE), sum(Matchups_Loss, na.rm = TRUE)
-      ),
-      CI_Arch_winrate_games = CI_prop(
-        Arch_winrate_games, number_of_games
       )
     )
   

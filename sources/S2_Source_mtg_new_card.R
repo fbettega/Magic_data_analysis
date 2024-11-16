@@ -915,9 +915,6 @@ gates_land_list <- c(
     "Mountain",
     "Forest"
   )
-
-
-
   base_string <- trimws(string)
 
   
@@ -997,7 +994,7 @@ gates_land_list <- c(
       base_string <- modify_land(
         base_string_fun = base_string,
         filter_land_list,
-        "Filtre land"
+        "Filter land"
       ) 
     #   ifelse(base_string %in% filter_land_list,
     #   "Filtre land", base_string
@@ -1169,6 +1166,65 @@ gates_land_list <- c(
 }
 ################################################################################
 
+agregate_land_link <- function() {
+  result <- tibble(
+    # Name = c(
+    #   "Fetch Lands", "Tron Lands", "Real Dual Lands", "Unlucky Lands", "Pathway Lands",
+    #   "Reveal Lands", "Pain Lands", "Mono-Color Artifact Lands", "Dual Artifact Lands",
+    #   "Gates", "Surveil Lands", "Shock Lands", "Triomes", "Filter Lands", "Fast Lands",
+    #   "Bounce Lands", "Horizon Lands", "Slow Lands", "Check Lands", "Basic Lands"
+    # ),
+    search_Link = c(
+      "https://scryfall.com/search?q=flooded+strand+OR+polluted+delta+OR+wooded+foothills+OR+verdant+catacombs+OR+arid+mesa+OR+windswept+heath+OR+scalding+tarn+OR+prismatic+vista+OR+misty+rainforest+OR+bloodstained+mire+OR+marsh+flats",
+      "https://scryfall.com/search?q=urza%27s+mine+OR+urza%27s+power+plant+OR+urza%27s+tower",
+      "https://scryfall.com/search?q=tundra+OR+underground+sea+OR+badlands+OR+taiga+OR+savannah+OR+scrubland+OR+volcanic+island+OR+bayou+OR+plateau+OR+tropical+island",
+      "https://scryfall.com/search?q=abandoned+campground+OR+murky+sewer+OR+razortrap+gorge+OR+bleeding+woods+OR+etched+cornfield+OR+neglected+manor+OR+peculiar+lighthouse+OR+strangled+cemetery+OR+raucous+carnival+OR+lakeside+shack",
+      "https://scryfall.com/search?q=barkchannel+pathway+OR+blightstep+pathway+OR+branchloft+pathway+OR+brightclimb+pathway+OR+clearwater+pathway+OR+cragcrown+pathway+OR+darkbore+pathway+OR+hengegate+pathway+OR+needleverge+pathway+OR+riverglide+pathway",
+      "https://scryfall.com/search?q=port+town+OR+choked+estuary+OR+foreboding+ruins+OR+game+trail+OR+fortified+village+OR+shineshadow+snarl+OR+frostboil+snarl+OR+necroblossom+snarl+OR+furycalm+snarl+OR+vineglimmer+snarl",
+      "https://scryfall.com/search?q=adarkar+wastes+OR+underground+river+OR+sulfurous+springs+OR+karplusan+forest+OR+brushland+OR+caves+of+koilos+OR+shivan+reef+OR+llanowar+wastes+OR+battlefield+forge+OR+yavimaya+coast",
+      "https://scryfall.com/search?q=ancient+den+OR+seat+of+the+synod+OR+vault+of+whispers+OR+great+furnace+OR+tree+of+tales",
+      "https://scryfall.com/search?q=razortide+bridge+OR+mistvault+bridge+OR+drossforge+bridge+OR+slagwoods+bridge+OR+thornglint+bridge+OR+goldmire+bridge+OR+silverbluff+bridge+OR+darkmoss+bridge+OR+rustvale+bridge+OR+tanglepool+bridge",
+      "https://scryfall.com/search?q=azorius+guildgate+OR+dimir+guildgate+OR+rakdos+guildgate+OR+gruul+guildgate+OR+selesnya+guildgate+OR+orzhov+guildgate+OR+izzet+guildgate+OR+golgari+guildgate+OR+boros+guildgate+OR+simic+guildgate",
+      "https://scryfall.com/search?q=meticulous+archive+OR+undercity+sewers+OR+raucous+theater+OR+commercial+district+OR+lush+portico+OR+shadowy+backstreet+OR+thundering+falls+OR+underground+mortuary+OR+elegant+parlor+OR+hedge+maze",
+      "https://scryfall.com/search?q=hallowed+fountain+OR+watery+grave+OR+blood+crypt+OR+stomping+ground+OR+temple+garden+OR+godless+shrine+OR+overgrown+tomb+OR+breeding+pool+OR+steam+vents+OR+sacred+foundry",
+      "https://scryfall.com/search?q=savai+triome+OR+indatha+triome+OR+zagoth+triome+OR+ketria+triome+OR+raugrin+triome+OR+spara%27s+headquarters+OR+raffine%27s+tower+OR+xander%27s+lounge+OR+ziatora%27s+proving+ground+OR+jetmir%27s+garden",
+      "https://scryfall.com/search?q=mystic+gate+OR+sunken+ruins+OR+graven+cairns+OR+fire-lit+thicket+OR+wooded+bastion+OR+fetid+heath+OR+cascade+bluffs+OR+twilight+mire+OR+rugged+prairie+OR+flooded+grove",
+      "https://scryfall.com/search?q=seachrome+coast+OR+darkslick+shores+OR+blackcleave+cliffs+OR+copperline+gorge+OR+razorverge+thicket+OR+concealed+courtyard+OR+spirebluff+canal+OR+blooming+marsh+OR+inspiring+vantage+OR+botanical+sanctum",
+      "https://scryfall.com/search?q=azorius+chancery+OR+dimir+aqueduct+OR+rakdos+carnarium+OR+gruul+turf+OR+selesnya+sanctuary+OR+orzhov+basilica+OR+izzet+boilerworks+OR+golgari+rot+farm+OR+boros+garrison+OR+simic+growth+chamber",
+      "https://scryfall.com/search?q=silent+clearing+OR+fiery+islet+OR+nurturing+peatland+OR+sunbaked+canyon+OR+waterlogged+grove+OR+horizon+canopy",
+      "https://scryfall.com/search?q=deserted+beach+OR+shipwreck+marsh+OR+haunted+ridge+OR+rockfall+vale+OR+overgrown+farmland+OR+shattered+sanctum+OR+stormcarved+coast+OR+deathcap+glade+OR+sundown+pass+OR+dreamroot+cascade",
+      "https://scryfall.com/search?q=glacial+fortress+OR+drowned+catacomb+OR+dragonskull+summit+OR+rootbound+crag+OR+sunpetal+grove+OR+isolated+chapel+OR+sulfur+falls+OR+woodland+cemetery+OR+clifftop+retreat+OR+hinterland+harbor",
+      "https://scryfall.com/search?q=t%3Abasic+t%3Aland"
+    ),
+    join_name = c(
+      "Fetch land", "Tron land", "Dual land", "Unlucky land", "Pathway land",
+      "Reveal land", "Pain land", "Mono arto land", "Dual arto land",
+      "Gate", "Surveil land", "Shock land", "Triome land", "Filter land", "Fast land",
+      "Bounce land", "Horizon land", "Slow land", "Check land", "Basic land"
+    )
+  )
+  return(result)
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ################################################################################
@@ -1190,6 +1246,15 @@ rmNullObs <- function(x) {
 # Réflechir a un merge entre les function selon les paramètres
 
 CI_2_prop <- function(p1, p2, n1, n2, alpha = 0.95) {
+  # browser()
+  if(
+    any(
+      is.na(c(p1, p2, n1, n2))
+      )
+  ){
+    result <-  NA
+  }else{
+  
   # Compute number of win from P and n
   Wins1 <- round(p1 * n1, 0)
   Wins2 <- round(p2 * n2, 0)
@@ -1207,9 +1272,17 @@ CI_2_prop <- function(p1, p2, n1, n2, alpha = 0.95) {
   p2_tide <- x2_tide / n2_tide
 
 
+  # if(any(
+  #   is.na(
+  #     sqrt(
+  #     
+  #   (p1_tide * (1 - p1_tide) / n1_tide) +
+  #   (p2_tide * (1 - p2_tide) / n2_tide)
+  # )
+  # )) ) browser()
   upper_bound <- (p1_tide - p2_tide) - z * sqrt(
-    (p1_tide * (1 - p1_tide) / n1_tide) +
-      (p2_tide * (1 - p2_tide) / n2_tide)
+    abs((p1_tide * (1 - p1_tide) / n1_tide)) +
+      abs( (p2_tide * (1 - p2_tide) / n2_tide))
   )
   ###################################################
 
@@ -1219,6 +1292,8 @@ CI_2_prop <- function(p1, p2, n1, n2, alpha = 0.95) {
     0,
     p1 - p2 - upper_bound
   )
+  }
+  
   return(
     result
   )
@@ -1328,15 +1403,101 @@ formating_CI <- function(value,
 }
 ################################################################################
 
+################################################################################
+##################  plot number of deck by color_combination  #######################
+color_presence_plot_fun <- function(
+    df_fun_base_color,
+    column_presence # "Presence_count_castable" ,"winrate_count_castable"
+){
+  color_combination_plot_df_base <- df_fun_base_color %>% 
+    select(-Color) %>% 
+    group_by(
+      across(starts_with("color_"))
+    ) %>% 
+    summarise(
+      Presence_count_castable = n(),
+      winrate_count_castable = sum(!only_presence),
+      .groups = "drop"
+    )  %>%
+    mutate(
+      combination = paste0(
+        ifelse(color_W == 1, "W", ""),
+        ifelse(color_B == 1, "B", ""),
+        ifelse(color_U == 1, "U", ""),
+        ifelse(color_R == 1, "R", ""),
+        ifelse(color_G == 1, "G", ""),
+        ifelse(color_W + color_B + color_U + color_R + color_G == 0, "Colorless", "")
+      )
+    )
+  
+  
+  color_combination_plot_df <- color_combination_plot_df_base  %>%
+    rowwise() %>%
+    mutate(
+      included_in = list(
+        color_combination_plot_df_base$combination[
+          sapply(color_combination_plot_df_base$combination, function(x) all(strsplit(x, "")[[1]] %in% strsplit(combination, "")[[1]]))
+        ]
+      )
+    ) %>%
+    unnest(included_in) %>%
+    group_by(included_in) %>%
+    select(-starts_with("color_")) %>% 
+    mutate(
+      proportion = !!rlang::sym(column_presence)   / sum(
+        color_combination_plot_df_base %>% 
+          pull(!!rlang::sym(column_presence))
+      )
+    ) %>%
+    rename(Color = included_in ) %>% 
+    group_by(Color) %>%
+    mutate(total_proportion = sum(proportion)) %>%
+    ungroup() %>% 
+    arrange(total_proportion) %>%
+    mutate(
+      combination = factor(combination, levels = unique(combination))
+    )
+  
+  
+  color_combination_plot <- ( 
+    ggplot(color_combination_plot_df,
+           aes(
+             x = Color,
+             y = proportion, 
+             fill = combination,
+             text = paste0("Combinaison : ", 
+                           combination, "<br>Proportion : ",
+                           scales::percent(proportion, accuracy = 0.1),
+                           "<br>Total : ",
+                           scales::percent(total_proportion, accuracy = 0.1)
+             )
+           )
+    ) +
+      geom_bar(stat = "identity", position = "stack", width = 0.8) +
+      # geom_text(aes(label = scales::percent(proportion, accuracy = 0.1)), 
+      #            position = position_stack(vjust = 0.5), size = 3, show.legend = FALSE) +
+      # scale_fill_manual(values = RColorBrewer::brewer.pal(n = 32, "Set1")) +
+      scale_y_continuous(labels = scales::percent_format()) +
+      labs(
+        title = "Cumulative Proportions of Color Combinations in Decks",
+        x = "Combinations",
+        y = "Proportion",
+        fill = "Combination"
+      ) +
+      theme_minimal() +
+      theme(axis.text.x = element_text(angle = 45, hjust = 1))
+  ) %>% 
+    ggplotly(
+      tooltip = "text" #c("x", "y", "fill")
+    ) %>% bslib::card(full_screen = TRUE)
+  
+  return(color_combination_plot)
+}
 
-
+################################################################################
 
 ################################################################################
 ##################  Function that prepare df in 5 and 6  #######################
-
-
-
-
 
 prepare_df_for_model <- function(df_fun,base_df,cols_fun){
   card_present <- df_fun %>%
@@ -1438,7 +1599,7 @@ DF_presence_fun <- function(
       # A reflechir ou tu mets ça selon les filters
       Archetype_percent = Archetype_count / nrow(.)
     ) %>%
-    group_by(Base_Archetype) %>%
+    group_by(Archetype,Base_Archetype) %>%
     mutate(
       Based_Archetype_count = n(),
       Based_Arch_winrate = winrate_1_data(sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)),
@@ -1457,7 +1618,8 @@ DF_presence_fun <- function(
     group_by(Base_Archetype) %>% 
     mutate(  
       Based_Arch_winrate = Based_Arch_winrate - Global_winrate_base_arch,
-      Based_Archetype_percent = round((Based_Archetype_count / nrow(.)) * 100, 1),
+      Based_Archetype_percent = #round((
+        Based_Archetype_count / nrow(.),#) * 100, 1),
       Based_Archetype_inside_main_percent = round(
         (Based_Archetype_count / Archetype_count) * 100, 1
       ),
@@ -1499,14 +1661,31 @@ DF_presence_fun <- function(
                  paste0("- ", Rank - !!rlang::sym(paste0("Rank_", compare_time_limit - 1)))
           )
         ),
-        Num_delta_perc_arch = Archetype_percent - !!rlang::sym(paste0("Archetype_percent_", compare_time_limit - 1)),
-        Num_Delta_Arch_win_rate = Arch_winrate - !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1)),
-        Num_Delta_based_Arch_win_rate = Based_Arch_winrate - !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1)),
+        Num_delta_perc_arch = ifelse(
+          is.na(Archetype_percent) |
+            is.na(!!rlang::sym(paste0("Archetype_percent_", compare_time_limit - 1))),0,
+                                     Archetype_percent - !!rlang::sym(paste0("Archetype_percent_", compare_time_limit - 1))),
+        Num_Delta_Arch_win_rate = ifelse(
+          is.na(Arch_winrate) |
+            is.na(!!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1))),0,
+          Arch_winrate - !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1))),
+        Num_Delta_based_Arch_win_rate = ifelse(
+          is.na(Based_Arch_winrate) |
+            is.na( !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1))
+                  ),0,
+          Based_Arch_winrate - !!rlang::sym(paste0("Based_Arch_winrate_", compare_time_limit - 1))
+        ),
         Delta_percent_arch = ifelse(Num_delta_perc_arch > 0,
                                     paste0("+ ", round(Num_delta_perc_arch * 100, 1)),
                                     paste0(round(Num_delta_perc_arch * 100, 1))
         ),
-        Delta_Arch_count = Archetype_count - !!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1)),
+        Delta_Arch_count = ifelse(
+          is.na(Archetype_count), 0,Archetype_count
+          ) - ifelse(
+          is.na(!!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1))),0,
+          !!rlang::sym(paste0("Archetype_count_", compare_time_limit - 1))
+          ),
+        
         CI_Delta_Arch_win_rate = CI_2_prop(
           Arch_winrate,
           !!rlang::sym(paste0("Arch_winrate_", compare_time_limit - 1)),
@@ -1637,13 +1816,21 @@ function_plot_spaghetti_plot <- function(
        ) +
        scale_color_manual(
          values = setNames(
-           Color_sheme_fun_df$colors_for_archetypes, Color_sheme_fun_df$archetype_levels)
+           Color_sheme_fun_df$colors_for_archetypes, Color_sheme_fun_df$archetype_levels),
+         guide = guide_legend(ncol = 3)
        ) +
        scale_linetype_manual(
-         values = setNames(Color_sheme_fun_df$type_styles, Color_sheme_fun_df$archetype_levels)  # Appliquer le style de ligne
-       ) +
+         values = setNames(Color_sheme_fun_df$type_styles, Color_sheme_fun_df$archetype_levels),  # Appliquer le style de ligne
+         guide = guide_legend(ncol = 3)
+         ) +
        theme(
-         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1)
+         axis.text.x = element_text(angle = 45, hjust = 1, vjust = 1),
+         legend.position = "top",            # Position en haut
+         legend.justification = c(0, 1),    # Alignement à droite
+         # legend.direction = "horizontal",   # Organisation sur plusieurs lignes
+         legend.box = "vertical",        # Ajustement horizontal pour plusieurs lignes
+         legend.text = element_text(size = 8),  # Taille des textes de la légende
+         legend.title = element_text(size = 10) # Taille du titre de la légende
        ) +
        ylab(
          paste0(str_replace(Arch_or_base_arch,"_"," "),
@@ -1656,8 +1843,13 @@ function_plot_spaghetti_plot <- function(
       # height = (480 * ratio_plot_fun), width = (850 * ratio_plot_fun)
       height = 480 * 2.5, 
       width = plot_width
-      )
-  
+      ) %>%
+    plotly::layout(legend = list(
+      orientation = "h",
+      y = -0.1,
+      title = list(text = "")
+    ))
+
   
   plot_spaghetti_res$x$data <- lapply(
     plot_spaghetti_res$x$data, function(y) {
@@ -1689,17 +1881,48 @@ plot_presence_fun <- function(
   # browser()
   
   df_plot_presence <- DF_presence_fun(
-    df_base, time_limit, compare_time_limit
-  )
+    df_base = df_base,
+    time_limit = time_limit,
+    compare_time_limit = compare_time_limit
+  ) %>% 
+    select(
+      any_of(
+        c(
+          "Archetype","Base_Archetype","Rank","Delta_rank","Archetype_count",
+           "Arch_winrate_format","Delta_based_Arch_win_rate","Archetype_percent",
+           "Delta_percent_arch","Delta_Arch_win_rate","Based_Archetype_count","Based_Archetype_percent",
+          "Based_Arch_winrate_format"
+          )
+        )
+      ) %>% 
+    distinct()
+  
+  df_labels <- df_plot_presence %>%
+    group_by(Archetype) %>%
+    summarise(
+      sum_prop = unique(Archetype_percent) # Toujours égal à 1 ou 100%
+    ) %>%
+    ungroup()
+  
+  # Nombre d'archetypes pour ajuster la hauteur
+  n_archetypes <- length(unique(df_plot_presence$Archetype))
+  
+  # Largeur maximum des proportions pour ajuster la largeur
+  max_plot_width <- max(df_labels$sum_prop, na.rm = TRUE)
+  
+  # Calcul dynamique des dimensions
+  plot_height <- min(max(480, n_archetypes * 50), 1100) # Entre 480px et 1200px
+  plot_width <- min(2400, 1200 * (1 + max_plot_width))
+  
   if (!is.null(compare_time_limit)) {
     base_Plot_presence  <- 
       ggplot(
         df_plot_presence,
         aes(
           x = Archetype,
-          y = prop.table(stat(count)),
+          y = Based_Archetype_percent,#prop.table(stat(count)),
           fill = Base_Archetype,
-          label = scales::percent(prop.table(stat(count))),
+          # label = scales::percent(prop.table(stat(count))),
           text = paste(
             "Archetype: ", Archetype, "<br>", # Archetype name
             "Base Archetype: ", Base_Archetype, "<br>", # Base Archetype name
@@ -1707,7 +1930,7 @@ plot_presence_fun <- function(
             "Archetype Win rate: ", Arch_winrate_format, " ", " (", Delta_Arch_win_rate, ")", "<br>",
             "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", " (", Delta_based_Arch_win_rate, ")", "<br>",
             "Delta Archetype percent: ", Delta_percent_arch, " %", "<br>",
-            "Base Archetype count: ", Based_Archetype_count, " (", Based_Archetype_percent, " %", ")", "<br>",
+            "Base Archetype count: ", Based_Archetype_count, " (", round(Based_Archetype_percent*100,1), " %", ")", "<br>",
             sep = ""
           )
         )
@@ -1718,33 +1941,37 @@ plot_presence_fun <- function(
         df_plot_presence,
         aes(
           x = Archetype,
-          y = prop.table(stat(count)),
+          y = Based_Archetype_percent,#prop.table(stat(count)),
           fill = Base_Archetype,
-          label = scales::percent(prop.table(stat(count))),
+          # label = scales::percent(prop.table(stat(count))),
           text = paste(
             "Archetype: ", Archetype, "<br>",
             "Base Archetype: ", Base_Archetype, "<br>",
             "Rank: ", Rank, " [n = ", Archetype_count, "]", "<br>",
             "Archetype Win rate: ", Arch_winrate_format, " ", "<br>",
             "Base Archetype Win rate: ", Based_Arch_winrate_format, " ", "<br>",
-            "Archetype: ", Based_Archetype_percent, "<br>",
+            "Archetype: ", round(Based_Archetype_percent*100,1), "<br>",
             "Base Archetype count: ", Based_Archetype_count, "<br>",
             sep = ""
           )
         )
       )
   }
-  Plot_presence <- (base_Plot_presence  +
-    geom_bar() +
+  
+  
+  Plot_presence <- 
+    (base_Plot_presence
+  +
+    geom_bar(stat = "identity", position = "stack") +
     geom_text(
+      data = df_labels,
       aes(
-        label = paste0(round(prop.table(stat(count)) * 100, 1), " %"),
-        y = prop.table(stat(count)) + 0.008,
-        group = 1
+        x = Archetype,
+        label = paste0(round(sum_prop * 100, 1), " %"),
+        y = sum_prop + 0.008 # Place les labels au-dessus de la pile
       ),
-      stat = "count",
-      position = position_dodge2(width = 0.9),
-      size = 5
+      size = 5,
+      inherit.aes = FALSE
     ) +
     scale_y_continuous(labels = scales::percent) +
     coord_flip() +
@@ -1760,11 +1987,14 @@ plot_presence_fun <- function(
           levels(df_plot_presence$Base_Archetype)
       ]
     )
-    ) %>%
-      ggplotly(
-        tooltip = c("text"),
-        height = (480 * plot_scaling), width = (820 * plot_scaling)
-      )
+  )  %>%
+  ggplotly(
+    tooltip = c("text"), 
+    height = plot_height,#(480 * plot_scaling),  # 1440
+    width = plot_width  #(820 * plot_scaling) # 2460
+  )
+  
+  
   # Truc compliqué pour enlever l'overlay du texte
   Plot_presence$x$data[[which(
     sapply(Plot_presence$x$data, function(x) {
@@ -1864,7 +2094,8 @@ Generate_CI_plot_fun <- function(
     )  %>%
     plotly::layout(
       legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
-    ) %>% bslib::card(full_screen = TRUE)
+    ) %>%
+    bslib::card(full_screen = TRUE)
   return(resulting_plot)
 }
 
@@ -2156,7 +2387,8 @@ add_link_to_a_column <- function(
     df_add_link_fun ,# =   a,
     column_where_is_add, #= "link", #"link",
     link_column, #= "scryfall_uri",  , 
-    mode = "html" # type of link not use now
+    mode = "html", # type of link not use now
+    Card_name_col =   NULL #  "Main Card"
 ){
   result_with_link <- df_add_link_fun %>% 
     mutate(!!rlang::sym(paste0(link_column)) := 
@@ -2166,9 +2398,22 @@ add_link_to_a_column <- function(
     {if (!column_where_is_add %in% colnames(.)) mutate(.,
                                                        !!rlang::sym(paste0(column_where_is_add)) := "link",
                                                        .before = 1
-    ) else .}
+    ) else .} 
   
-  
+  if(!is.null(Card_name_col)){
+    result_with_link <- result_with_link %>% 
+      left_join(
+        agregate_land_link(),
+        by = join_by(!!rlang::sym(paste0(Card_name_col)) == join_name)
+      ) %>%
+      mutate(
+        scryfall_uri = ifelse(
+          is.na(scryfall_uri)
+         & !is.na(search_Link ) ,search_Link ,scryfall_uri
+      )
+      )
+
+  }
   # create link
   if(mode == "html"){
     res <-  result_with_link  %>% 

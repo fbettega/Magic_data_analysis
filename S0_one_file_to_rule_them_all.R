@@ -220,8 +220,6 @@ if(reparse_arch){
     as_job = FALSE
   )
 
-
-
   unlink(
     c(
       "rmd_files/_quarto-basic.yml",
@@ -274,7 +272,6 @@ log_df <- log_df_fun(
 )
 
 tictoc::tic.clearlog()
-# system("shutdown -s")
 # cancel shutdown use : system("shutdown -a")
 system("shutdown /s /t 30")
 },

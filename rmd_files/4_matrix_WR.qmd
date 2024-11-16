@@ -17,16 +17,15 @@ conflicted::conflicts_prefer(plotly::layout)
 loaded_base_data <- readRDS(paste0("../data/", params$format_param, "_data_meta_en_cours.rds"))
 # Je ne compte pas faire de matrix pour les SUB archetype pour le moment Car les sample sizes sont trop souvent ridicules a réfléchir
 # Reflechir a inclusion player
-#
 # A reflechir :
 # * WR including player perf
 # * Combination
-
 # X et Y en bilattérale
 ratio_plot <- 3
 # Generate different color scheme for close archetype
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
 ```
+
 
 
 ```{r}
@@ -162,6 +161,14 @@ Df_win_rate_matrix_base <- Df_win_rate_matrix_simple_unnest_matchup %>%
 
 
 
+
+
+
+```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
+```
+
+
+
 ```{r winrate_matrix_arch}
 Df_win_rate_matrix_summarise <- win_rate_matrix_maker(
   df_fun = Df_win_rate_matrix_base,
@@ -171,13 +178,10 @@ Df_win_rate_matrix_summarise <- win_rate_matrix_maker(
 
 Df_win_rate_matrix_format <- Df_win_rate_matrix_summarise %>%
   mutate(
-    number_format_games = paste0("n = ", number_of_games, " [", Matchups_Wins, "-", Matchups_Losses, "]"),
     number_format_matches = paste0("n = ", number_of_matches, " [", Win_matches, "-", (number_of_matches - Win_matches), "]"),
     CI_WR_format_matches = paste0(round(WR_matches * 100, 1), "%", formating_CI(WR_matches, CI_WR_matches, round_val = 1, limit = c(0, 1))),
-    CI_WR_format_games = paste0(round(WR_games * 100, 1), "%", formating_CI(WR_games, CI_WR_games, round_val = 1, limit = c(0, 1)))
   ) %>%
   mutate(
-    CI_WR_sign_diff_0_games = CI_WR_sign_games != "0",
     CI_WR_sign_diff_0_matches = CI_WR_sign_matches != "0"
   )
 ```
@@ -192,57 +196,121 @@ Df_win_rate_matrix_base_arch_summarise <- win_rate_matrix_maker(
 
 Df_win_rate_matrix_base_arch_format <- Df_win_rate_matrix_base_arch_summarise %>%
   mutate(
-    number_format_games = paste0("n = ", number_of_games, " [", Matchups_Wins, "-", Matchups_Losses, "]"),
     number_format_matches = paste0("n = ", number_of_matches, " [", Win_matches, "-", (number_of_matches - Win_matches), "]"),
     CI_WR_format_matches = paste0(round(WR_matches * 100, 1), "%", formating_CI(WR_matches, CI_WR_matches, round_val = 1, limit = c(0, 1))),
-    CI_WR_format_games = paste0(round(WR_games * 100, 1), "%", formating_CI(WR_games, CI_WR_games, round_val = 1, limit = c(0, 1)))
   ) %>%
   mutate(
-    CI_WR_sign_diff_0_games = CI_WR_sign_games != "0",
     CI_WR_sign_diff_0_matches = CI_WR_sign_matches != "0"
   ) %>%
   rename(
     Archetype = Base_Archetype,
     Matchups_OpponentArchetype = Matchups_OpponentBase_Archetype
   )
-# %>%
-#   filter(number_of_matches > 5)
-# a <- table(Df_win_rate_matrix_base$Archetype,Df_win_rate_matrix_base$Base_Archetype) %>%
-#   as.data.frame() %>%
-#   filter(Freq > 0)
+```
 
+```{r One_week_base_data}
+One_month_week_vector <- Df_win_rate_matrix_base %>% 
+  filter(Date >= as.Date(Sys.time()) %m-% months(1)) %>% 
+  distinct(Week) %>% 
+  pull(Week)
+  
 
+Df_win_rate_matrix_base_1_month <- Df_win_rate_matrix_base %>% 
+  filter(Week %in% One_month_week_vector) 
 ```
 
 
-* All data : `r format(as.Date(min(Df_win_rate_matrix_simple_unnest_matchup$Date)), "%d-%m-%Y")` to `r format(as.Date(max(Df_win_rate_matrix_simple_unnest_matchup$Date)), format = "%d/%m/%Y")`. 
+
+```{r winrate_matrix_arch_1_month}
+Df_win_rate_matrix_format_1_month <-  win_rate_matrix_maker(
+  df_fun = Df_win_rate_matrix_base_1_month,
+  Archetype_type = "Archetype" # "Archetype" , "Base_Archetype"
+) %>%
+  mutate(
+    number_format_matches = paste0("n = ", number_of_matches, " [", Win_matches, "-", (number_of_matches - Win_matches), "]"),
+    CI_WR_format_matches = paste0(round(WR_matches * 100, 1), "%", formating_CI(WR_matches, CI_WR_matches, round_val = 1, limit = c(0, 1))),
+  ) %>%
+  mutate(
+    CI_WR_sign_diff_0_matches = CI_WR_sign_matches != "0"
+  )
+```
+
+
+```{r winrate_matrix_base_arch_1_month}
+Df_win_rate_matrix_base_arch_format_1_month <-  win_rate_matrix_maker(
+  df_fun = Df_win_rate_matrix_base_1_month,
+  Archetype_type = "Base_Archetype" # "Archetype" , "Base_Archetype"
+) %>%
+  mutate(
+    number_format_matches = paste0("n = ", number_of_matches, " [", Win_matches, "-", (number_of_matches - Win_matches), "]"),
+    CI_WR_format_matches = paste0(round(WR_matches * 100, 1), "%", formating_CI(WR_matches, CI_WR_matches, round_val = 1, limit = c(0, 1))),
+  ) %>%
+  mutate(
+    CI_WR_sign_diff_0_matches = CI_WR_sign_matches != "0"
+  ) %>%
+  rename(
+    Archetype = Base_Archetype,
+    Matchups_OpponentArchetype = Matchups_OpponentBase_Archetype
+  )
+```
+
+::: {.panel-tabset .nav-pills}
+
+## All data
+
+* All data : `r format(as.Date(min(Df_win_rate_matrix_simple_unnest_matchup$Date)), "%d-%m-%Y")` to `r format(as.Date(max(Df_win_rate_matrix_simple_unnest_matchup$Date)), format = "%d-%m-%Y")`. 
 * Duration `r round(max(difftime(Sys.Date(),Df_win_rate_matrix_simple_unnest_matchup$Date,units = "weeks")),0)` weeks.
 * Include meta : `r unique(Df_win_rate_matrix_simple_unnest_matchup$Meta)`.  
 * Number of tournament : `r n_distinct(Df_win_rate_matrix_simple_unnest_matchup$TournamentFile)`
 * With a total of `r nrow(Df_win_rate_matrix_base)` rounds of magic
 * `r nrow(Df_win_rate_matrix_base %>% distinct(Archetype,Matchups_OpponentArchetype))` different matchup for archetypes.  
-* `r nrow(Df_win_rate_matrix_base %>%   distinct(Base_Archetype,Matchups_OpponentBase_Archetype))` different matchup for base archetypes.  
+* `r nrow(Df_win_rate_matrix_base %>%   distinct(Base_Archetype,Matchups_OpponentBase_Archetype))` different matchup for base archetypes.
+
+## Last month
 
 
+* One month data : `r format(as.Date(min(Df_win_rate_matrix_base_1_month$Date)), "%d-%m-%Y")` to `r format(as.Date(max(Df_win_rate_matrix_base_1_month$Date)), format = "%d-%m-%Y")`. 
+* Duration `r round(max(difftime(Sys.Date(),Df_win_rate_matrix_base_1_month$Date,units = "weeks")),0)` weeks.
+* Include meta : `r unique(Df_win_rate_matrix_base_1_month$Meta)`.  
+* Number of tournament : `r n_distinct(Df_win_rate_matrix_simple_unnest_matchup %>% filter(Week %in% One_month_week_vector) %>% pull(TournamentFile))`
+* With a total of `r nrow(Df_win_rate_matrix_base_1_month)` rounds of magic
+* `r nrow(Df_win_rate_matrix_base_1_month %>% distinct(Archetype,Matchups_OpponentArchetype))` different matchup for archetypes.  
+* `r nrow(Df_win_rate_matrix_base_1_month %>% distinct(Base_Archetype,Matchups_OpponentBase_Archetype))` different matchup for base archetypes.  
 
-```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
-```
-
-
+:::
 
 Plot below show presence of each archetype in the matrix
 
+::: {.panel-tabset .nav-pills}
+## All data  
+
 ```{r presence_plot}
-#| column: screen
+# <!-- #| column: screen -->
 plot_presence_modify_for_matchup_matrix_fun(
      df_base = Df_win_rate_matrix_base,
     color_scheme =  scheme$hex(
   length(levels(Df_win_rate_matrix_base$Base_Archetype))
 ),
     plot_scaling = 2.25
-)
+) %>%
+  bslib::card(full_screen = TRUE)
 ```
 
+## Last month  
+
+```{r presence_plot_1_month}
+# <!-- #| column: screen -->
+plot_presence_modify_for_matchup_matrix_fun(
+  df_base = Df_win_rate_matrix_base_1_month,
+  color_scheme =  scheme$hex(
+    length(levels(Df_win_rate_matrix_base_1_month$Base_Archetype))
+  ),
+  plot_scaling = 2.25
+) %>%
+  bslib::card(full_screen = TRUE)
+```
+
+:::
 
 # Archetype
 
@@ -250,33 +318,52 @@ For example, a score of 2-1 counts as 1 game won.
 
 ## Matrix
 ::: {.panel-tabset .nav-pills}
-### Total matrix  
+  
+### All data  
 
 ```{r res_arch_matrix}
-plot_win_rate_mat(Df_win_rate_matrix_format, "matches")
+# <!-- #| column: screen -->
+plot_win_rate_mat(
+  Df_winrate_format_fun = Df_win_rate_matrix_format,
+                group_column =  "matches"
+  ) 
 ```
 
-### Only significative CI
+### Last month 
 
-```{r only_signif_mat_arch}
-plot_win_rate_mat(Df_win_rate_matrix_format, "matches",
-  # simplify_tab_ratio = 0.5,
-  only_signif = TRUE
-) %>% bslib::card(full_screen = TRUE)
+
+```{r res_arch_matrix_1_month}
+# <!-- #| column: screen -->
+plot_win_rate_mat(
+  Df_winrate_format_fun = Df_win_rate_matrix_format_1_month,
+  group_column =  "matches"
+)
 ```
+
 :::
 
 ## CI plot 
+
+::: {.panel-tabset .nav-pills}
+  
+### All data   
+
 ```{r res_ci_plot_arch}
 # <!-- #| column: screen -->
-Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_format) %>%
+Archetype_ci_df_plot <- CI_plot_prepare_df_fun(
+  df_fun = Df_win_rate_matrix_format
+  ) %>%
   mutate(
     Archetype = factor(
       Archetype,
       levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
   ) %>% 
   arrange(Archetype) %>% 
-  mutate(Archetype_count = paste0(number_of_matches ,"(",number_of_games ,")")            )
+  mutate(
+    Archetype_count = paste0(
+      number_of_matches ," (",Number_of_deck ,")"
+                             )            
+         )
 
 arch_ci_plot_final <- Generate_CI_plot_fun(
     df_ci_fun_param = Archetype_ci_df_plot,
@@ -288,6 +375,36 @@ arch_ci_plot_final <- Generate_CI_plot_fun(
 arch_ci_plot_final
 ```
 
+### Last month 
+
+
+```{r res_ci_plot_arch_1_month}
+# <!-- #| column: screen -->
+Archetype_ci_one_month_df_plot <- CI_plot_prepare_df_fun(
+  df_fun = Df_win_rate_matrix_format_1_month
+) %>%
+  mutate(
+    Archetype = factor(
+      Archetype,
+      levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
+  ) %>% 
+  arrange(Archetype) %>% 
+  mutate(
+    Archetype_count = paste0(
+      number_of_matches ," (",Number_of_deck ,")"
+    )            
+  )
+
+arch_ci_plot_one_month_final <- Generate_CI_plot_fun(
+  df_ci_fun_param = Archetype_ci_one_month_df_plot,
+  win_rate_fun_par = "Arch_winrate_matches",
+  CI_fun_par = "CI_Arch_winrate_matches",
+  Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
+)
+
+arch_ci_plot_one_month_final
+```
+:::
 
 
 # Base archetype
@@ -296,25 +413,30 @@ For example, a score of 2-1 counts as 1 game won.
 
 ## Matrix
 ::: {.panel-tabset .nav-pills}
-### Total matrix  
+### All data   
 
 ```{r res_base_arch_matrix}
-plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches")
+# <!-- #| column: screen -->
+plot_win_rate_mat(
+  Df_winrate_format_fun = Df_win_rate_matrix_base_arch_format, 
+          group_column =        "matches"
+  )
 ```
 
-### Only significative CI
+### Last month  
 
-```{r base_arch_only_signif_mat_arch}
-plot_win_rate_mat(Df_win_rate_matrix_base_arch_format, "matches",
-  # simplify_tab_ratio = 0.5,
-  only_signif = TRUE
-) %>% bslib::card(full_screen = TRUE)
+```{r res_base_arch_matrix_1_month}
+# <!-- #| column: screen -->
+plot_win_rate_mat(Df_win_rate_matrix_base_arch_format_1_month, "matches")
 ```
 
 :::
 
 
 ## CI plot 
+::: {.panel-tabset .nav-pills}
+### All data  
+
 ```{r res_ci_plot_base_arch}
 # <!-- #| column: screen -->
 base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch_format) %>%
@@ -324,7 +446,10 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
             levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
     ) %>% 
     arrange(Archetype ) %>% 
-  mutate(Archetype_count = paste0(number_of_matches ,"(",number_of_games ,")")            )
+  mutate(Archetype_count = paste0(number_of_matches 
+                                  # ,"(",number_of_games ,")"
+                                  )           
+         )
 
 
 base_arch_ci_plot_final <- Generate_CI_plot_fun(
@@ -337,8 +462,34 @@ base_arch_ci_plot_final <- Generate_CI_plot_fun(
 base_arch_ci_plot_final
 ```
 
+### Last month  
+
+```{r res_ci_plot_base_arch_1_month}
+# <!-- #| column: screen -->
+base_Archetype_ci_one_month_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch_format_1_month) %>%
+  mutate(
+    Archetype = factor(
+      Archetype,
+      levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
+  ) %>% 
+  arrange(Archetype ) %>% 
+  mutate(Archetype_count = paste0(number_of_matches 
+                                  # ,"(",number_of_games ,")"
+  )           
+  )
 
 
+base_arch_ci_plot_one_month_final <- Generate_CI_plot_fun(
+  df_ci_fun_param = base_Archetype_ci_one_month_df_plot,
+  win_rate_fun_par = "Arch_winrate_matches",
+  CI_fun_par = "CI_Arch_winrate_matches",
+  Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
+)
+
+base_arch_ci_plot_one_month_final
+```
+
+:::
 
 
 #  Best deck 

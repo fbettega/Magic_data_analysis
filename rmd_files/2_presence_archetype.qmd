@@ -184,15 +184,13 @@ ratio_plot <- 3
 
 
 
-# Presence over Time 
-
-
-
-## Archetype 
+# Presence over Time  
 
 Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)`  for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
 
+::: {.panel-tabset .nav-pills}
 
+## Archetype 
 
 ```{r, results='asis'}
 if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p("::: {.column-screen}")
@@ -205,7 +203,7 @@ plot_archetype_spaghetti <- function_plot_spaghetti_plot(
   df_fun_spaghetti_plot = spaghetti_plot_df,
   scheme_color_sheme_fun  = scheme,
   Arch_or_base_arch = "Archetype" , #"Base_Archetype" "Archetype"
-  hide_treshold = 0.025,
+  hide_treshold = 2.5/100,
   count_arch_var = "Count_arch" # "Count_base_arch" "Count_arch",
   )
 
@@ -218,8 +216,6 @@ if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p(":::")
 ```
 
 ## Base Archetype
-Presence from `r min(spaghetti_plot_df$Date)` to `r max(spaghetti_plot_df$Date)` for a total of `r spaghetti_plot_df %>% distinct(Week,.keep_all = TRUE) %>% pull(Week_deck_number) %>% sum()` decks.   
-
 
 ```{r, results='asis'}
 if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p("::: {.column-screen}")
@@ -232,7 +228,7 @@ plot_base_archetype_spaghetti <- function_plot_spaghetti_plot(
   df_fun_spaghetti_plot = spaghetti_plot_df,
   scheme_color_sheme_fun  = scheme,
   Arch_or_base_arch = "Base_Archetype"  , #"Base_Archetype" "Archetype"
-  hide_treshold = 0.025,
+  hide_treshold = 2.5/100,
   count_arch_var = "Count_base_arch" # "Count_base_arch" "Count_arch",
   )
 
@@ -246,11 +242,13 @@ if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p(":::")
 ```
 
 
-
-
+:::
 
 
 # Presence graph 
+
+::: {.panel-tabset .nav-pills}
+
 
 ## All Data 
 
@@ -263,14 +261,15 @@ if(n_distinct(spaghetti_plot_df$Week) >= 15) pander::pandoc.p(":::")
 
 
 ```{r plot_presence_arch_all_data_print}
-#| column: screen
+# <!-- #| column: screen -->
 plot_presence_fun(
   df_base = Presence_df_base,
   color_scheme = colors_scales_presence_base_arch,
   time_limit = Inf,
   compare_time_limit = NULL,
   plot_scaling = ratio_plot
-) %>% bslib::card(full_screen = TRUE)
+) %>% 
+  bslib::card(full_screen = TRUE)
 ```
 
 ## 1 Month
@@ -281,13 +280,13 @@ plot_presence_fun(
 * Total number of deck : `r nrow(one_month_inline)`.  
 
 ```{r plot_presence_arch_one_month_print}
-#| column: screen
+# <!-- #| column: screen -->
 plot_presence_fun(
   df_base = Presence_df_base,
   color_scheme = colors_scales_presence_base_arch,
   time_limit = 5,
   compare_time_limit = Inf,
-  plot_scaling = ratio_plot
+  plot_scaling = 2.25 #ratio_plot
 ) %>% 
   bslib::card(full_screen = TRUE)
 ```
@@ -303,7 +302,7 @@ plot_presence_fun(
 
 
 ```{r plot_presence_arch_two_weeks_print}
-#| column: screen
+# <!-- #| column: screen -->
 plot_presence_fun(
   df_base = Presence_df_base,
   color_scheme = colors_scales_presence_base_arch,
@@ -324,7 +323,7 @@ plot_presence_fun(
 
 
 ```{r plot_presence_arch_one_week_print}
-#| column: screen
+# <!-- #| column: screen -->
 plot_presence_fun(
   df_base = Presence_df_base,
   color_scheme = colors_scales_presence_base_arch,
@@ -333,6 +332,8 @@ plot_presence_fun(
   plot_scaling = ratio_plot
 ) %>% bslib::card(full_screen = TRUE)
 ```
+
+:::
 
 # CI plot win rates  
 
@@ -546,7 +547,10 @@ base_arch_ci_plot_final
 
 
 
-# Number of copy of each cards 
+
+
+# Global meta analysis
+
 
 ```{r Base_init_number_of_copy_of_each_cards}
 source("../sources/sources_script_specific/S1new_cards.R", local = TRUE)
@@ -564,7 +568,7 @@ df_export <- loaded_base_data %>%
   mutate(
     n_deck = n_distinct(id),
     n_winrates = sum(!is.na(Wins))
-    )
+  )
 
 ```
 
@@ -585,7 +589,7 @@ win_rate_main_board_overall <- Count_and_winrates_cards_in_decklist(
   rename_all(~str_remove(.,"Mainboard_"))
 
 General_presence_mainboard_overall <- Count_cards_in_decklist(
-   df = df_export,
+  df = df_export,
   colname_deck_list = "Mainboard" , 
   No_grouping_column = TRUE
 ) %>%
@@ -593,10 +597,10 @@ General_presence_mainboard_overall <- Count_cards_in_decklist(
   rename_all(~str_remove(.,"Mainboard_"))
 
 Main_board_total <-   full_join(
-    General_presence_mainboard_overall,
-    win_rate_main_board_overall,
-    by = c("CardName", "Count")
-  ) %>% 
+  General_presence_mainboard_overall,
+  win_rate_main_board_overall,
+  by = c("CardName", "Count")
+) %>% 
   mutate(Main_side = "Main",.before = 1)
 ```
 
@@ -604,14 +608,14 @@ Main_board_total <-   full_join(
 
 ```{r computation_side_board_number_of_copy_of_each_cards}
 win_rate_side_board_overall <- Count_and_winrates_cards_in_decklist(
-   df = df_export,
+  df = df_export,
   colname_deck_list = "Sideboard" , 
   No_grouping_column = TRUE
 ) %>% 
   rename_all(~str_remove(.,"Sideboard_"))
 
 General_presence_sideboard_overall <- Count_cards_in_decklist(
-   df = df_export,
+  df = df_export,
   colname_deck_list = "Sideboard" , 
   No_grouping_column = TRUE
 ) %>%
@@ -619,10 +623,10 @@ General_presence_sideboard_overall <- Count_cards_in_decklist(
   rename_all(~str_remove(.,"Sideboard_"))
 
 Side_board_total <-   full_join(
-    General_presence_sideboard_overall,
-    win_rate_side_board_overall,
-    by = c("CardName", "Count")
-  ) %>% 
+  General_presence_sideboard_overall,
+  win_rate_side_board_overall,
+  by = c("CardName", "Count")
+) %>% 
   mutate(Main_side = "Side",.before = 1)
 ```
 
@@ -630,28 +634,23 @@ Side_board_total <-   full_join(
 
 ```{r computation_total_number_of_copy_of_each_cards}
 win_rate_total_deck_overall <- Count_and_winrates_cards_in_decklist(
-   df = df_export,
+  df = df_export,
   colname_deck_list = "All" , 
   No_grouping_column = TRUE
 ) 
-# %>% 
-#   rename_all(~str_remove(.,"Sideboard_"))
-
 
 General_presence_total_deck_overall <- Count_cards_in_decklist(
   df = df_export,
   colname_deck_list = "All" , 
   No_grouping_column = TRUE
 ) %>%
-   rename(count_presence = count) 
-# %>% 
-#   rename_all(~str_remove(.,"Sideboard_"))
+  rename(count_presence = count) 
 
 total_deck_total <-   full_join(
-    General_presence_total_deck_overall,
-    win_rate_total_deck_overall,
-    by = c("CardName", "Count")
-  ) %>% 
+  General_presence_total_deck_overall,
+  win_rate_total_deck_overall,
+  by = c("CardName", "Count")
+) %>% 
   mutate(Main_side = "All",.before = 1)
 ```
 
@@ -677,55 +676,162 @@ tooltips_deck_new_cards <- c(
 
 ```{r read_modern_db}
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
-filter(
+  filter(
     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
-        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
-)
+      !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+  )
 ```
 
 
+```{r prepare_df_for_join_with_final_table}
+Deck_color_castable_cards_base <- df_export %>% 
+  rowwise() %>% 
+  mutate(
+    only_presence = any(is.na(Wins) | is.na(Losses)),
+    .before =  Wins
+    ) %>%
+  ungroup() %>% 
+  select(id,Color,only_presence) %>% 
+    mutate(
+      color_W = as.numeric(str_detect(Color, "W")),
+      color_B = as.numeric(str_detect(Color, "B")),
+      color_U = as.numeric(str_detect(Color, "U")),
+      color_R = as.numeric(str_detect(Color, "R")),
+      color_G = as.numeric(str_detect(Color, "G"))
+    )
 
 
-```{r print_number_of_copy_of_each_cards}
-DT::datatable(
-  rbind(
+Deck_color_castable_cards <- 
+  Deck_color_castable_cards_base %>%
+  filter(Color != "C") %>% 
+    select(-Color) %>% 
+  group_by(
+    across(starts_with("color_"))
+    ) %>% 
+  summarise(
+    Presence_count_castable = n(),
+    winrate_count_castable = sum(!only_presence),
+    .groups = "drop"
+  )
+
+
+ # bloque de code pour ajouter les comtptes de deck pouvant jouer la couleurs
+modern_db_join_with_castable_number_of_deck <-   modern_DB_card %>% 
+        select(id,set,scryfall_uri,starts_with("colors.")) %>%
+  pivot_longer(cols = starts_with("colors"), names_to = "colnames", values_to = "color") %>%
+  filter(!is.na(color)) %>%
+  mutate(
+    color_W = ifelse(color == "W", 1, 0),
+    color_B = ifelse(color == "B", 1, 0),
+    color_U = ifelse(color == "U", 1, 0),
+    color_R = ifelse(color == "R", 1, 0),
+    color_G = ifelse(color == "G", 1, 0)
+  ) %>%
+  # Ajouter une ligne pour les cartes incolores
+  bind_rows(modern_DB_card %>% 
+        select(id,set,scryfall_uri,starts_with("colors.")) %>% 
+          filter(is.na(colors.1)) %>% 
+          mutate(
+    color_W = 0, color_B = 0, color_U = 0, color_R = 0, color_G = 0
+  )) %>%
+  group_by(id,set,scryfall_uri) %>%
+  summarise(across(starts_with("color_"), sum), .groups = "drop") %>% 
+  full_join(Deck_color_castable_cards, by = 
+              join_by(
+                color_W <= color_W , 
+                color_B <= color_B,  
+                color_U <= color_U ,
+                color_R <= color_R,
+                color_G <= color_G
+                )
+            ) %>%
+  group_by(id,set,scryfall_uri) %>%
+  summarise(
+    Presence_count_castable = sum(Presence_count_castable),
+    winrate_count_castable = sum( winrate_count_castable),
+             .groups = "drop")
+
+```
+
+
+## Color repartion
+
+
+
+::: {.panel-tabset .nav-pills} 
+
+### Corlor in deck with winrates
+
+```{r print_color_winrate}
+color_presence_plot_fun(
+    df_fun_base_color = Deck_color_castable_cards_base,
+    column_presence = "Presence_count_castable" # "Presence_count_castable" ,"winrate_count_castable"
+  )
+```
+
+### Corlors of all deck 
+```{r print_color_presence}
+color_presence_plot_fun(
+    df_fun_base_color = Deck_color_castable_cards_base,
+    column_presence = "Presence_count_castable" # "Presence_count_castable" ,"winrate_count_castable"
+  )
+```
+:::
+
+
+
+```{r number_of_copy_of_each_cards_result_table_generation}
+number_of_copy_of_each_cards_final_table <-  rbind(
     total_deck_total,
     Main_board_total,
     Side_board_total
   ) %>% 
-  left_join(
-     join_with_scryfall(
-    Df_with_cardname =   .,
-    cardname_col = "CardName" ,
-    scry_fall_df = modern_DB_card
-),
-by = c("CardName" = "CardName")
-  ) %>%
-  left_join(
-    modern_DB_card %>% 
-      select(id,set,scryfall_uri),
-    by = join_by(
-      scry_fall_id == id
-    )
-  ) %>% 
-add_link_to_a_column(
-  df_add_link_fun =   .,
-  column_where_is_add = "link", #"link",
-  link_column = "scryfall_uri"
-) %>%
-  
-  select(-scry_fall_id) %>% 
+    left_join(
+      join_with_scryfall(
+        Df_with_cardname =   .,
+        cardname_col = "CardName" ,
+        scry_fall_df = modern_DB_card
+      ),
+      by = c("CardName" = "CardName")
+    ) %>%
+    left_join(
+      modern_db_join_with_castable_number_of_deck ,
+      by = join_by(
+        scry_fall_id == id
+      )
+    ) %>% 
+    add_link_to_a_column(
+      df_add_link_fun =   .,
+      column_where_is_add = "link", #"link",
+      link_column = "scryfall_uri",
+      Card_name_col =   "CardName"         
+    ) %>% 
+  mutate(
+    Presence_count_castable = ifelse(
+      is.na(Presence_count_castable),df_export$n_deck,Presence_count_castable
+      ),
+    winrate_count_castable = ifelse(
+      is.na(winrate_count_castable),df_export$n_winrates,winrate_count_castable
+      )
+    ) %>% 
+    select(-scry_fall_id,-search_Link) %>% 
     mutate(set = as.factor(set),
-           ) %>% 
-  relocate(set,.after = CardName)  %>% 
-  mutate(
-    count_presence_percent = count_presence/unique(df_export$n_deck),
-    .after = count_presence
-  )  %>%
-  mutate(
-    count_winrate_percent = count_winrate/unique(df_export$n_winrates),
-    .after = count_winrate
-  ) %>% 
+    ) %>% 
+    relocate(set,.after = CardName)  %>% 
+    mutate(
+      count_presence_percent = count_presence/unique(df_export$n_deck),
+      Presence_count_castable = Presence_count_castable,
+      Presence_castable_percent = count_presence/Presence_count_castable,
+      .after = count_presence
+    )  %>%
+    mutate(
+      count_winrate_percent = count_winrate/unique(df_export$n_winrates),
+      winrate_count_castable = winrate_count_castable,
+      winrate_castable_percent = count_winrate/winrate_count_castable,
+      .after = count_winrate
+    ) %>% 
+  relocate(winrate_count_castable,.after = count_presence_percent) %>% 
+  relocate(Presence_count_castable,.after = count_presence_percent) %>% 
     mutate(
       Main_side = as.factor(Main_side) ,
       CardName = as.factor(CardName),
@@ -738,7 +844,7 @@ add_link_to_a_column(
       -CI_delta_winrate_card,
       -Sign_delta_wr,
       -card_draw_diff
-      ) %>% 
+    ) %>% 
     rename_with(
       ~ str_replace(
         str_replace(
@@ -750,7 +856,14 @@ add_link_to_a_column(
         ),
         "CardName", "Card"
       )
-    ) ,
+    )
+```
+
+## Number of copy of each cards 
+
+```{r print_number_of_copy_of_each_cards}
+DT::datatable(
+ number_of_copy_of_each_cards_final_table ,
   callback = DT::JS(
     paste0(
       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
@@ -759,25 +872,28 @@ for (var i = 0; i < tips.length; i++) {
   $(header[i]).attr('title', tips[i]);
 }
 ",
-      return_filter_js()
+return_filter_js()
     )
   ),
-  filter = "top", rownames = FALSE,
-  options = list(
-    dom = "ltipr",
-    searchCols = list(
-       NULL,list(search = '["All"]'), NULL,NULL,
-      list(search = '["Any"]'),
-      NULL,NULL,NULL,NULL, NULL,
-      NULL, # list(search = '10 ...'),
-      NULL, NULL#,# NULL, NULL, NULL, NULL,      list(search = '["false"]') # NULL
-    ), autoWidth = TRUE, pageLength = 25
-  ),
+filter = "top", rownames = FALSE,
+options = list(
+  dom = "ltipr",
+  searchCols = list(
+    NULL,list(search = '["All"]'), NULL,NULL,
+    list(search = '["Any"]'),
+    NULL,NULL,NULL,NULL, NULL,NULL, NULL,
+    NULL, # list(search = '10 ...'),
+    NULL, NULL#,# NULL, NULL, NULL, NULL,      list(search = '["false"]') # NULL
+  ), autoWidth = TRUE, pageLength = 25
+),
 escape = FALSE
 ) %>% 
-  DT::formatPercentage(c(7,9,12#,10,13
-                         ),digits = 1)
+  DT::formatPercentage(c(7,10,12,13,16
+                         #,10,13
+  ),digits = 1)
 ```
+
+
 
 
 

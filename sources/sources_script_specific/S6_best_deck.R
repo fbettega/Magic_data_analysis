@@ -154,9 +154,10 @@ table_generator_sub_fun <- function(
         df_add_link_fun =   .,
         column_where_is_add = "CardName", #"link",
         link_column = "scryfall_uri",
-        mode = "md"
+        mode = "md",
+        Card_name_col = "CardName"  
       ) %>%
-      select(-scry_fall_id) %>%
+      select(-scry_fall_id,-search_Link) %>%
       rowwise()  %>%
   # Récupération des divers deck pour obtenir les stat desc par cartes
   mutate(

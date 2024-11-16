@@ -566,7 +566,7 @@ Generate_and_format_model_result <-
 print_main_side <- function(
     res_encours_fun,
     iteration_print ,
-    print_count_string,
+    # print_count_string,
     type,
     Df_with_cardname
 ){
@@ -578,6 +578,8 @@ print_main_side <- function(
   # Section contents
   pander::pandoc.header(type, level = 3)
   pander::pandoc.p("")
+  # pander::pandoc.p(print_count_string)
+  # pander::pandoc.p("")
   
   if (iteration_print %in% names(res_encours_fun$Base_cards_and_base_count_res)) {
     
@@ -589,8 +591,6 @@ print_main_side <- function(
     pander::pandoc.header("Base Cards", level = 4)
     pander::pandoc.p("")
     pander::pandoc.p("Cards Always in deck with nearly fix count")
-    pander::pandoc.p(print_count_string)
-    
     pander::pandoc.p("")
     flextable::flextable_to_rmd(
       flextable::flextable(
@@ -618,8 +618,18 @@ print_main_side <- function(
             by = join_by(
               scry_fall_id == id
             )
+          ) %>% 
+          left_join(
+            agregate_land_link(),
+            by = join_by(!!rlang::sym(paste0(colname_deck_list, "_CardName")) == join_name)
           ) %>%
-          select(-scry_fall_id)
+          mutate(
+            scryfall_uri = ifelse(
+              is.na(scryfall_uri)
+              & !is.na(search_Link ) ,search_Link ,scryfall_uri
+            )
+          ) %>%
+          select(-scry_fall_id,-search_Link)
       ) %>%
         flextable::compose(j = paste0(colname_deck_list, "_CardName"),
                            value = flextable::as_paragraph(
@@ -693,11 +703,12 @@ print_result_total_script_deck_ana <- function(
   
   pander::pandoc.header(iteration, level = 2)
   pander::pandoc.p("")
+  pander::pandoc.p(print_count_string)
+  pander::pandoc.p("")  
   
   print_main_side(
     res_encours_fun = res_main ,
     iteration_print = iteration,
-    print_count_string = print_count_string,
     type = "Main deck",
     Df_with_cardname = scryfall_db
   )
@@ -705,7 +716,6 @@ print_result_total_script_deck_ana <- function(
   print_main_side(
     res_encours_fun = res_side ,
     iteration_print = iteration,
-    print_count_string = print_count_string,
     type = "Side Board",
     Df_with_cardname = scryfall_db
   )
@@ -713,7 +723,6 @@ print_result_total_script_deck_ana <- function(
   print_main_side(
     res_encours_fun = res_75 ,
     iteration_print = iteration,
-    print_count_string = print_count_string,
     type = "Total 75",
     Df_with_cardname = scryfall_db
   )
