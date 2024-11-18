@@ -19,6 +19,8 @@ loaded_base_data <- readRDS(paste0("../data/",params$format_param,"_data_meta_en
 # Réfléchir pour les couleurs et meilleurs distances
 # Manque ajouter du texte après les % pour la variation
 conflicted::conflicts_prefer(dplyr::filter)
+
+
 ```
 
 
@@ -405,7 +407,18 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
            Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate + .$CI_Arch_winrate)])
          ) %>% 
   arrange(Archetype)
+
+Archetype_best_player <- best_player_result_fun(
+  top_n_player_fun = top_n_player,
+Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+df_fun_top_player = Presence_df_base
+) %>% 
+  mutate(
+    best_player_Arch_winrate = best_player_Arch_winrate - 
+      unique(Presence_df_base$Global_winrate)
+    )
 ```
+
 
 
 
@@ -417,7 +430,8 @@ arch_ci_plot_final <- Generate_CI_plot_fun(
     df_ci_fun_param = df_Ci_by_all_week,
     win_rate_fun_par = "Arch_winrate",
     CI_fun_par = "CI_Arch_winrate",
-    Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
+    Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+    best_player_df_par_fun = Archetype_best_player
 )
 
 arch_ci_plot_final
@@ -523,6 +537,17 @@ df_base_arch_Ci_by_all_week <- df_base_arch_Ci_by_week %>%
            Base_Archetype = factor(Base_Archetype, levels = .$Base_Archetype[order(.$Arch_winrate + .$CI_Arch_winrate)])
          ) %>% 
   arrange(Base_Archetype)
+
+
+base_Archetype_best_player <- best_player_result_fun(
+    top_n_player_fun = top_n_player/2,
+    Arch_or_base_arch = "Base_Archetype", #"Base_Archetype" "Archetype"
+    df_fun_top_player = Presence_df_base
+) %>% 
+    mutate(
+        best_player_Arch_winrate = best_player_Arch_winrate - 
+            unique(Presence_df_base$Global_winrate)
+    )
 ```
 
 
@@ -535,7 +560,8 @@ base_arch_ci_plot_final <- Generate_CI_plot_fun(
     df_ci_fun_param = df_base_arch_Ci_by_all_week,
     win_rate_fun_par = "Arch_winrate",
     CI_fun_par = "CI_Arch_winrate",
-    Arch_or_base_arch = "Base_Archetype" #"Base_Archetype" "Archetype"
+    Arch_or_base_arch = "Base_Archetype", #"Base_Archetype" "Archetype"
+    best_player_df_par_fun = base_Archetype_best_player
 )
 base_arch_ci_plot_final
 ```

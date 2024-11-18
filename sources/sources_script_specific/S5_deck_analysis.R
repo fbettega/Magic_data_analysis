@@ -592,6 +592,12 @@ print_main_side <- function(
     pander::pandoc.p("")
     pander::pandoc.p("Cards Always in deck with nearly fix count")
     pander::pandoc.p("")
+    pander::pandoc.p(
+      paste0("Total number of most common count : ",
+             sum(res_encours_fun$Base_cards_and_base_count_res[[iteration_print]]$most_common_quantity)
+                            )
+      )
+    pander::pandoc.p("")
     flextable::flextable_to_rmd(
       flextable::flextable(
         res_encours_fun$Base_cards_and_base_count_res[[iteration_print]] %>%

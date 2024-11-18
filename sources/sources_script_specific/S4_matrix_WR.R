@@ -447,8 +447,8 @@ CI_plot_prepare_df_fun <- function(df_fun) {
       CI_Arch_winrate_matches = CI_prop(
         Arch_winrate_matches, number_of_matches
       )
-    )
-  
+    ) %>% 
+    filter(!is.na(Arch_winrate_matches))
   return(res)
 }
 

@@ -99,12 +99,13 @@ fun_parNumber_of_deck_print = Number_of_deck,
 ## All Data Model best deck prediction  
 ```{r print_result_all_data, results='asis'}
 #, out.width="100%"
+# arch_encours <- total_result_Archetype_best_deck_to_print$Archetype_consider[1]
 all_data_best_deck_arch_print_res <- 
   lapply(total_result_Archetype_best_deck_to_print$Archetype_consider,
          function(arch_encours){
     print_result_total_script_best_deck(
-    total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$global,
-    total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$main_side,
+    res_tot = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$global,
+    res_main_side = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$main_side,
     iteration = arch_encours
     ) 
          }
@@ -112,7 +113,7 @@ all_data_best_deck_arch_print_res <-
 ```
 
 
-## 2 weeks Data Model best deck prediction  
+## Two weeks Data Model best deck prediction  
 ```{r print_result_2weeks, results='asis'}
 #, out.width="100%"
 twoweeks_data_best_deck_arch_print_res <- 
@@ -165,7 +166,7 @@ all_data_best_deck_arch_print_res <-
 ```
 
 
-## 2 weeks Data Model best deck prediction  
+## Two weeks Data Model best deck prediction  
 ```{r print_result_2weeks_base_arch, results='asis'}
 #, out.width="100%"
 twoweeks_data_best_deck_arch_print_res <- 

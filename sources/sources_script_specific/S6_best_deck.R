@@ -181,7 +181,6 @@ table_generator_sub_fun <- function(
     .before = 3
   ) 
     
-    
     base_cards_table <-   Table_main_side_before_base_cards  %>%
       filter(base_deck_cards ) %>% 
       select(-base_deck_cards) %>% 
@@ -208,6 +207,7 @@ table_generator_sub_fun <- function(
         across(!c(CardName, Main_or_side , mean_number ,min_number ,max_number ),
                ~ . -min_number
         )) %>% 
+      mutate(base_number = min_number) %>% 
       rowwise()  %>%
       # Récupération des divers deck pour obtenir les stat desc par cartes
       mutate(
@@ -235,10 +235,15 @@ table_generator_sub_fun <- function(
               CardName, "<br>",
               mean_number, "[",
               min_number, ";",
-              max_number, "]"
+              max_number, "]",
+              ifelse(base_number > 0,
+                     paste0("(",
+              base_number,")"),""
+              )
             ),
         base_deck_cards = FALSE
-      ) 
+      ) %>% 
+      select(-base_number)
     
       Table_main_side <- rbind(base_cards_table,variables_cards_table) %>% 
         group_by(Main_or_side) %>% 
@@ -247,7 +252,6 @@ table_generator_sub_fun <- function(
         ungroup() %>% 
         select(-c(mean_number, min_number, max_number,number_of_base_cards))
         
-    
     title_table <- paste0(
       "Top ", top_x_rank,
       " best performing ",ifelse(
@@ -455,7 +459,11 @@ get_models_for_best_deck <- function(
   result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
     df_fun = df_after_model_preparation$group_com_unco_cards_res
   ) %>%
-    name_list_of_model_with_string(unique(df_after_model_preparation$group_com_unco_cards_res$Archetype))
+    name_list_of_model_with_string(
+      unique(
+        df_after_model_preparation$group_com_unco_cards_res$Archetype
+        )
+      )
   
   
   return(result_models_Uncommon_cards_all_arch)
@@ -477,7 +485,9 @@ generate_total_result_of_best_deck <- function(
     db_scryfall_fun_par
 ){
   
-  list_of_Model_result_total_fun <- lapply(fun_pardeck_or_side, function(all_main_side_fun){
+  # all_main_side_fun <- fun_pardeck_or_side[1]
+  list_of_Model_result_total_fun <- lapply(fun_pardeck_or_side, 
+                                           function(all_main_side_fun){
     # print(all_main_side_fun)
     
     fun_par_df <- fun_par_df %>%

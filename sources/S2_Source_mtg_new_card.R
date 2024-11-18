@@ -1,4 +1,14 @@
 
+################################################################################
+new_cards_number_of_month_for_new_set_1 <- 5
+top_n_player <- 20
+Archetype_cut_of_4 <- 50
+min_sample_size_5 <- 50
+filter_archetype_count_5 <- 50
+min_sample_size_6 <- 25
+filter_archetype_count_6 <- 50
+min_tournament_size_7 <- 64
+last_week_number_7 <- 3
 
 
 
@@ -1207,26 +1217,6 @@ agregate_land_link <- function() {
 }
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ################################################################################
 #######################  Remove NULL from nested list  #########################
 ## a list of NULLs
@@ -2007,13 +1997,66 @@ plot_presence_fun <- function(
 
 
 ################################################################################
+
+################################################################################
+################   Compute winrate and CI for top n player  ####################
+
+best_player_result_fun <- function(
+    top_n_player_fun,
+    Arch_or_base_arch,
+    df_fun_top_player
+){
+  top_player_df <- df_fun_top_player %>%
+    group_by(!!rlang::sym(Arch_or_base_arch),Player) %>% 
+    mutate(n_deck_player = sum( Wins + Losses),.before = 1) %>% 
+    filter(n_deck_player >= top_n_player_fun) %>% 
+    summarise( 
+      Arch_winrate = winrate_1_data(
+        sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)
+      ),
+      player_lower_bound  = Arch_winrate + CI_prop(
+        Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
+      ),
+      .groups = "keep"
+    ) %>% 
+    slice_max(
+      player_lower_bound,
+      n = 10 
+    ) %>% 
+    select(-Arch_winrate) %>%
+    ungroup()
+  
+  best_player_res <- df_fun_top_player %>% 
+    left_join(
+      top_player_df,
+      by = join_by(Player, !!rlang::sym(Arch_or_base_arch))
+    ) %>% 
+    filter(!is.na(player_lower_bound)) %>%
+    group_by(!!rlang::sym(Arch_or_base_arch)) %>% 
+    summarise( 
+      best_player_Arch_winrate = winrate_1_data(
+        sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)
+      ),
+      best_player_CI_Arch_winrate = CI_prop(
+        best_player_Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
+      )
+    )
+  
+  return(best_player_res)
+}
+
+################################################################################
+
+################################################################################
 ##################      Function that Generate CI plot  ######################## 
 Generate_CI_plot_fun <- function(
     df_ci_fun_param ,
     win_rate_fun_par ,
     CI_fun_par,
-    Arch_or_base_arch 
+    Arch_or_base_arch ,
+    best_player_df_par_fun = NULL
 ){
+
   ci_df_plot_lines_df <- data.frame(
     yintercept = c(
       mean(df_ci_fun_param[[win_rate_fun_par]]),
@@ -2023,14 +2066,35 @@ Generate_CI_plot_fun <- function(
     line_type = c("Average Winrate",  "Lower CI", "Upper CI")
   )
   
+  if(is.null(best_player_df_par_fun)){
+  df_plot_with_best_player <- df_ci_fun_param
+  } else {
+    df_plot_with_best_player <- df_ci_fun_param %>% 
+      mutate(join_arch = as.character(!!rlang::sym(Arch_or_base_arch))) %>% 
+      left_join(
+        best_player_df_par_fun,
+        by = join_by(join_arch == !!rlang::sym(Arch_or_base_arch))
+        ) %>% 
+      select(-join_arch)
+    
+  }
+
   resulting_plot <- (
-    ggplot(data = df_ci_fun_param,
+    ggplot(data = df_plot_with_best_player,
            aes(text = paste(
              "Archetype: ", !!rlang::sym(Arch_or_base_arch), "<br>", # Archetype name
              "Winrate: ", 
              round(!!rlang::sym(win_rate_fun_par) * 100, 1), " %",
-             "[",round((!!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par)) * 100, 2),";",
-             round((!!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)) * 100, 2),"]", "<br>",
+             "[", round((!!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par)) * 100, 2), ";",
+             round((!!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)) * 100, 2), "]", "<br>",
+             "Best Player Winrate: ", 
+             ifelse(is.na(!!rlang::sym("best_player_Arch_winrate")), "NA", 
+                    paste0(round(!!rlang::sym("best_player_Arch_winrate") * 100, 1), " %",
+                           "[", round((!!rlang::sym("best_player_Arch_winrate") + !!rlang::sym("best_player_CI_Arch_winrate")) * 100, 2), ";",
+                           round((!!rlang::sym("best_player_Arch_winrate") - !!rlang::sym("best_player_CI_Arch_winrate")) * 100, 2), "]"
+                           )
+                    
+                    ), "<br>",
              sep = ""
            ))
     ) +
@@ -2040,14 +2104,39 @@ Generate_CI_plot_fun <- function(
           x = !!rlang::sym(Arch_or_base_arch)
         ),
         position = position_dodge(0.75)
-      )  +
+      ) +
       geom_errorbar(aes(
         x = !!rlang::sym(Arch_or_base_arch),
         ymin = !!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par),
         ymax = !!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)
       ),
-      position = position_dodge(width = .75), width = .01
-      )  +
+      position = position_dodge(width = .75), 
+      width = .01
+      ) +
+      # Points et barres d'erreur pour les meilleurs joueurs
+      geom_point(
+        data = df_plot_with_best_player %>% 
+          filter(!is.na(best_player_Arch_winrate)),
+        aes(
+          y = !!rlang::sym("best_player_Arch_winrate"),
+          x = !!rlang::sym(Arch_or_base_arch),
+          color = "Best Player Winrate"
+        ),
+        shape = 17, # Forme différente pour distinguer
+        position = position_nudge(x = 0.3)
+      ) +
+      geom_errorbar(
+        data = df_plot_with_best_player %>%
+          filter(!is.na(best_player_Arch_winrate)),
+        aes(
+          x = !!rlang::sym(Arch_or_base_arch) ,
+          ymin = !!rlang::sym("best_player_Arch_winrate") + !!rlang::sym("best_player_CI_Arch_winrate"),
+          ymax = !!rlang::sym("best_player_Arch_winrate") - !!rlang::sym("best_player_CI_Arch_winrate"),
+          color = "Best Player Winrate CI"
+        ),
+        width = 0.01,
+        position = position_nudge(x = 0.3)#position_dodge(0.75)
+      ) +
       geom_hline(
         data = ci_df_plot_lines_df,
         aes(yintercept = yintercept, color = line_type),
@@ -2055,10 +2144,24 @@ Generate_CI_plot_fun <- function(
       ) +
       scale_color_manual(
         name = "Legend",
-        values = c("Average Winrate" = "red", 
-                   "Lower CI" = "darkgreen", 
-                   "Upper CI" = "blue")
-      )  +
+        values = c("Average Winrate" = "red",
+                   "Lower CI" = "darkgreen",
+                   "Upper CI" = "blue",
+                   "Best Player Winrate" = "purple",
+                   "Best Player Winrate CI" = "orange"),
+        # guide = guide_legend(override.aes = list(
+        #   linetype = c(NA, "solid"), # Applique "dashed" à la ligne CI
+        #   shape = c(16, NA, NA, 17, NA)          # Contrôle les formes des points
+        # ))
+      ) +
+      # guides(
+      #   color = guide_legend(
+      #     override.aes = list(
+      #       linetype = c("solid", "solid", "dashed", "solid", "dashed"), # Corriger les types de lignes
+      #       shape = c(16, NA, NA, 17, NA)                                # Points pour winrates
+      #     )
+      #   )
+      # ) +
       scale_x_discrete(
         label = paste0(
           "<span style='font-size:", 17 , "px;'> <b>",
@@ -2094,7 +2197,7 @@ Generate_CI_plot_fun <- function(
     )  %>%
     plotly::layout(
       legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
-    ) %>%
+    )  %>%
     bslib::card(full_screen = TRUE)
   return(resulting_plot)
 }
@@ -2369,15 +2472,6 @@ flattenCorrMatrix <- function(cormat, pmat) {
     # p = pmat[ut]
   )
 }
-################################################################################
-new_cards_number_of_month_for_new_set_1 <- 5
-Archetype_cut_of_4 <- 50
-min_sample_size_5 <- 50
-filter_archetype_count_5 <- 50
-min_sample_size_6 <- 25
-filter_archetype_count_6 <- 50
-min_tournament_size_7 <- 64
-last_week_number_7 <- 3
 
 
 

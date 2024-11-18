@@ -3,12 +3,21 @@ source("sources/S0_source_init.R")
 Reupdate_scryfall_db <- FALSE #TRUE FALSE
 
 reparse_arch <- TRUE  #TRUE FALSE
-
+not_all_arch_filter_S0 <- c(
+  # "Modern",
+  # "Legacy",
+  # "Pauper",
+  "Pioneer",
+  "Vintage",
+  "All"
+)
 # Try catch because script is long allow shutdown if error
 tryCatch(
 {
 
-format_date_en_cours_fulltable <- read.csv("other_file/format_handle.csv")
+format_date_en_cours_fulltable <- dplyr::filter(
+  read.csv("other_file/format_handle.csv"),
+  !format_param %in% not_all_arch_filter_S0)
 
 
 log_df <- read.csv("other_file/log_run.csv")
@@ -276,8 +285,12 @@ tictoc::tic.clearlog()
 system("shutdown /s /t 30")
 },
 error = function(e) {
-  error_message <- paste("Une erreur s'est produite :", e$message, "\n")
-  write(error_message, file = "outpout/erreur_log.txt")
+  error_message <- capture.output(print(e))
+  error_message <- paste("Une erreur s'est produite :", paste(error_message, collapse = "\n"))
+  
+  # Écrire l'erreur dans le fichier
+  write(error_message, file = "output/erreur_log.txt")
+  
   
   # cancel shutdown use : system("shutdown -a")
   print(paste0("shutdown cause of error"))

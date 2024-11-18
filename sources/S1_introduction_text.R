@@ -24,10 +24,11 @@ pander::pandoc.p("")
 #######################  Intro of script 2  ####################################
 ## ---- Introduction_chunk_2_Deck_analysis
 
-Introduction_char_vec_par_2_1 <-
+Introduction_char_vec_par_2_1 <-  paste0(
   "This chapter shows the representation of differences over time. Leagues are excluded from this analysis.\n\n
   File in 3 parts :\n
 The first shows the presence curves over time for each archetype or archetype base. Archetypes with too low a presence are deactivated by default but can be reactivated by clicking on the desired decks. By default, certain Archetypes are hidden if their number is less than 0.25%.\n
+Leagues are includes in this part\n\n
 The second part shows the presence barchart of the different archetypes (archetype is define as other if their number is less than the minimum of 50 or 1%) and base archetypes for different time intervals: \n\n
 - all data\n
 - one moth\n
@@ -38,10 +39,15 @@ Additional information is available in tooltip (for Archetype and base archetype
 - The delta in percent compared to the upper time interval\n
 - Deck rank and its evolution compared to the previous time interval\n
 - Win rates and confidence interval\n
-The confidence interval graphs show the averages and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.
-In particular, the publication of the top32 only for results from MTGO led to an overestimation of the winrates, the winrates were centred.\n\n
-The presence of different cards in the format. Leagues are includes in this part. \n\n
+The confidence interval graphs show the averages and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.",
+"Top player 10 average win rate and CI (A player need at least", top_n_player, " rounds for Archetype and",top_n_player/2," for base archetype) result are show above error bar",
+"In particular, the publication of the top32 only for results from MTGO led to an overestimation of the winrates, the winrates were centred.\n\n
+The last part present : \n
+- The représentation of each colors combinations in the format\n
+- The presence of different cards in the format.\n
+Leagues are includes in this part\n\n
 "
+)
 pander::pandoc.p(Introduction_char_vec_par_2_1)
 pander::pandoc.p("")
 pander::pandoc.p("")
@@ -75,11 +81,15 @@ Introduction_char_vec_par_4_1 <- paste0(
   "This chapter focuses on the data for which we know the result of each match and the Archetype of the opponent.\n
 In order to be included, an archetype must be represented more than ", Archetype_cut_of_4, " times in the dataset.\n
 - Matrix considers the matches as a whole (for example, a 2-1 score counts as 1 game won).\n
-- For each tournament, a bar graph shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n\n
-They are built on the following model (additionnal information in matrix tooltip): \n\n
+- 
+
+Part one focus on Archetype (aggragated) and part two on base archetype (parser archetype).\n\n
+
+They are built on the following model (additionnal information in tooltip) one tab for all data and one tab for 1 month data: \n\n
+- Summary of data.\n\n
+- Bar chart shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n\n
 - The confidence interval graphs show the averages winrates (without miror matchs) and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.\n
 - A complete matrix with all the information.\n
-- A matrix presenting only the matchups with a confidence interval of less than 50%.\n
 The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time.\n
 In order to determine an expected number of victories 2 criteria are used the average winrate and the lower bounds of the confidence interval.**Please note that this part is still under construction as some decks with too few matchups are included**.\n"
 )
@@ -154,7 +164,11 @@ Introduction_char_vec_par_6_2 <- "**A total of 6 quasibinomial regression models
 
 
 Introduction_char_vec_par_6_3 <- "These different models are then used to determine the 7 complete decks (maindeck and sideboard) with the highest probability of victory for each archetype.\n
-As well as the 7 maindecks and 7 sideboards with the highest probability of victory are presented for each archetype.**Warning: this second part can lead to inconsistent combinations.** It seemed useful if you want explore the maindecks and sides separately."
+As well as the 7 maindecks and 7 sideboards with the highest probability of victory are presented for each archetype.**Warning: this second part can lead to inconsistent combinations.** It seemed useful if you want explore the maindecks and sides separately.\n\n
+Table shows the top7 decks: \n\n
+- Firstly base cards (present in all decklist).\n  
+- Variables cards are present as card name average number of cards[minimum; maximum number of cards](number of base cards if this card is also in base cards) \n\n  
+"
 
 pander::pandoc.p(Introduction_char_vec_par_6_1)
 pander::pandoc.p("")

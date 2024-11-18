@@ -15,6 +15,7 @@ format:
       margin-width: 250px
       # gutter-width: 1.5rem
     # css: large_plot.css
+    toc-depth: 4
 knitr:
   opts_chunk:
     out.width: "100%"

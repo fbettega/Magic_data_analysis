@@ -206,6 +206,18 @@ Df_win_rate_matrix_base_arch_format <- Df_win_rate_matrix_base_arch_summarise %>
     Archetype = Base_Archetype,
     Matchups_OpponentArchetype = Matchups_OpponentBase_Archetype
   )
+
+Top_player_base_df <- Df_win_rate_matrix_base %>% 
+  mutate(Wins = Matchups_Wins > Matchups_Losses,
+         Losses  = Matchups_Wins < Matchups_Losses
+         ) %>% 
+  group_by(Archetype,Base_Archetype,Player) %>% 
+  summarise(
+    Wins = sum(Wins),
+    Losses = sum(Losses),
+    .groups = "drop"
+            )
+
 ```
 
 ```{r One_week_base_data}
@@ -217,6 +229,17 @@ One_month_week_vector <- Df_win_rate_matrix_base %>%
 
 Df_win_rate_matrix_base_1_month <- Df_win_rate_matrix_base %>% 
   filter(Week %in% One_month_week_vector) 
+
+Top_player_base_1_month_df <- Df_win_rate_matrix_base_1_month %>% 
+  mutate(Wins = Matchups_Wins > Matchups_Losses,
+         Losses  = Matchups_Wins < Matchups_Losses
+         ) %>% 
+  group_by(Archetype,Base_Archetype,Player) %>% 
+  summarise(
+    Wins = sum(Wins),
+    Losses = sum(Losses),
+    .groups = "drop"
+            )
 ```
 
 
@@ -363,16 +386,28 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(
     Archetype_count = paste0(
       number_of_matches ," (",Number_of_deck ,")"
                              )            
-         )
+         ) 
+
+
+
+Archetype_best_player <- best_player_result_fun(
+    top_n_player_fun = top_n_player,
+    Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+    df_fun_top_player = Top_player_base_df 
+) 
+
 
 arch_ci_plot_final <- Generate_CI_plot_fun(
     df_ci_fun_param = Archetype_ci_df_plot,
     win_rate_fun_par = "Arch_winrate_matches",
     CI_fun_par = "CI_Arch_winrate_matches",
-    Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
+    Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+    best_player_df_par_fun = Archetype_best_player
 )
 
 arch_ci_plot_final
+
+
 ```
 
 ### Last month 
@@ -393,13 +428,20 @@ Archetype_ci_one_month_df_plot <- CI_plot_prepare_df_fun(
     Archetype_count = paste0(
       number_of_matches ," (",Number_of_deck ,")"
     )            
-  )
+  ) 
+
+Archetype_best_player_1_month <- best_player_result_fun(
+    top_n_player_fun = top_n_player,
+    Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+    df_fun_top_player = Top_player_base_1_month_df
+) 
 
 arch_ci_plot_one_month_final <- Generate_CI_plot_fun(
   df_ci_fun_param = Archetype_ci_one_month_df_plot,
   win_rate_fun_par = "Arch_winrate_matches",
   CI_fun_par = "CI_Arch_winrate_matches",
-  Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
+  Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+  best_player_df_par_fun = Archetype_best_player_1_month
 )
 
 arch_ci_plot_one_month_final
@@ -452,11 +494,20 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
          )
 
 
+base_Archetype_best_player <- best_player_result_fun(
+    top_n_player_fun = top_n_player/2,
+    Arch_or_base_arch = "Base_Archetype", #"Base_Archetype" "Archetype"
+    df_fun_top_player = Top_player_base_df
+) %>% 
+  rename(Archetype = Base_Archetype)
+
+
 base_arch_ci_plot_final <- Generate_CI_plot_fun(
     df_ci_fun_param = base_Archetype_ci_df_plot,
     win_rate_fun_par = "Arch_winrate_matches",
     CI_fun_par = "CI_Arch_winrate_matches",
-    Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
+    Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+     best_player_df_par_fun = base_Archetype_best_player
 )
 
 base_arch_ci_plot_final
@@ -478,12 +529,19 @@ base_Archetype_ci_one_month_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix
   )           
   )
 
+base_Archetype_best_player_one_month <- best_player_result_fun(
+    top_n_player_fun = top_n_player/2,
+    Arch_or_base_arch = "Base_Archetype", #"Base_Archetype" "Archetype"
+    df_fun_top_player = Top_player_base_1_month_df
+) %>% 
+  rename(Archetype = Base_Archetype)
 
 base_arch_ci_plot_one_month_final <- Generate_CI_plot_fun(
   df_ci_fun_param = base_Archetype_ci_one_month_df_plot,
   win_rate_fun_par = "Arch_winrate_matches",
   CI_fun_par = "CI_Arch_winrate_matches",
-  Arch_or_base_arch = "Archetype" #"Base_Archetype" "Archetype"
+  Arch_or_base_arch = "Archetype", #"Base_Archetype" "Archetype"
+  best_player_df_par_fun = base_Archetype_best_player_one_month
 )
 
 base_arch_ci_plot_one_month_final

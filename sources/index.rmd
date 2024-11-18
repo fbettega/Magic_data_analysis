@@ -7,6 +7,18 @@ knit: (function(inputFile, encoding) {
   rmarkdown::render(inputFile, encoding = encoding, output_dir = "../outpout") })
 ---
 
+```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
+knitr::opts_chunk$set(
+	echo = FALSE,
+	message = FALSE,
+	warning = FALSE
+)
+library(tidyverse)
+# ajouter les derniere fois que les formats ont été updates
+# source("../data/")
+```
+
+
 You can find quarto book from various magic the gathering format 
 
 
