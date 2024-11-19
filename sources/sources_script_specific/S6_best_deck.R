@@ -237,8 +237,8 @@ table_generator_sub_fun <- function(
               min_number, ";",
               max_number, "]",
               ifelse(base_number > 0,
-                     paste0("(",
-              base_number,")"),""
+                     paste0(" ",
+              base_number,"*"),""
               )
             ),
         base_deck_cards = FALSE

@@ -167,7 +167,7 @@ Introduction_char_vec_par_6_3 <- "These different models are then used to determ
 As well as the 7 maindecks and 7 sideboards with the highest probability of victory are presented for each archetype.**Warning: this second part can lead to inconsistent combinations.** It seemed useful if you want explore the maindecks and sides separately.\n\n
 Table shows the top7 decks: \n\n
 - Firstly base cards (present in all decklist).\n  
-- Variables cards are present as card name average number of cards[minimum; maximum number of cards](number of base cards if this card is also in base cards) \n\n  
+- Variables cards are present as card name average number of cards[minimum; maximum number of cards]number of base cards* (if this card is also in base cards) \n\n  
 "
 
 pander::pandoc.p(Introduction_char_vec_par_6_1)
