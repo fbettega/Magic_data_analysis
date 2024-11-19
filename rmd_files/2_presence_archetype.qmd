@@ -67,7 +67,8 @@ Presence_df_base <- Presence_df_base_no_filter %>%
   mutate(
     Archetype = if_else(
     Archetype_count > filter_archetype_count,
-                             Archetype,"other")
+                             Archetype,"other"
+    )
     ) %>%  
   group_by(Archetype) %>%
   mutate(
@@ -690,6 +691,10 @@ tooltips_deck_new_cards <- c(
   "Number of copies of the cards",
   "Number of decks with the card (exact number of copies) including deck without winrate like 5-0 leagues",
   "Percent of deck with the card (exact number of copies) including deck without winrate like 5-0 leagues",
+  "Number of decks with the card (exact number of copies) and sharing colors with cards including deck without winrate like 5-0 leagues",
+  "Number of decks include in the win rate computation of the card (exact number of copies) and sharing colors with cards",
+  "Percent of deck with the card (exact number of copies) and sharing colors with cards including deck without winrate like 5-0 leagues",
+  "Percent of deck with the card (exact number of copies) and sharing colors with cards only deck with winrate",
   "Number of decks include in the win rate computation of the card (exact number of copies)",
   "Percent of deck with the card (exact number of copies) only deck with winrate",
   "Number of wins",
@@ -780,18 +785,16 @@ modern_db_join_with_castable_number_of_deck <-   modern_DB_card %>%
 ```
 
 
-## Color repartion
-
-
+## Color repartion  
 
 ::: {.panel-tabset .nav-pills} 
 
-### Corlor in deck with winrates
+### Corlor in deck with winrates  
 
 ```{r print_color_winrate}
 color_presence_plot_fun(
     df_fun_base_color = Deck_color_castable_cards_base,
-    column_presence = "Presence_count_castable" # "Presence_count_castable" ,"winrate_count_castable"
+    column_presence = "winrate_count_castable" # "Presence_count_castable" ,"winrate_count_castable"
   )
 ```
 

@@ -40,7 +40,7 @@ Additional information is available in tooltip (for Archetype and base archetype
 - Deck rank and its evolution compared to the previous time interval\n
 - Win rates and confidence interval\n
 The confidence interval graphs show the averages and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.",
-"Top player 10 average win rate and CI (A player need at least", top_n_player, " rounds for Archetype and",top_n_player/2," for base archetype) result are show above error bar",
+"Top player 10 (top 10 lower CI winrate bound) average win rate and CI (A player need at least", top_n_player, " rounds for Archetype and",top_n_player/2," for base archetype) result are show above error bar",
 "In particular, the publication of the top32 only for results from MTGO led to an overestimation of the winrates, the winrates were centred.\n\n
 The last part present : \n
 - The représentation of each colors combinations in the format\n
@@ -88,8 +88,9 @@ Part one focus on Archetype (aggragated) and part two on base archetype (parser 
 They are built on the following model (additionnal information in tooltip) one tab for all data and one tab for 1 month data: \n\n
 - Summary of data.\n\n
 - Bar chart shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n\n
-- The confidence interval graphs show the averages winrates (without miror matchs) and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.\n
-- A complete matrix with all the information.\n
+- The confidence interval graphs show the averages winrates (without miror matchs) and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.",
+"Top player 10 (top 10 lower CI winrate bound) average win rate and CI (A player need at least", top_n_player, " rounds for Archetype and",top_n_player/2," for base archetype) result are show above error bar\n",
+"- A complete matrix with all the information.\n
 The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time.\n
 In order to determine an expected number of victories 2 criteria are used the average winrate and the lower bounds of the confidence interval.**Please note that this part is still under construction as some decks with too few matchups are included**.\n"
 )

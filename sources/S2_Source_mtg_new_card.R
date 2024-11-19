@@ -1419,8 +1419,7 @@ color_presence_plot_fun <- function(
         ifelse(color_W + color_B + color_U + color_R + color_G == 0, "Colorless", "")
       )
     )
-  
-  
+
   color_combination_plot_df <- color_combination_plot_df_base  %>%
     rowwise() %>%
     mutate(
@@ -1441,12 +1440,63 @@ color_presence_plot_fun <- function(
     ) %>%
     rename(Color = included_in ) %>% 
     group_by(Color) %>%
-    mutate(total_proportion = sum(proportion)) %>%
+    mutate(total_proportion = sum(proportion),
+           total_count = sum(!!rlang::sym(column_presence))
+           ) %>%
     ungroup() %>% 
     arrange(total_proportion) %>%
     mutate(
       combination = factor(combination, levels = unique(combination))
     )
+  
+  
+  combinations_palette <- c(
+    # Couleurs de base
+    Colorless = "#FFFFFF", # Incolore
+    W = "#FFFF00", # Blanc
+    U = "#0000FF", # Bleu
+    B = "#000000", # Noir
+    R = "#FF0000", # Rouge
+    G = "#00FF00", # Vert
+    
+    # Combinaisons bicolores
+    WU = "#7F7FFF",
+    WB = "#6C4E12",
+    WR = "#FF7F7F",
+    WG = "#7FFF7F",
+    BU = "#00007F",
+    UR = "#7F007F",
+    UG = "#007F7F",
+    BR = "#7F0000",
+    BG = "#007F00",
+    RG = "#7F7F00",
+    
+    # Combinaisons tricolores
+    WBU = "#7F7FBF",
+    WUR = "#BF7FBF",
+    WUG = "#7FBF7F",
+    WBR = "#BF5F5F",
+    WBG = "#5FBF5F",
+    WRG = "#BF9F5F",
+    BUR = "#3F003F",
+    UBG = "#003F3F",
+    URG = "#3F3F00",
+    BRG = "#5F3F00",
+    BUG = "#2F5F5F", # Ajusté pour correspondre à BUG
+    BUR = "#5F003F", # Ajusté pour correspondre à BUR
+    
+    # Combinaisons quadricolores
+    WUBR = "#9F5FAF",
+    WBUG = "#5FAF7F",
+    WURG = "#AF9F5F",
+    WBRG = "#9F7F5F",
+    WBUR = "#8F6F8F", # Ajusté pour correspondre à WBUR
+    BURG = "#5F2F1F",
+    
+    # Toutes les couleurs
+    WBURG = "#9F9F9F" # Une teinte neutre équilibrée
+  )
+  
   
   
   color_combination_plot <- ( 
@@ -1456,14 +1506,15 @@ color_presence_plot_fun <- function(
              y = proportion, 
              fill = combination,
              text = paste0("Combinaison : ", 
-                           combination, "<br>Proportion : ",
-                           scales::percent(proportion, accuracy = 0.1),
-                           "<br>Total : ",
-                           scales::percent(total_proportion, accuracy = 0.1)
+                           combination, "<br>N(%) : ",
+                           !!rlang::sym(column_presence)," (",scales::percent(proportion, accuracy = 0.1),")",
+                           "<br>Total N(%): ",
+                           total_count," (",scales::percent(total_proportion, accuracy = 0.1),")"
              )
            )
     ) +
-      geom_bar(stat = "identity", position = "stack", width = 0.8) +
+      geom_bar(stat = "identity", position = "stack", width = 0.8, color = "black") +
+      scale_fill_manual(values = combinations_palette) +
       # geom_text(aes(label = scales::percent(proportion, accuracy = 0.1)), 
       #            position = position_stack(vjust = 0.5), size = 3, show.legend = FALSE) +
       # scale_fill_manual(values = RColorBrewer::brewer.pal(n = 32, "Set1")) +
@@ -2005,7 +2056,8 @@ best_player_result_fun <- function(
     top_n_player_fun,
     Arch_or_base_arch,
     df_fun_top_player
-){
+) {
+  
   top_player_df <- df_fun_top_player %>%
     group_by(!!rlang::sym(Arch_or_base_arch),Player) %>% 
     mutate(n_deck_player = sum( Wins + Losses),.before = 1) %>% 
@@ -2017,11 +2069,13 @@ best_player_result_fun <- function(
       player_lower_bound  = Arch_winrate + CI_prop(
         Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
       ),
-      .groups = "keep"
+      .groups = "drop" # "keep"
     ) %>% 
+    group_by(!!rlang::sym(Arch_or_base_arch)) %>%
     slice_max(
       player_lower_bound,
-      n = 10 
+      n = 10 ,
+      with_ties = FALSE
     ) %>% 
     select(-Arch_winrate) %>%
     ungroup()
@@ -2034,6 +2088,8 @@ best_player_result_fun <- function(
     filter(!is.na(player_lower_bound)) %>%
     group_by(!!rlang::sym(Arch_or_base_arch)) %>% 
     summarise( 
+      Number_of_best_player = n_distinct(Player),
+      Number_of_match_best_player = sum(Wins, na.rm = TRUE) + sum(Losses, na.rm = TRUE),
       best_player_Arch_winrate = winrate_1_data(
         sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)
       ),
@@ -2089,7 +2145,8 @@ Generate_CI_plot_fun <- function(
              round((!!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)) * 100, 2), "]", "<br>",
              "Best Player Winrate: ", 
              ifelse(is.na(!!rlang::sym("best_player_Arch_winrate")), "NA", 
-                    paste0(round(!!rlang::sym("best_player_Arch_winrate") * 100, 1), " %",
+                    paste0(Number_of_best_player ," players (matches :",Number_of_match_best_player,")<br>",
+                           round(!!rlang::sym("best_player_Arch_winrate") * 100, 1), " %",
                            "[", round((!!rlang::sym("best_player_Arch_winrate") + !!rlang::sym("best_player_CI_Arch_winrate")) * 100, 2), ";",
                            round((!!rlang::sym("best_player_Arch_winrate") - !!rlang::sym("best_player_CI_Arch_winrate")) * 100, 2), "]"
                            )
