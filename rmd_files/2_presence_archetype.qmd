@@ -34,8 +34,6 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```
 
 
-
-
 ```{r color_scheme_and_base_data_manipulation}
 # Generate different color scheme for close archetype
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
@@ -731,7 +729,6 @@ Deck_color_castable_cards_base <- df_export %>%
       color_G = as.numeric(str_detect(Color, "G"))
     )
 
-
 Deck_color_castable_cards <- 
   Deck_color_castable_cards_base %>%
   filter(Color != "C") %>% 
@@ -746,25 +743,104 @@ Deck_color_castable_cards <-
   )
 
 
- # bloque de code pour ajouter les comtptes de deck pouvant jouer la couleurs
-modern_db_join_with_castable_number_of_deck <-   modern_DB_card %>% 
-        select(id,set,scryfall_uri,starts_with("colors.")) %>%
-  pivot_longer(cols = starts_with("colors"), names_to = "colnames", values_to = "color") %>%
-  filter(!is.na(color)) %>%
+# bloque de code pour ajouter les comtptes de deck pouvant jouer la couleurs
+Modern_db_colors_parsing <- modern_DB_card %>% 
+        select(id, name,
+               set,scryfall_uri,contains("mana_cost")) %>%
+# Combine les colonnes mana_cost et card_faces.mana_cost.* en une seule chaîne pour chaque ligne
+  rowwise() %>%
   mutate(
-    color_W = ifelse(color == "W", 1, 0),
-    color_B = ifelse(color == "B", 1, 0),
-    color_U = ifelse(color == "U", 1, 0),
-    color_R = ifelse(color == "R", 1, 0),
-    color_G = ifelse(color == "G", 1, 0)
+    combined_cost = paste(
+      mana_cost,
+      card_faces.mana_cost.1,
+      card_faces.mana_cost.2,
+      card_faces.mana_cost.3,
+      card_faces.mana_cost.4,
+      card_faces.mana_cost.5,
+      sep = " "
+    ) %>%
+      str_remove_all("NA") %>% # Retirer les "NA"
+      str_squish()             # Supprimer les espaces superflus
   ) %>%
-  # Ajouter une ligne pour les cartes incolores
-  bind_rows(modern_DB_card %>% 
-        select(id,set,scryfall_uri,starts_with("colors.")) %>% 
-          filter(is.na(colors.1)) %>% 
-          mutate(
-    color_W = 0, color_B = 0, color_U = 0, color_R = 0, color_G = 0
-  )) %>%
+  ungroup() %>%
+  select(id,set,scryfall_uri,combined_cost)
+# tentative de gestion des mana hybride
+# %>% 
+#   mutate(
+#     hybrid_mana = map(str_extract_all(combined_cost, "\\{[WUBRG]/[WUBRG]\\}"),unique),  
+#     combined_cost = str_remove_all(combined_cost, "\\{[WUBRG]/[WUBRG]\\}")
+#     ) %>% 
+#   unnest_wider(hybrid_mana,names_sep = "_")
+
+hybride_cost_db_colors_parsing <-  modern_DB_card %>% 
+        select(id, name,
+               set,scryfall_uri,contains("mana_cost")) %>%
+# Combine les colonnes mana_cost et card_faces.mana_cost.* en une seule chaîne pour chaque ligne
+  rowwise() %>%
+  mutate(
+    combined_cost = paste(
+      mana_cost,
+      card_faces.mana_cost.1,
+      card_faces.mana_cost.2,
+      card_faces.mana_cost.3,
+      card_faces.mana_cost.4,
+      card_faces.mana_cost.5,
+      sep = " "
+    ) %>%
+      str_remove_all("NA") %>% # Retirer les "NA"
+      str_squish()             # Supprimer les espaces superflus
+  ) %>%
+  ungroup() %>%
+  select(id,set,scryfall_uri,combined_cost) %>% 
+  mutate(
+    # filer_out = str_detect(combined_cost, "\\{[WUBRG]/[WUBRG]\\}"),
+    hybrid_mana = map(str_extract_all(combined_cost, "\\{[WUBRG]/[WUBRG]\\}"),unique),
+    combined_cost = str_remove_all(combined_cost, "\\{[WUBRG]/[WUBRG]\\}")
+    )  %>%
+   unnest_longer(hybrid_mana) %>% 
+  rowwise() %>% 
+    mutate( 
+      combined_cost = list(c(
+        paste0(combined_cost,str_extract(hybrid_mana,"\\{[WUBRG](?=/)"),"}"),
+      paste0(combined_cost,"{",str_extract(hybrid_mana,"(?<=/)[WUBRG]\\}")) )
+      )
+              ) %>%
+  ungroup() %>% 
+   unnest_longer(combined_cost) %>% 
+  select(-hybrid_mana) %>% 
+  distinct() %>%   
+  # Déterminer les couleurs basées sur les symboles dans combined_cost
+  mutate(
+    color_W = ifelse(str_detect(combined_cost, "W"), 1, 0),
+    color_U = ifelse(str_detect(combined_cost, "U"), 1, 0),
+    color_B = ifelse(str_detect(combined_cost, "B"), 1, 0),
+    color_R = ifelse(str_detect(combined_cost, "R"), 1, 0),
+    color_G = ifelse(str_detect(combined_cost, "G"), 1, 0)
+  ) %>%
+  select(-combined_cost) %>%
+  left_join(Deck_color_castable_cards, by = 
+              join_by(
+                color_W == color_W , 
+                color_B == color_B,  
+                color_U == color_U ,
+                color_R == color_R,
+                color_G == color_G
+                )
+            ) %>% 
+  select(-starts_with("color_"))
+
+
+modern_db_join_with_castable_number_of_deck <- rbind(
+  Modern_db_colors_parsing %>%   
+  # Déterminer les couleurs basées sur les symboles dans combined_cost
+  mutate(
+    color_W = ifelse(str_detect(combined_cost, "W"), 1, 0),
+    color_U = ifelse(str_detect(combined_cost, "U"), 1, 0),
+    color_B = ifelse(str_detect(combined_cost, "B"), 1, 0),
+    color_R = ifelse(str_detect(combined_cost, "R"), 1, 0),
+    color_G = ifelse(str_detect(combined_cost, "G"), 1, 0)
+  ) %>%
+  select(-combined_cost) %>%
   group_by(id,set,scryfall_uri) %>%
   summarise(across(starts_with("color_"), sum), .groups = "drop") %>% 
   full_join(Deck_color_castable_cards, by = 
@@ -775,7 +851,10 @@ modern_db_join_with_castable_number_of_deck <-   modern_DB_card %>%
                 color_R <= color_R,
                 color_G <= color_G
                 )
-            ) %>%
+            ) %>% 
+  select(-starts_with("color_")) , 
+  hybride_cost_db_colors_parsing
+  ) %>%
   group_by(id,set,scryfall_uri) %>%
   summarise(
     Presence_count_castable = sum(Presence_count_castable),

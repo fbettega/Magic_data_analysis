@@ -1399,6 +1399,53 @@ color_presence_plot_fun <- function(
     df_fun_base_color,
     column_presence # "Presence_count_castable" ,"winrate_count_castable"
 ){
+  
+  combinations_palette <- c(
+    # Couleurs de base
+    Colorless = "#FFFFFF", # Incolore
+    W = "#FFFF00", # Blanc
+    U = "#0000FF", # Bleu
+    B = "#000000", # Noir
+    R = "#FF0000", # Rouge
+    G = "#00FF00", # Vert
+    
+    # Combinaisons bicolores
+    WU = "#7F7FFF",
+    WB = "#6C4E12",
+    WR = "#FF7F7F",
+    WG = "#7FFF7F",
+    BU = "#00007F",
+    UR = "#7F007F",
+    UG = "#007F7F",
+    BR = "#7F0000",
+    BG = "#007F00",
+    RG = "#7F7F00",
+    
+    # Combinaisons tricolores
+    WBU = "#7F7FBF", # Blanc, Bleu, Noir
+    WUR = "#BF7FBF", # Blanc, Bleu, Rouge
+    WUG = "#7FBF7F",  # Blanc, Bleu, Vert
+    WBR = "#BF5F5F",  # Blanc, Noir, Rouge
+    WBG = "#5FBF5F", # Blanc, Noir, Vert
+    WRG = "#BF9F5F", # Blanc, Rouge, Vert
+    BUR = "#3F003F", # Bleu, Noir, Rouge
+   # UBG 
+    BUG = "#003F3F",  # Bleu, Noir, Vert
+    URG = "#3F3F00", # Bleu, Rouge, Vert
+    BRG = "#5F3F00",  # Noir, Rouge, Vert
+    
+    # Combinaisons quadricolores
+    WUBR = "#9F5FAF",
+    WBUG = "#5FAF7F",
+    WURG = "#AF9F5F",
+    WBRG = "#9F7F5F",
+    WBUR = "#8F6F8F", 
+    BURG = "#5F2F1F",
+    
+    # Toutes les couleurs
+    WBURG = "#9F9F9F" 
+  )
+  
   color_combination_plot_df_base <- df_fun_base_color %>% 
     select(-Color) %>% 
     group_by(
@@ -1446,59 +1493,12 @@ color_presence_plot_fun <- function(
     ungroup() %>% 
     arrange(total_proportion) %>%
     mutate(
-      combination = factor(combination, levels = unique(combination))
+      combination = factor(combination, levels = names(combinations_palette)),
+      Color = factor(Color,levels = names(combinations_palette))
     )
   
   
-  combinations_palette <- c(
-    # Couleurs de base
-    Colorless = "#FFFFFF", # Incolore
-    W = "#FFFF00", # Blanc
-    U = "#0000FF", # Bleu
-    B = "#000000", # Noir
-    R = "#FF0000", # Rouge
-    G = "#00FF00", # Vert
-    
-    # Combinaisons bicolores
-    WU = "#7F7FFF",
-    WB = "#6C4E12",
-    WR = "#FF7F7F",
-    WG = "#7FFF7F",
-    BU = "#00007F",
-    UR = "#7F007F",
-    UG = "#007F7F",
-    BR = "#7F0000",
-    BG = "#007F00",
-    RG = "#7F7F00",
-    
-    # Combinaisons tricolores
-    WBU = "#7F7FBF",
-    WUR = "#BF7FBF",
-    WUG = "#7FBF7F",
-    WBR = "#BF5F5F",
-    WBG = "#5FBF5F",
-    WRG = "#BF9F5F",
-    BUR = "#3F003F",
-    UBG = "#003F3F",
-    URG = "#3F3F00",
-    BRG = "#5F3F00",
-    BUG = "#2F5F5F", # Ajusté pour correspondre à BUG
-    BUR = "#5F003F", # Ajusté pour correspondre à BUR
-    
-    # Combinaisons quadricolores
-    WUBR = "#9F5FAF",
-    WBUG = "#5FAF7F",
-    WURG = "#AF9F5F",
-    WBRG = "#9F7F5F",
-    WBUR = "#8F6F8F", # Ajusté pour correspondre à WBUR
-    BURG = "#5F2F1F",
-    
-    # Toutes les couleurs
-    WBURG = "#9F9F9F" # Une teinte neutre équilibrée
-  )
-  
-  
-  
+
   color_combination_plot <- ( 
     ggplot(color_combination_plot_df,
            aes(
@@ -1530,7 +1530,8 @@ color_presence_plot_fun <- function(
   ) %>% 
     ggplotly(
       tooltip = "text" #c("x", "y", "fill")
-    ) %>% bslib::card(full_screen = TRUE)
+    ) %>% 
+    bslib::card(full_screen = TRUE)
   
   return(color_combination_plot)
 }
@@ -1845,9 +1846,9 @@ function_plot_spaghetti_plot <- function(
          week_var,
          # breaks = levels(Presence_for_best_deck_plot$Week),
          labels = paste0(
-           "Week : ", as.character(unique(df_fun_spaghetti_plot[[week_var]])), "<br>",
+           "Week: ", as.character(unique(df_fun_spaghetti_plot[[week_var]])), "<br>",
            # unique(Presence_Base_Archetype_for_best_deck_plot$Date), "<br>",
-           "N total deck :<br>", df_fun_spaghetti_plot %>%
+           "N decks:<br>", df_fun_spaghetti_plot %>%
              arrange(!!rlang::sym(week_var)) %>%  
              select(!!rlang::sym(week_var),!!rlang::sym(Number_deck_by_week_var)) %>% 
              distinct(!!rlang::sym(week_var),.keep_all = TRUE) %>% 
@@ -1871,7 +1872,8 @@ function_plot_spaghetti_plot <- function(
          # legend.direction = "horizontal",   # Organisation sur plusieurs lignes
          legend.box = "vertical",        # Ajustement horizontal pour plusieurs lignes
          legend.text = element_text(size = 8),  # Taille des textes de la légende
-         legend.title = element_text(size = 10) # Taille du titre de la légende
+         legend.title = element_text(size = 10), # Taille du titre de la légende
+         axis.title.x=element_blank()
        ) +
        ylab(
          paste0(str_replace(Arch_or_base_arch,"_"," "),
@@ -1906,10 +1908,7 @@ function_plot_spaghetti_plot <- function(
   return(
     plot_spaghetti_res 
   )
-  
 }
-
-
 ################################################################################
 ######  Function that plot presence of archetype used in 2 and 7  ##############
 plot_presence_fun <- function(
