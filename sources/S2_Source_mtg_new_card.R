@@ -126,32 +126,95 @@ sanitize_string <- function(text) {
 
 ####################### Patch foireux pour ban #################################
 
-# Take simple df from json curated and search for a vector of ban cards
-Search_for_ban_cards <- function(vec_of_ban_cards, df, colname_deck_list) {
-  main_remove_id <- df %>%
-    unnest_longer(!!colname_deck_list) %>%
-    unnest_wider(!!colname_deck_list,
-      names_sep = "_"
+# # Take simple df from json curated and search for a vector of ban cards
+# Search_for_ban_cards <- function(vec_of_ban_cards, df, colname_deck_list) {
+#   main_remove_id <- df %>%
+#     unnest_longer(!!colname_deck_list) %>%
+#     unnest_wider(!!colname_deck_list,
+#       names_sep = "_"
+#     ) %>%
+#     # add filter for deck with more than 30 copies of single cards
+#     filter(!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% vec_of_ban_cards | 
+#              !!rlang::sym(paste0(colname_deck_list, "_Count")) >= 30) %>%
+#     distinct(id) %>%
+#     unlist()
+#   return(main_remove_id)
+# }
+
+################################################################################
+####
+search_for_illegal_cards <- function(
+  df_illeg,
+  cards_db,
+  Format_fun_par
+  ){
+  # conflicted::conflicts_prefer(dplyr::lag)
+  
+  Base_df <- rbind(df_illeg %>%
+    unnest_longer(Mainboard) %>%
+    unnest_wider(Mainboard,
+                 names_sep = "_"
+    ) %>% 
+    rename(
+      CardName = Mainboard_CardName,
+      Count = Mainboard_Count
+            ) %>% 
+      select(-Sideboard ),
+    df_illeg %>%
+      unnest_longer(Sideboard ) %>%
+      unnest_wider(Sideboard ,
+                   names_sep = "_"
+      ) %>% 
+      rename(
+        CardName = Sideboard_CardName,
+        Count = Sideboard_Count
+      ) %>% 
+      select(-Mainboard)
+    )
+  
+  join_with_scryfall_df_res <- Base_df %>% 
+    select(id,CardName) %>% 
+    left_join(
+      join_with_scryfall(
+        Df_with_cardname =   .,
+        cardname_col = "CardName" ,
+        scry_fall_df = cards_db
+      ),
+      by = c("CardName" = "CardName")
     ) %>%
-    # add filter for deck with more than 30 copies of single cards
-    filter(!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% vec_of_ban_cards | 
-             !!rlang::sym(paste0(colname_deck_list, "_Count")) >= 30) %>%
-    distinct(id) %>%
-    unlist()
-  return(main_remove_id)
+    left_join(
+      cards_db %>% 
+        select(id ,!!sym(paste0("legalities.",tolower(Format_fun_par))) ),
+      by = join_by(
+        scry_fall_id == id
+      )
+    ) %>% 
+    filter(
+      !!sym(paste0("legalities.",tolower(Format_fun_par))) != "legal" &
+        !!sym(paste0("legalities.",tolower(Format_fun_par))) !=  "restricted"
+    ) 
+    
+  
+  return(join_with_scryfall_df_res)
+
 }
-
-
 # prévoir exact résultat en supprimant les résultats obtenue contre des deck ban mais douteux risque de biais ++
-Ban_patch <- function(vec_of_ban_cards, df # ,exact_result = FALSE
+Ban_patch <- function(
+    df ,
+    scryfall_db,
+    Format_fun_par,
+    Date_cutoff
 ) {
   # Search deck id with ban cards in side or deck
-  Main_board_remove_id <- Search_for_ban_cards(vec_of_ban_cards, df, "Mainboard")
-  Side_board_remove_id <- Search_for_ban_cards(vec_of_ban_cards, df, "Sideboard")
+  illegal_cards_id <- search_for_illegal_cards(
+    df_illeg = df,
+    cards_db =  scryfall_db,
+    Format_fun_par = Format_fun_par
+  )
 
 
   # Get unique id when ban cards is in both side and main
-  Remove_id <- unique(c(Main_board_remove_id, Side_board_remove_id))
+  Remove_id <- unique(illegal_cards_id$id)
 
 
 
@@ -233,8 +296,23 @@ Ban_patch <- function(vec_of_ban_cards, df # ,exact_result = FALSE
     filter(!(id %in% Remove_id)) %>%
     left_join(Matchup_issue, by = "id")
 
-
-
+  
+  debug_remove_cards <- df %>% 
+    filter(
+      Date >= as.Date(
+        Date_cutoff,
+        tryFormats = c("%Y-%m-%d", "%d/%m/%Y")
+        )
+      ) %>% 
+    select(id,AnchorUri ,Archetype ,Color) %>% 
+    right_join(
+      illegal_cards_id,
+      by = join_by(id)
+    ) %>% 
+    filter(!is.na(AnchorUri))
+    
+    
+  saveRDS(debug_remove_cards, paste0("data/intermediate_result/",Format_fun_par,"_debug_remove_cards.rds"))  
 
   return(Df_final)
 }
@@ -2137,19 +2215,19 @@ Generate_CI_plot_fun <- function(
   resulting_plot <- (
     ggplot(data = df_plot_with_best_player,
            aes(text = paste(
-             "Archetype: ", !!rlang::sym(Arch_or_base_arch), "<br>", # Archetype name
-             "Winrate: ", 
+             "Archetype: ", !!rlang::sym(Arch_or_base_arch)," ",!!rlang::sym(paste0(Arch_or_base_arch,"_count"))," (",Number_of_match ,")" ,"<br>", # Archetype name
+             "Winrate: ",
              round(!!rlang::sym(win_rate_fun_par) * 100, 1), " %",
              "[", round((!!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par)) * 100, 2), ";",
              round((!!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)) * 100, 2), "]", "<br>",
-             "Best Player Winrate: ", 
-             ifelse(is.na(!!rlang::sym("best_player_Arch_winrate")), "NA", 
+             "Best Player Winrate: ",
+             ifelse(is.na(!!rlang::sym("best_player_Arch_winrate")), "NA",
                     paste0(Number_of_best_player ," players (matches :",Number_of_match_best_player,")<br>",
                            round(!!rlang::sym("best_player_Arch_winrate") * 100, 1), " %",
                            "[", round((!!rlang::sym("best_player_Arch_winrate") + !!rlang::sym("best_player_CI_Arch_winrate")) * 100, 2), ";",
                            round((!!rlang::sym("best_player_Arch_winrate") - !!rlang::sym("best_player_CI_Arch_winrate")) * 100, 2), "]"
                            )
-                    
+
                     ), "<br>",
              sep = ""
            ))
@@ -2166,12 +2244,12 @@ Generate_CI_plot_fun <- function(
         ymin = !!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par),
         ymax = !!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)
       ),
-      position = position_dodge(width = .75), 
+      position = position_dodge(width = .75),
       width = .01
       ) +
       # Points et barres d'erreur pour les meilleurs joueurs
       geom_point(
-        data = df_plot_with_best_player %>% 
+        data = df_plot_with_best_player %>%
           filter(!is.na(best_player_Arch_winrate)),
         aes(
           y = !!rlang::sym("best_player_Arch_winrate"),
@@ -2188,7 +2266,7 @@ Generate_CI_plot_fun <- function(
           x = !!rlang::sym(Arch_or_base_arch) ,
           ymin = !!rlang::sym("best_player_Arch_winrate") + !!rlang::sym("best_player_CI_Arch_winrate"),
           ymax = !!rlang::sym("best_player_Arch_winrate") - !!rlang::sym("best_player_CI_Arch_winrate"),
-          color = "Best Player Winrate CI"
+          color = "Best Player Winrate"
         ),
         width = 0.01,
         position = position_nudge(x = 0.3)#position_dodge(0.75)
@@ -2203,21 +2281,9 @@ Generate_CI_plot_fun <- function(
         values = c("Average Winrate" = "red",
                    "Lower CI" = "darkgreen",
                    "Upper CI" = "blue",
-                   "Best Player Winrate" = "purple",
-                   "Best Player Winrate CI" = "orange"),
-        # guide = guide_legend(override.aes = list(
-        #   linetype = c(NA, "solid"), # Applique "dashed" à la ligne CI
-        #   shape = c(16, NA, NA, 17, NA)          # Contrôle les formes des points
-        # ))
+                   "Best Player Winrate" = "purple" #,"Best Player Winrate CI" = "orange"
+                   ),
       ) +
-      # guides(
-      #   color = guide_legend(
-      #     override.aes = list(
-      #       linetype = c("solid", "solid", "dashed", "solid", "dashed"), # Corriger les types de lignes
-      #       shape = c(16, NA, NA, 17, NA)                                # Points pour winrates
-      #     )
-      #   )
-      # ) +
       scale_x_discrete(
         label = paste0(
           "<span style='font-size:", 17 , "px;'> <b>",
@@ -2227,14 +2293,18 @@ Generate_CI_plot_fun <- function(
           "</b> </span>",
           "<br /> n : ", df_ci_fun_param %>%
             pull(
-              !!rlang::sym(paste0(Arch_or_base_arch,"_count")   
-              )),
+              !!rlang::sym(paste0(Arch_or_base_arch,"_count")
+              ))," (",df_ci_fun_param %>%
+            pull(
+              Number_of_match
+              ) ,
+          ")" ,
           "<br /> ", (df_ci_fun_param %>%
                         mutate(temp_ci = paste0(
                           round(!!rlang::sym(win_rate_fun_par) * 100, 1), " %",
                           "[", round((!!rlang::sym(win_rate_fun_par) + !!rlang::sym(CI_fun_par)) * 100, 2), ";",
                           round((!!rlang::sym(win_rate_fun_par) - !!rlang::sym(CI_fun_par)) * 100, 2), "]")
-                        ) %>% 
+                        ) %>%
                         pull(
                           temp_ci
                         )
@@ -2243,7 +2313,7 @@ Generate_CI_plot_fun <- function(
       ) +
       coord_flip() +
       theme(
-        legend.position = c(0.85, 0.15),
+        legend.position = c(0.0, 0.85),
         legend.background = element_rect(fill = "white", color = "black")
       )
   )  %>%
@@ -2252,7 +2322,8 @@ Generate_CI_plot_fun <- function(
       height = max(650,50 * nrow(df_ci_fun_param))
     )  %>%
     plotly::layout(
-      legend = list(x = 0.85, y = 0.15) # Position précise de la légende dans le graphique Plotly
+      legend = list(x = 0.0, y = 1), # Position précise de la légende dans le graphique Plotly
+      showlegend = TRUE 
     )  %>%
     bslib::card(full_screen = TRUE)
   return(resulting_plot)

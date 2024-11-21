@@ -354,6 +354,7 @@ df_Ci_by_week <- rbind(
     CI_Arch_winrate = CI_prop(
       Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
       ),
+    Number_of_match = sum(Losses + Wins, na.rm = TRUE)
     ) %>% 
   distinct(Archetype,Week,.keep_all = TRUE) %>% 
   group_by(Week) %>% 
@@ -364,7 +365,7 @@ df_Ci_by_week <- rbind(
   select(
     Archetype,#Base_Archetype,
     Week,Archetype_count,
-    Arch_winrate,CI_Arch_winrate #, Base_Arch_winrate,CI_Base_Arch_winrate
+    Arch_winrate,CI_Arch_winrate ,Number_of_match#, Base_Arch_winrate,CI_Base_Arch_winrate
     ) %>% 
   mutate(
     Week = factor(ifelse(Week == 0,"all",Week),
@@ -372,7 +373,9 @@ df_Ci_by_week <- rbind(
                                                     ))
                              )
                   )
-    ) %>% arrange(Archetype_count)
+    ) %>%
+  arrange(Archetype_count)
+
 
 df_Ci_by_week2 <- rbind(
   Presence_df_base,
@@ -397,7 +400,9 @@ df_Ci_by_week2 <- rbind(
                                                     ))
                              )
                   )
-    ) %>% arrange(Archetype_count)
+    ) %>% 
+  arrange(Archetype_count)
+
 
 
 df_Ci_by_all_week <- df_Ci_by_week %>% 
@@ -406,6 +411,7 @@ df_Ci_by_all_week <- df_Ci_by_week %>%
            Archetype = factor(Archetype, levels = .$Archetype[order(.$Arch_winrate + .$CI_Arch_winrate)])
          ) %>% 
   arrange(Archetype)
+
 
 Archetype_best_player <- best_player_result_fun(
   top_n_player_fun = top_n_player,
@@ -484,6 +490,7 @@ df_base_arch_Ci_by_week <- rbind(
     CI_Arch_winrate = CI_prop(
       Arch_winrate, sum(Losses + Wins, na.rm = TRUE)
       ),
+    Number_of_match = sum(Losses + Wins, na.rm = TRUE)
     ) %>% 
   distinct(Base_Archetype,Week,.keep_all = TRUE) %>% 
   group_by(Week) %>% 
@@ -494,7 +501,7 @@ df_base_arch_Ci_by_week <- rbind(
   select(
     Base_Archetype,#Base_Archetype,
     Week,Base_Archetype_count,
-    Arch_winrate,CI_Arch_winrate #, Base_Arch_winrate,CI_Base_Arch_winrate
+    Arch_winrate,CI_Arch_winrate,Number_of_match #, Base_Arch_winrate,CI_Base_Arch_winrate
     ) %>% 
   mutate(
     Week = factor(ifelse(Week == 0,"all",Week),
@@ -690,11 +697,11 @@ tooltips_deck_new_cards <- c(
   "Number of decks with the card (exact number of copies) including deck without winrate like 5-0 leagues",
   "Percent of deck with the card (exact number of copies) including deck without winrate like 5-0 leagues",
   "Number of decks with the card (exact number of copies) and sharing colors with cards including deck without winrate like 5-0 leagues",
-  "Number of decks include in the win rate computation of the card (exact number of copies) and sharing colors with cards",
   "Percent of deck with the card (exact number of copies) and sharing colors with cards including deck without winrate like 5-0 leagues",
-  "Percent of deck with the card (exact number of copies) and sharing colors with cards only deck with winrate",
   "Number of decks include in the win rate computation of the card (exact number of copies)",
   "Percent of deck with the card (exact number of copies) only deck with winrate",
+  "Number of decks include in the win rate computation of the card (exact number of copies) and sharing colors with cards",
+  "Percent of deck with the card (exact number of copies) and sharing colors with cards only deck with winrate",
   "Number of wins",
   "Number of looses",
   "Win rate of the card",
@@ -938,7 +945,7 @@ number_of_copy_of_each_cards_final_table <-  rbind(
       winrate_castable_percent = count_winrate/winrate_count_castable,
       .after = count_winrate
     ) %>% 
-  relocate(winrate_count_castable,.after = count_presence_percent) %>% 
+  relocate(winrate_count_castable,.after = count_winrate_percent) %>% 
   relocate(Presence_count_castable,.after = count_presence_percent) %>% 
     mutate(
       Main_side = as.factor(Main_side) ,
@@ -996,7 +1003,7 @@ options = list(
 ),
 escape = FALSE
 ) %>% 
-  DT::formatPercentage(c(7,10,12,13,16
+  DT::formatPercentage(c(7,9,11,13,16
                          #,10,13
   ),digits = 1)
 ```

@@ -352,19 +352,25 @@ df_export_pre_60_filter <- json_parsing %>%
 
 
 
+total_DB_card <- read_csv("data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
+  filter(
+    legalities.vintage == "legal" |
+      legalities.vintage ==  "restricted"
+  )  %>% 
+  filter(layout != "token",
+         layout != "art_series" ,
+         layout != "double_faced_token",
+         layout != "emblem") 
+  
 
-format_bann_cards <- tryCatch(
-  scryr::scry_cards(paste0("banned:",format_param)),
-                              error = function(e) {
-                                data.frame(name = "No card bann in format")
-                              }
-  )
 
 
 
 df_export_pre_60_filter_remove_bann <- Ban_patch(
   df = df_export_pre_60_filter,
-  vec_of_ban_cards = c(format_bann_cards$name)
+  scryfall_db = total_DB_card,
+  Format_fun_par = format_param,
+  Date_cutoff = date_cut
 )  %>% 
   # add rules if a fall back is more than 1% meta it become an archetype
   mutate(type = ifelse(type == "Fallback" & Archetype_count/nrow(.) > 0.01,"variant",type))

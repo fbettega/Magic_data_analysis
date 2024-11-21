@@ -7,8 +7,8 @@ not_all_arch_filter_S0 <- c(
   # "Modern",
   # "Legacy",
   # "Pauper",
-  # "Pioneer",
-  # "Vintage",
+  "Pioneer",
+  "Vintage",
   "All"
 )
 # Try catch because script is long allow shutdown if error

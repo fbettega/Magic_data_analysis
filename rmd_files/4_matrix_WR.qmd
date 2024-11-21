@@ -379,14 +379,12 @@ Archetype_ci_df_plot <- CI_plot_prepare_df_fun(
   mutate(
     Archetype = factor(
       Archetype,
-      levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
+      levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
+    Number_of_match = number_of_matches,
+   Archetype_count = Number_of_deck 
   ) %>% 
-  arrange(Archetype) %>% 
-  mutate(
-    Archetype_count = paste0(
-      number_of_matches ," (",Number_of_deck ,")"
-                             )            
-         ) 
+  arrange(Archetype) 
+
 
 
 
@@ -406,8 +404,6 @@ arch_ci_plot_final <- Generate_CI_plot_fun(
 )
 
 arch_ci_plot_final
-
-
 ```
 
 ### Last month 
@@ -421,14 +417,12 @@ Archetype_ci_one_month_df_plot <- CI_plot_prepare_df_fun(
   mutate(
     Archetype = factor(
       Archetype,
-      levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)])
+      levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
+    Number_of_match = number_of_matches,
+   Archetype_count = Number_of_deck 
   ) %>% 
-  arrange(Archetype) %>% 
-  mutate(
-    Archetype_count = paste0(
-      number_of_matches ," (",Number_of_deck ,")"
-    )            
-  ) 
+  arrange(Archetype) 
+
 
 Archetype_best_player_1_month <- best_player_result_fun(
     top_n_player_fun = top_n_player,
@@ -486,12 +480,10 @@ base_Archetype_ci_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix_base_arch
         Archetype = factor(
             Archetype,
             levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
-    ) %>% 
-    arrange(Archetype ) %>% 
-  mutate(Archetype_count = paste0(number_of_matches 
-                                  # ,"(",number_of_games ,")"
-                                  )           
-         )
+  Number_of_match = number_of_matches,
+   Archetype_count = Number_of_deck 
+  ) %>% 
+  arrange(Archetype) 
 
 
 base_Archetype_best_player <- best_player_result_fun(
@@ -522,12 +514,10 @@ base_Archetype_ci_one_month_df_plot <- CI_plot_prepare_df_fun(Df_win_rate_matrix
     Archetype = factor(
       Archetype,
       levels = .$Archetype[order(.$Arch_winrate_matches + .$CI_Arch_winrate_matches)]),
+  Number_of_match = number_of_matches,
+   Archetype_count = Number_of_deck 
   ) %>% 
-  arrange(Archetype ) %>% 
-  mutate(Archetype_count = paste0(number_of_matches 
-                                  # ,"(",number_of_games ,")"
-  )           
-  )
+  arrange(Archetype)
 
 base_Archetype_best_player_one_month <- best_player_result_fun(
     top_n_player_fun = top_n_player/2,

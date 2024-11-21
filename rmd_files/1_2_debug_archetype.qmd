@@ -25,6 +25,11 @@ df_export <-  readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours
   ) %>% 
     ungroup() 
 
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types = FALSE) %>% 
+  filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+      !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+  )
 ```
 
 
@@ -37,13 +42,13 @@ merge_df_side_main <-
   df_export %>%
   unnest_longer(Mainboard) %>%
   unnest_wider(Mainboard, names_sep = "_")  %>%
-  select(Mainboard_Count,Mainboard_CardName,Archetype,Base_Archetype,id) %>%
+  select(Mainboard_Count,Mainboard_CardName,Archetype,Base_Archetype,id,Color) %>%
   rename(Count = 1 , CardName = 2)   %>%
   mutate(main_side = "Main"),
   df_export %>%
   unnest_longer(Sideboard) %>%
   unnest_wider(Sideboard, names_sep = "_") %>%
-  select(Sideboard_Count,Sideboard_CardName,Archetype,Base_Archetype,id) %>%
+  select(Sideboard_Count,Sideboard_CardName,Archetype,Base_Archetype,id,Color) %>%
   rename(Count = 1 , CardName = 2) %>%
   mutate(main_side = "Side")
   ) 
@@ -58,7 +63,8 @@ Deck_list_cards_count <-
     main_side,
     CardName,
     Archetype,
-    Base_Archetype
+    Base_Archetype,
+    Color
     ) %>% 
   summarise(Count = sum(Count),.groups = "drop") 
   ) %>% 
@@ -73,7 +79,8 @@ Deck_list_cards_count <-
     Count,
     Archetype,
     Base_Archetype,
-    Archetype_count
+    Archetype_count,
+    Color
     ) %>% 
   summarise(N = n(),.groups = "drop") 
 
@@ -88,7 +95,8 @@ Deck_list_cards_count_with_any <- rbind(
     Count,
     Archetype,
     Base_Archetype,
-    Archetype_count
+    Archetype_count,
+    Color
     ) %>% 
   summarise(N = sum(N),.groups = "drop") 
   ) %>% 
@@ -96,7 +104,30 @@ Deck_list_cards_count_with_any <- rbind(
     percent_presence = N/Archetype_count
   ) %>% 
   arrange(desc(Archetype_count)) %>% 
-  mutate(across(where(is.character),as.factor))
+  left_join(
+      join_with_scryfall(
+        Df_with_cardname =   .,
+        cardname_col = "CardName" ,
+        scry_fall_df = modern_DB_card
+      ),
+      by = c("CardName" = "CardName")
+    ) %>%
+    left_join(
+      modern_DB_card %>% 
+        select(id ,scryfall_uri ),
+      by = join_by(
+        scry_fall_id == id
+      )
+    ) %>%
+    add_link_to_a_column(
+      df_add_link_fun =   .,
+      column_where_is_add = "link", #"link",
+      link_column = "scryfall_uri",
+      Card_name_col =   "CardName"         
+    ) %>% 
+  select(-scry_fall_id,-search_Link) %>% 
+  mutate(across(where(is.character),as.factor)) %>% 
+  mutate(link = as.character(link))
 # rm(Deck_list_cards_count)
 ```
 
@@ -106,11 +137,13 @@ Deck_list_cards_count_with_any <- rbind(
 
 ```{r tooltips_card_arch_def}
 tooltips_base_arch_cards <- c(
+  "Link to scry fall", 
   "Main, Side or Both combine",
   "Card name",
   "Number of copies of the cards",
-    "Deck Archetype agregated",
-    "Deck Archetype parser",
+  "Deck Archetype agregated",
+  "Deck Archetype parser",
+  "Deck color(s)",
   "Number of decks with the card (exact number of copies) including deck without winrate like 5-0 leagues",
   "Number of time the cards is present",
   "Percent of time the cards is present"#,"Boolean for card with no possible win rate inclusion (only league)"
@@ -139,13 +172,15 @@ for (var i = 0; i < tips.length; i++) {
   options = list(
   dom = "ltipr",
     searchCols = list(
-    list(search = '["Any"]' ),
+     NULL,
+     list(search = '["Any"]' ),
     NULL,
     list(search = '["Any"]' ),
     NULL,NULL,NULL,NULL,NULL
   ),
   autoWidth = TRUE,
-  pageLength = 25)
+  pageLength = 25),
+  escape = FALSE
   )  %>% 
   DT::formatPercentage(c("percent_presence"),digits = 1)
   )
@@ -314,6 +349,66 @@ for (var i = 0; i < tips.length; i++) {
 ```
 
 
+# Remove deck because of illegal cards
+
+
+```{r tolltips_debug_remove_id_cards}
+tooltips_debug_remove_id_cards <- c(
+  "Id and Link to scry fall", 
+  "Deck Archetype parser",
+  "Deck color(s)",
+  "Card name",
+  "Cause of removing deck"
+)
+```
+
+```{r debug_remove_id_cards}
+Base_prediction_df <- read_rds(
+  paste0("../data/intermediate_result/",params$format_param,"_debug_remove_cards.rds")
+  ) %>% 
+  mutate(
+    id = paste0(
+            '<a href=\"',AnchorUri,'">',id,'</a>'
+          )
+  ) %>% 
+  select(-AnchorUri,-scry_fall_id) %>% 
+  mutate(across(
+    # everything(),
+    -id,
+    as.factor)
+    )
+
+
+htmltools::tagList(
+      DT::datatable( 
+        Base_prediction_df,
+      # colnames = str_replace_all(colnames(model_pred), "_", " "),
+    callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_debug_remove_id_cards, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),     
+  filter = "top",
+  rownames = FALSE,
+  options = list(
+  dom = "ltipr",
+  searchCols = list(
+    NULL,
+    list(search = '["true"]' )
+  ),
+  autoWidth = TRUE,
+  pageLength = 25)  ,
+  escape=FALSE
+  ) 
+  )
+
+```
 
 
 
