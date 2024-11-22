@@ -2,13 +2,14 @@ library(yaml)
 source("sources/S0_source_init.R")
 Reupdate_scryfall_db <- FALSE #TRUE FALSE
 
+# suppressPackageStartupMessages()
 reparse_arch <- TRUE  #TRUE FALSE
 not_all_arch_filter_S0 <- c(
   # "Modern",
   # "Legacy",
   # "Pauper",
-  "Pioneer",
-  "Vintage",
+  # "Pioneer",
+  # "Vintage",
   "All"
 )
 # Try catch because script is long allow shutdown if error

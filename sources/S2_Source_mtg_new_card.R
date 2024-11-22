@@ -126,23 +126,6 @@ sanitize_string <- function(text) {
 
 ####################### Patch foireux pour ban #################################
 
-# # Take simple df from json curated and search for a vector of ban cards
-# Search_for_ban_cards <- function(vec_of_ban_cards, df, colname_deck_list) {
-#   main_remove_id <- df %>%
-#     unnest_longer(!!colname_deck_list) %>%
-#     unnest_wider(!!colname_deck_list,
-#       names_sep = "_"
-#     ) %>%
-#     # add filter for deck with more than 30 copies of single cards
-#     filter(!!rlang::sym(paste0(colname_deck_list, "_CardName")) %in% vec_of_ban_cards | 
-#              !!rlang::sym(paste0(colname_deck_list, "_Count")) >= 30) %>%
-#     distinct(id) %>%
-#     unlist()
-#   return(main_remove_id)
-# }
-
-################################################################################
-####
 search_for_illegal_cards <- function(
   df_illeg,
   cards_db,
@@ -304,7 +287,7 @@ Ban_patch <- function(
         tryFormats = c("%Y-%m-%d", "%d/%m/%Y")
         )
       ) %>% 
-    select(id,AnchorUri ,Archetype ,Color) %>% 
+    select(id,Date,AnchorUri ,Archetype ,Color) %>% 
     right_join(
       illegal_cards_id,
       by = join_by(id)
@@ -1593,9 +1576,6 @@ color_presence_plot_fun <- function(
     ) +
       geom_bar(stat = "identity", position = "stack", width = 0.8, color = "black") +
       scale_fill_manual(values = combinations_palette) +
-      # geom_text(aes(label = scales::percent(proportion, accuracy = 0.1)), 
-      #            position = position_stack(vjust = 0.5), size = 3, show.legend = FALSE) +
-      # scale_fill_manual(values = RColorBrewer::brewer.pal(n = 32, "Set1")) +
       scale_y_continuous(labels = scales::percent_format()) +
       labs(
         title = "Cumulative Proportions of Color Combinations in Decks",
@@ -1691,7 +1671,6 @@ DF_presence_fun <- function(
       Archetype_count = n(),
       Arch_winrate = winrate_1_data(sum(Wins, na.rm = TRUE) , sum(Losses, na.rm = TRUE)),
       CI_Arch_winrate = CI_prop(Arch_winrate, sum(Losses + Wins, na.rm = TRUE)),
-      # 
     ) %>%
      ungroup() %>% 
     {. ->> intermediateResult} %>%

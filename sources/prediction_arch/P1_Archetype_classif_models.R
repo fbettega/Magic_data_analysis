@@ -356,11 +356,12 @@ total_DB_card <- read_csv("data/mtg_data/DBcarte_oracle.csv",show_col_types = FA
   filter(
     legalities.vintage == "legal" |
       legalities.vintage ==  "restricted"
-  )  %>% 
-  filter(layout != "token",
-         layout != "art_series" ,
-         layout != "double_faced_token",
-         layout != "emblem") 
+  )  
+# %>% 
+#   filter(layout != "token",
+#          layout != "art_series" ,
+#          layout != "double_faced_token",
+#          layout != "emblem") 
   
 
 

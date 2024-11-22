@@ -362,6 +362,7 @@ tooltips_debug_remove_id_cards <- c(
 )
 ```
 
+
 ```{r debug_remove_id_cards}
 Base_prediction_df <- read_rds(
   paste0("../data/intermediate_result/",params$format_param,"_debug_remove_cards.rds")
@@ -374,7 +375,7 @@ Base_prediction_df <- read_rds(
   select(-AnchorUri,-scry_fall_id) %>% 
   mutate(across(
     # everything(),
-    -id,
+    -c(id,Date),
     as.factor)
     )
 
@@ -398,15 +399,23 @@ for (var i = 0; i < tips.length; i++) {
   rownames = FALSE,
   options = list(
   dom = "ltipr",
-  searchCols = list(
-    NULL,
-    list(search = '["true"]' )
-  ),
+  # searchCols = list(
+  #   NULL,
+  #   list(search = '["true"]' )
+  # ),
   autoWidth = TRUE,
   pageLength = 25)  ,
-  escape=FALSE
+  escape = FALSE
+  ) %>%
+  DT::formatDate(
+    columns = "Date",
+    method = "toLocaleDateString",
+     params = list(
+       "en-GB", 
+       list(year = "numeric", month = "long", day = "numeric")
+       )
+    )
   ) 
-  )
 
 ```
 
