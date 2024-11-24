@@ -177,6 +177,7 @@ add_link_to_a_column(
         Card_name_col =   "Main Card"  
     ) %>%
     select(-scry_fall_id,-search_Link) %>% 
+  mutate(`Main Card` = as.factor(`Main Card` )) %>% 
   arrange(
     desc(`Archetype count`)
           ),
@@ -233,6 +234,7 @@ add_link_to_a_column(
   Card_name_col =   "Main Card"  
 ) %>%
   select(-scry_fall_id,-search_Link) %>% 
+    mutate(`Main Card` = as.factor(`Main Card` )) %>% 
   arrange(
     desc(`count WR`)
           ),
@@ -306,6 +308,7 @@ add_link_to_a_column(
   link_column = "scryfall_uri",
         Card_name_col =   "Side Card" 
     ) %>%
+    mutate(`Side Card` = as.factor(`Side Card` )) %>% 
     select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`Archetype count`)
@@ -364,6 +367,7 @@ add_link_to_a_column(
   link_column = "scryfall_uri",
   Card_name_col =   "Side Card" 
     ) %>%
+   mutate(`Side Card` = as.factor(`Side Card` )) %>% 
     select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`count WR`)
@@ -434,7 +438,7 @@ DT::datatable(
     # colname_deck_list = "Mainboard",
     df_Archetyp_fun = df_base_Archetype,
     Based_Archetyp_fun  = TRUE
-  )%>% 
+  ) %>% 
   ungroup() %>% 
   left_join(
      join_with_scryfall(
@@ -457,6 +461,7 @@ add_link_to_a_column(
   link_column = "scryfall_uri",
         Card_name_col =   "Main Card"  
     ) %>%
+   mutate(`Main Card` = as.factor(`Main Card` )) %>% 
     select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`Archetype count`)
@@ -515,6 +520,7 @@ add_link_to_a_column(
   link_column = "scryfall_uri",
         Card_name_col =   "Main Card"  
     ) %>%
+  mutate(`Main Card` = as.factor(`Main Card` )) %>% 
     select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`count WR`)
@@ -588,6 +594,7 @@ add_link_to_a_column(
   link_column = "scryfall_uri",
         Card_name_col =   "Side Card"  
     ) %>%
+  mutate(`Side Card` = as.factor(`Side Card` )) %>% 
     select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`Archetype count`)
@@ -646,6 +653,7 @@ add_link_to_a_column(
   link_column = "scryfall_uri",
         Card_name_col =   "Side Card" 
     ) %>%
+  mutate(`Side Card` = as.factor(`Side Card` )) %>% 
     select(-scry_fall_id,-search_Link) %>% 
   arrange(
     desc(`count WR`)

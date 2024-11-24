@@ -3,9 +3,6 @@ project:
 book:
   chapters:
     - index.qmd
-    - part: "New cards"
-      chapters:
-      - 1_new_card.qmd
     - part: "Metagame"
       chapters:
       - 2_presence_archetype.qmd
@@ -18,3 +15,6 @@ book:
       chapters:
       - 6_best_deck.qmd
       - 7_last_weeks_winners.qmd
+    - part: "New cards"
+      chapters:
+      - 1_new_card.qmd

@@ -419,6 +419,7 @@ model_unco_cards_fun <- function(df_fun) {
   # x <- 'Storm'
   # x <- "Delver"
   # x <- "Tron : Eldrazi Tron"
+  # x <- "Boros Energy" 
   model_unco_fun <- lapply(
     unique(df_fun$Archetype),
     function(x) {

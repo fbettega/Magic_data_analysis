@@ -373,8 +373,13 @@ df_export_pre_60_filter_remove_bann <- Ban_patch(
   Format_fun_par = format_param,
   Date_cutoff = date_cut
 )  %>% 
-  # add rules if a fall back is more than 1% meta it become an archetype
-  mutate(type = ifelse(type == "Fallback" & Archetype_count/nrow(.) > 0.01,"variant",type))
+  # add rules if a fall back is more than 1%  and n > 100 meta it become an archetype
+  mutate(
+    type = ifelse(
+      type == "Fallback" &
+      (Archetype_count/nrow(.) > 0.01 & Archetype_count > 100),
+    "variant",type)
+    )
 
 
 

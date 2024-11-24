@@ -80,13 +80,6 @@ Table_with_arch_count_and_sub_count <- df_export %>%
 
 
 # Principal chapter
-## New card
-
-
-```{r, Introduction_chunk_1_newcards, results='asis'}
-
-```
-
 
 ## Metagame 
 ### Presence archetype
@@ -135,6 +128,14 @@ potentiellement selecteur de deck sous contrainte en script annexe
 ### Best deck analysis
 
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
+
+```
+
+
+## New card
+
+
+```{r, Introduction_chunk_1_newcards, results='asis'}
 
 ```
 

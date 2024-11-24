@@ -520,7 +520,7 @@ for (var i = 0; i < tips.length; i++) {
   ),
   autoWidth = TRUE,
   pageLength = 25),
-  escape=FALSE
+  escape = FALSE
   )  %>%
   DT::formatPercentage(c("Voting_result","regression_proba","rando_forest_proba","knn_proba","decision_tree_c5_proba","xgboost_proba"),digits = 1)
   )

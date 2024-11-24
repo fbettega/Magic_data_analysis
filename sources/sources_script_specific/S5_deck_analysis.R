@@ -48,15 +48,25 @@ format_model_list <- function(
           ),
           by = c("CardName" = "CardName")
         ) %>%
-        inner_join(
+        left_join(
           scry_fall_db_format_par %>%
             select(id, scryfall_uri),
           by = join_by(
             scry_fall_id == id
           )
+        ) %>% 
+        left_join(
+          agregate_land_link(),
+          by = join_by("CardName" == join_name)
         ) %>%
-        select(-scry_fall_id)
-      
+        mutate(
+          scryfall_uri = ifelse(
+            is.na(scryfall_uri)
+            & !is.na(search_Link ) ,search_Link ,scryfall_uri
+          )
+        ) %>%
+        select(-scry_fall_id ,- search_Link) %>% 
+        filter(!is.na(scryfall_uri))
       
       
       Model_any_encours <- x$Model_any %>%
@@ -109,15 +119,27 @@ format_model_list <- function(
           ),
           by = c("CardName" = "CardName")
         ) %>%
-        inner_join(
+        left_join(
           scry_fall_db_format_par %>%
             select(id, scryfall_uri),
           by = join_by(
             scry_fall_id == id
           )
+        ) %>% 
+        left_join(
+          agregate_land_link(),
+          by = join_by("CardName" == join_name)
         ) %>%
-        select(-scry_fall_id)
+        mutate(
+          scryfall_uri = ifelse(
+            is.na(scryfall_uri)
+            & !is.na(search_Link ) ,search_Link ,scryfall_uri
+          )
+        ) %>%
+        select(-scry_fall_id ,- search_Link) %>% 
+        filter(!is.na(scryfall_uri))
       
+   
       
       Model_count_encours <- x$Model_count %>%
         gtsummary::tbl_regression(exponentiate = TRUE) %>%
@@ -508,6 +530,7 @@ Generate_and_format_model_result <-
     land_name_fun,
     min_number_of_cards = min_sample_size_5,
     db_scryfall_fun_par) {
+    
     result_pre_treatement <- Prepare_df_for_long_for_model(
       df_base_fun = df_base_fun,
       min_arch_presence_fun = filter_archetype_count_5,
@@ -530,14 +553,19 @@ Generate_and_format_model_result <-
     result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
       df_fun = DF_prepare_for_model$group_com_unco_cards_res
     ) %>%
-      name_list_of_model_with_string(unique(DF_prepare_for_model$group_com_unco_cards_res$Archetype))
-    
+      name_list_of_model_with_string(
+        unique(DF_prepare_for_model$group_com_unco_cards_res$Archetype)
+        )
     
     uncomon_card_format_model <- format_model_list(
       model_list = result_models_Uncommon_cards_all_arch,
       scry_fall_db_format_par = db_scryfall_fun_par
     ) %>%
-      name_list_of_model_with_string(unique(DF_prepare_for_model$group_com_unco_cards_res$Archetype))
+      name_list_of_model_with_string(
+        unique(
+          DF_prepare_for_model$group_com_unco_cards_res$Archetype
+          )
+        )
     
     
     Df_base_number_to_print <- result_pre_treatement$df_land_agreg %>%
@@ -546,7 +574,8 @@ Generate_and_format_model_result <-
       group_by(Archetype, Archetype_count) %>%
       summarise(
         Wins = sum(Wins),
-        Losses = sum(Losses), .groups = "drop"
+        Losses = sum(Losses), 
+        .groups = "drop"
       )
     
     return(

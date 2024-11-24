@@ -105,7 +105,7 @@ If the probabilities of the event in each of the groups of cards count are p1 (f
 
 $$OR = \frac{p_1/(1-p_1)}{p_2/(1-p_2)}$$
 
-# Archetype
+# Archetype  
 
 
 ```{r result_archetype_mainboard}
@@ -152,7 +152,6 @@ Total_75_res_Archetype <- Generate_and_format_model_result(
 if (is_inside_knitr()) {
   # x <- sort(Main_res_Archetype$list_archetype)[1]
   res_arch <- lapply(sort(Main_res_Archetype$list_archetype), function(x) {
-     # print(x)
     print_result_total_script_deck_ana(
       res_main = Main_res_Archetype,
       res_side = Side_res_Archetype,
@@ -208,10 +207,8 @@ Total_75_res_base_archetype <- Generate_and_format_model_result(
 
 ```{r print_result_base_arch, results='asis'}
 #, out.width="100%"
-
 if (is_inside_knitr()) {
   res_base_arch <- lapply(sort(Main_res_base_archetype$list_archetype), function(x) {
-
     print_result_total_script_deck_ana(
       res_main = Main_res_base_archetype,
       res_side = Side_res_base_archetype,
