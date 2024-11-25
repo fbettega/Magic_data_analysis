@@ -594,7 +594,8 @@ model_xgboost_base <- boost_tree(
   set_mode("classification")
 
 
-grid_xgboost_base <- grid_latin_hypercube(
+grid_xgboost_base <- grid_space_filling(
+  #grid_latin_hypercube(
   tree_depth(),
   min_n(),
   loss_reduction(), ## first three: model complexity
