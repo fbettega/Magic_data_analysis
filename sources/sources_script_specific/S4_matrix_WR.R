@@ -216,12 +216,19 @@ plot_win_rate_mat <- function(
       pull(Archetype) %>%
       unique(),
     "</b> </span>",
-    "<br /> n : ", Df_winrate_format_filter_fun %>%
+    "<br /> n : ",
+    Df_winrate_format_filter_fun %>%
+      select(Archetype, tota_number_of_deck_in_arch) %>%
+      distinct() %>%
+      pull(
+        tota_number_of_deck_in_arch
+      ), " (",
+    Df_winrate_format_filter_fun %>%
       select(Archetype, all_of(paste0("Archetype_presence_", group_column))) %>%
       distinct() %>%
       pull(
         !!rlang::sym(paste0("Archetype_presence_", group_column))
-      ),
+      ),")",
     "<br /> ", Df_winrate_format_filter_fun %>%
       pull(
         !!rlang::sym(paste0("Archetype_CI_WR_format_", group_column))
@@ -236,12 +243,19 @@ plot_win_rate_mat <- function(
       pull(Archetype) %>%
       unique(),
     "</b> </span>",
-    "<br /> n : ", Df_winrate_format_filter_fun %>%
+    "<br /> n : ",
+    Df_winrate_format_filter_fun %>%
+      select(Archetype, tota_number_of_deck_in_arch) %>%
+      distinct() %>%
+      pull(
+        tota_number_of_deck_in_arch
+      ), " (",
+    Df_winrate_format_filter_fun %>%
       select(Archetype, all_of(paste0("Archetype_presence_", group_column))) %>%
       distinct() %>%
       pull(
         !!rlang::sym(paste0("Archetype_presence_", group_column))
-      ),
+      ),")",
     "<br /> ", Df_winrate_format_filter_fun %>%
       pull(
         !!rlang::sym(paste0("Archetype_CI_WR_format_", group_column))
@@ -374,19 +388,24 @@ win_rate_matrix_maker <- function(
   
   
   win_rate_matrix_fun_res <- df_fun %>%
+    group_by(!!rlang::sym(Archetype_type)) %>% 
+    mutate(
+      tota_number_of_deck_in_arch = n_distinct(id)
+    ) %>% 
+    ungroup() %>% 
     group_by(across(all_of(select_col))) %>% 
     mutate(Number_of_deck = n_distinct(id)) %>% 
     ungroup() %>% 
     select(
       all_of(select_col),
       Matchups_Wins, Matchups_Losses,
-      Number_of_deck
+      Number_of_deck,tota_number_of_deck_in_arch
     ) %>%
     mutate(
       Result = Matchups_Wins > Matchups_Losses,
       Draw = Matchups_Wins == Matchups_Losses
     ) %>%
-    group_by(across(all_of(select_col))) %>%
+    group_by(across(all_of(c(select_col,"tota_number_of_deck_in_arch")))) %>%
     summarise(
       Number_of_deck = unique(Number_of_deck),
       number_of_matches = n() - sum(Draw),
@@ -424,7 +443,7 @@ win_rate_matrix_maker <- function(
 CI_plot_prepare_df_fun <- function(df_fun) {
   res <- df_fun %>%
     filter(Archetype != Matchups_OpponentArchetype ) %>% 
-    group_by(Archetype) %>%
+    group_by(Archetype,tota_number_of_deck_in_arch ) %>%
     summarise(
       Number_of_deck = sum(Number_of_deck),
       number_of_matches = sum(number_of_matches),
