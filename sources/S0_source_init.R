@@ -89,8 +89,8 @@ eddit_yaml <- function(format_date_en_cours_fun){
     quarto_fun_basic$project$`output-dir`,
     "/", format_date_en_cours_fun$format_param
   )
-  quarto_fun_basic$book$chapters[[2]]$chapters <- as.list(
-    quarto_fun_basic$book$chapters[[2]]$chapters
+  quarto_fun_basic$book$chapters[[5]]$chapters <- as.list(
+    quarto_fun_basic$book$chapters[[5]]$chapters
   )
   
   quarto_fun_fb <- read_yaml("other_file/_quarto-fb.yml")

@@ -17,6 +17,9 @@ params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.r
 
 **<span style="color: red;">Please note that this document is not optimised and is difficult to read on mobile.</span>**
 
+To access the other parts of the book on mobile, click here.
+![Table Of Content location on mobile](TOC_location.png)
+
 # Acknowledgements
 Thanks to [Badaro](https://github.com/Badaro) for his data collection work and the archetype parser.  
 Thanks to [Aliquanto](https://github.com/Aliquanto3) for his initial analysis, which served as an inspiration for me.  
@@ -75,6 +78,7 @@ Table_with_arch_count_and_sub_count <- df_export %>%
          ) %>% 
   ungroup()
 
+
 ```
 
 
@@ -82,7 +86,7 @@ Table_with_arch_count_and_sub_count <- df_export %>%
 # Principal chapter
 
 ## Metagame 
-### Presence archetype
+### [Presence archetype](2_presence_archetype.qmd)
 
 <!---
 potentiellement selecteur de deck sous contrainte en script annexe
@@ -93,7 +97,7 @@ potentiellement selecteur de deck sous contrainte en script annexe
 ```
 
 
-### Matrix WR
+### [Matrix WR](4_matrix_WR.qmd)
 ```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
 
 ```
@@ -103,13 +107,13 @@ potentiellement selecteur de deck sous contrainte en script annexe
 ## Deck winrate
 
 
-### Card win rate table  
+### [Card win rate table](3_Card_win_rate_table.qmd)  
 ```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
 
 ```
 
 
-### Cards WR models
+### [Cards WR models](5_Deck_analysis.qmd)
 ```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
 
 ```
@@ -117,22 +121,21 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 ## Best performing deck
 
-
-### Top 8 deck
-
-```{r, Introduction_chunk_7_top8, results='asis'}
-
-```
-
-
-### Best deck analysis
+### [Best deck analysis](6_best_deck.qmd)
 
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
 ```
 
 
-## New card
+### [Top 8 deck](7_last_weeks_winners.qmd)
+
+```{r, Introduction_chunk_7_top8, results='asis'}
+
+```
+
+
+## [New card](1_new_card.qmd)
 
 
 ```{r, Introduction_chunk_1_newcards, results='asis'}

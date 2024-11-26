@@ -287,10 +287,13 @@ system("shutdown /s /t 30")
 },
 error = function(e) {
   error_message <- capture.output(print(e))
-  error_message <- paste("Une erreur s'est produite :", paste(error_message, collapse = "\n"))
+  error_message <- paste("Une erreur s'est produite :",
+                         paste(
+                           error_message,
+                               collapse = "\n"))
   
   # Écrire l'erreur dans le fichier
-  write(error_message, file = "output/erreur_log.txt")
+  cat(error_message, file = "outpout/erreur_log.txt")
   
   
   # cancel shutdown use : system("shutdown -a")
