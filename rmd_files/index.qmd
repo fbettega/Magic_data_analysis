@@ -86,7 +86,14 @@ Table_with_arch_count_and_sub_count <- df_export %>%
 # Principal chapter
 
 ## Metagame 
+::: {.content-visible when-profile="basic"}
 ### [Presence archetype](2_presence_archetype.qmd)
+:::
+
+
+::: {.content-visible when-profile="fb"}
+### Presence archetype
+:::
 
 <!---
 potentiellement selecteur de deck sous contrainte en script annexe
@@ -97,7 +104,16 @@ potentiellement selecteur de deck sous contrainte en script annexe
 ```
 
 
+
+::: {.content-visible when-profile="basic"}
 ### [Matrix WR](4_matrix_WR.qmd)
+:::
+
+
+::: {.content-visible when-profile="fb"}
+### Matrix WR
+:::
+
 ```{r, Introduction_chunk_4_Deck_analysis, results='asis'}
 
 ```
@@ -106,14 +122,33 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 ## Deck winrate
 
-
+::: {.content-visible when-profile="basic"}
 ### [Card win rate table](3_Card_win_rate_table.qmd)  
+:::
+
+
+::: {.content-visible when-profile="fb"}
+### Card win rate table
+:::
+
+
 ```{r, Introduction_chunk_3_Deck_analysis, results='asis'}
 
 ```
 
 
+
+
+::: {.content-visible when-profile="basic"}
 ### [Cards WR models](5_Deck_analysis.qmd)
+:::
+
+
+::: {.content-visible when-profile="fb"}
+### Cards WR models
+:::
+
+
 ```{r, Introduction_chunk_5_Deck_analysis, results='asis'}
 
 ```
@@ -121,22 +156,48 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 ## Best performing deck
 
-### [Best deck analysis](6_best_deck.qmd)
+::: {.content-visible when-profile="basic"}
+### [Best deck analysis](6_best_deck.qmd)  
+:::
+
+
+::: {.content-visible when-profile="fb"}
+### Best deck analysis  
+:::
+
+
 
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
 
 ```
 
 
+::: {.content-visible when-profile="basic"}
 ### [Top 8 deck](7_last_weeks_winners.qmd)
+:::
+
+
+::: {.content-visible when-profile="fb"}
+### Top 8 deck   
+:::
+
 
 ```{r, Introduction_chunk_7_top8, results='asis'}
 
 ```
 
 
-## [New card](1_new_card.qmd)
 
+
+
+::: {.content-visible when-profile="basic"}
+## [New card](1_new_card.qmd)
+:::
+
+
+::: {.content-visible when-profile="fb"}
+## New card   
+:::
 
 ```{r, Introduction_chunk_1_newcards, results='asis'}
 

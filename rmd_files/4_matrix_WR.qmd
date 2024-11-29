@@ -24,6 +24,7 @@ loaded_base_data <- readRDS(paste0("../data/", params$format_param, "_data_meta_
 ratio_plot <- 3
 # Generate different color scheme for close archetype
 scheme <- iwanthue(seed = 42, force_init = TRUE) # recreate with a seed
+options(DT.warn.size=FALSE)
 ```
 
 

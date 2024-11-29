@@ -177,14 +177,15 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
   
   Win_rate_df_final <- Win_rate_df %>%
     mutate(
-      CI_signe_vs_Total = factor(ifelse(
+      CI_signe_vs_Total = 
+        ifelse(
         ((card_WR - Total_WR) + (CI_card_WR)) > 0,
         "+",
         ifelse(
           ((card_WR - Total_WR) - (CI_card_WR)) < 0,
           "-", "0"
         )
-      ), levels = c("+", "0", "-")),
+      ),
       card_WR_vs_Total =
         (card_WR - Total_WR) 
       ,
@@ -192,14 +193,14 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
       CI_card_WR = formating_CI(card_WR, CI_card_WR),
       card_WR = 
         card_WR ,
-      CI_signe_vs_other = factor(ifelse(
+      CI_signe_vs_other = ifelse(
         (delta_WR_card + CI_delta_WR_card) > 0,
         "+",
         ifelse(
           (delta_WR_card - CI_delta_WR_card) < 0,
           "-", "0"
         )
-      ), levels = c("+", "0", "-")),
+      ),
       CI_delta_WR_card = formating_CI(delta_WR_card, CI_delta_WR_card),
       delta_WR_card =
         delta_WR_card,
@@ -207,7 +208,15 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
         card_draw_diff,
       count_WR = count,
       Count_WR_percent = 
-        (count / Archetype_count) 
+        (count / Archetype_count),
+      CI_signe_vs_Total = factor(
+        ifelse(str_detect(CI_card_WR_vs_Total,"No data"),"0", CI_signe_vs_Total), 
+                                 levels = c("+", "0", "-")
+      ),
+      CI_signe_vs_other = factor(
+        ifelse(str_detect(CI_delta_WR_card,"No data"),"0", CI_signe_vs_other), 
+        levels = c("+", "0", "-")
+        )
     ) %>%
     select(
       all_of(select_group_var),
@@ -220,13 +229,6 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
       delta_WR_card, CI_delta_WR_card, CI_signe_vs_other,
       card_WR_vs_Total, CI_card_WR_vs_Total, CI_signe_vs_Total # ,card_draw_diff
     )
-  
-  
-  
-  
-  
-  
-  
   
   Card_always_in_deck_final <- Card_always_in_deck %>%
     group_by(

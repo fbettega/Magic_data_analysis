@@ -8,7 +8,7 @@ library(plotly)
 library(rwantshue)
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(dplyr::lag)
-
+options(DT.warn.size = FALSE)
 source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 source("../sources/sources_script_specific/S7_last_weeks_winners.R",local = TRUE)

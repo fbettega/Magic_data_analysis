@@ -20,7 +20,7 @@ loaded_base_data <- readRDS(paste0("../data/",params$format_param,"_data_meta_en
 # Manque ajouter du texte après les % pour la variation
 conflicted::conflicts_prefer(dplyr::filter)
 
-
+options(DT.warn.size=FALSE)
 ```
 
 

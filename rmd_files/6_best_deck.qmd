@@ -20,7 +20,8 @@ source("../sources/S2_Source_mtg_new_card.R")
 source("../sources/sources_script_specific/S5_6_model_deck.R")
 source("../sources/sources_script_specific/S6_best_deck.R")
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
-options(kableExtra.auto_format = FALSE)
+options(kableExtra.auto_format = FALSE,
+        DT.warn.size = FALSE)
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 

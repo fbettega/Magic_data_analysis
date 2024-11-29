@@ -155,6 +155,20 @@ search_for_illegal_cards <- function(
       select(-Mainboard)
     )
   
+  Troll_deck <- Base_df %>% 
+    group_by(id,CardName,AnchorUri ) %>% 
+    summarise(
+      Count = sum(Count),
+      .groups = "drop"
+    ) %>% 
+    filter( Count > 40) %>% 
+    select(-AnchorUri,-Count) %>% 
+    mutate(
+      scry_fall_id   = NA,                      
+      !!sym(paste0("legalities.",tolower(Format_fun_par))) := "Troll deck"
+    )
+  
+  
   join_with_scryfall_df_res <- Base_df %>% 
     select(id,CardName) %>% 
     left_join(
@@ -177,8 +191,13 @@ search_for_illegal_cards <- function(
         !!sym(paste0("legalities.",tolower(Format_fun_par))) !=  "restricted"
     ) 
     
+  res <- rbind(
+    Troll_deck,
+    join_with_scryfall_df_res
+    )
   
-  return(join_with_scryfall_df_res)
+  
+  return(res)
 
 }
 # prévoir exact résultat en supprimant les résultats obtenue contre des deck ban mais douteux risque de biais ++
@@ -194,7 +213,8 @@ Ban_patch <- function(
     cards_db =  scryfall_db,
     Format_fun_par = Format_fun_par
   )
-
+  
+  
 
   # Get unique id when ban cards is in both side and main
   Remove_id <- unique(illegal_cards_id$id)
@@ -1587,6 +1607,7 @@ color_presence_plot_fun <- function(
       theme(axis.text.x = element_text(angle = 45, hjust = 1))
   ) %>% 
     ggplotly(
+      height = 800,
       tooltip = "text" #c("x", "y", "fill")
     ) %>% 
     bslib::card(full_screen = TRUE)

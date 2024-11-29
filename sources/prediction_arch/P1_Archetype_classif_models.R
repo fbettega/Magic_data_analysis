@@ -279,12 +279,13 @@ Archetype_parser_list <- lapply(
 
 
 
-json_parsing <- fromJSON(file = paste0(
-  "data/intermediate_result/parser_outpout/",
-  format_date_en_cours$format_param,"_",
-  "data.json"
+json_parsing <- fromJSON(
+  file = paste0(
+    "data/intermediate_result/parser_outpout/",
+    format_date_en_cours$format_param,"_",
+    "data.json"
+    )
   )
-                         )
 
 # df_export_pre_60_filter
 df_export_pre_60_filter <- json_parsing %>%
@@ -334,18 +335,20 @@ df_export_pre_60_filter <- json_parsing %>%
   ungroup() %>%
   mutate(
     Date = as_datetime(Date),
-    Week = as.integer(
-      ceiling(
-        difftime(
-          Date,
-          (min(Date) - as.difftime(1, unit = "days")),
-          units = "weeks"
-        )
-      )
-    )
+    Week = as.numeric(paste0(year(Date) %% 100, ".", isoweek(Date)))
+    # Week = as.integer(
+    #   ceiling(
+    #     difftime(
+    #       Date,
+    #       (min(Date) - as.difftime(1, unit = "days")),
+    #       units = "weeks"
+    #     )
+    #   )
+    # )
   ) 
 # %>%
 #   mutate(Archetype = make.names(Archetype))
+
 
 
 

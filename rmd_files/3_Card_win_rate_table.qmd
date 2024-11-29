@@ -12,6 +12,7 @@ params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.r
 conflicted::conflicts_prefer(dplyr::filter)
 # All table include tooltip column description
 # Reflechir a carte de side vs maccro archetype
+options(DT.warn.size=FALSE)
 ```
 
 
@@ -121,9 +122,9 @@ tooltips_deck_variable_arch <- c(
 
 ```{r Arch_main_board_computation}
 win_rate_main_board <- Count_and_winrates_cards_in_decklist_total(
-  df_Archetype,
-  "Archetype",
-  "Mainboard"
+  df = df_Archetype,
+  group_var = "Archetype",
+  colname_deck_list = "Mainboard"
 )
 ```
 
@@ -203,6 +204,7 @@ escape = FALSE,
 ```
 
 ### Variable Cards Mainboard
+
 
 
 ```{r print_arch_variable_card_main_board}

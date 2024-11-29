@@ -9,3 +9,4 @@ git pull upstream/main
 
 # fonctionne pour pull 
 git pull jiliac master
+git merge jiliac/master

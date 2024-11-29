@@ -19,7 +19,7 @@ source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
 source("../sources/sources_script_specific/S5_deck_analysis.R")
 params <- read_rds("../data/intermediate_result/temp_format_encours_for_param.rds")
 # knitr::opts_knit$set(output.dir = rprojroot::find_rstudio_root_file())
-
+options(DT.warn.size = FALSE)
 # formatmodif
 modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>%
 filter(

@@ -6,14 +6,13 @@ title: "Collection Tracker"
 library(tidyverse)
 source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
-
+options(DT.warn.size = FALSE)
 conflicted::conflicts_prefer(dplyr::filter)
 params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
 ```
 
 
 ```{r data_reading }
-
 exclude_archetype <- c(
    # "Nadu"
   )
@@ -44,6 +43,7 @@ path_collection <-
                full.names = TRUE
       )
 ```
+
 
 ```{r}
 knitr::opts_chunk$set(
@@ -182,15 +182,160 @@ not_owned_cards <-
 ```
 
 
+# Boosters Tables
+```{r}
+Total_scryfall_table <-  read_csv("../data/mtg_data/DBcarte.csv") %>% 
+filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+    ) %>% 
+  filter(booster) %>%
+  filter(digital == FALSE) %>%  # Exclure les cartes exclusivement numériques
+  filter(!set_type %in% c("alchemy", "arena", "mtgo"))
 
 
+Missing_cards_by_set <- not_owned_cards %>% 
+  group_by(CardName) %>% 
+  summarise(
+    n = n(),
+    .groups = "drop"
+    ) %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = Total_scryfall_table
+    ),
+    by = c("CardName" = "CardName")
+    ) %>%
+  left_join(
+    Total_scryfall_table %>% 
+      select(id,rarity,set,set_name,set_id),
+    by = join_by(
+      scry_fall_id == id
+      )
+    ) %>% 
+  distinct(CardName,rarity,set_name,.keep_all = TRUE) %>% 
+  group_by(rarity,set_name) %>% 
+  summarise(
+    n_distinct = n_distinct(CardName),
+    number_of_deck = sum(n),
+    .groups = "drop"
+  ) %>%
+  filter(!is.na(rarity)) %>% 
+  mutate(
+    rarity = factor(
+      rarity,
+      levels = c("common", "uncommon","rare","mythic","special")),
+    set_name = as.factor(set_name)
+  ) %>% 
+  arrange(rarity) %>% 
+  pivot_wider(
+    names_from = rarity,
+    values_from = c(n_distinct, number_of_deck),
+    values_fill = 0
+  )
+
+
+```
+
+
+```{r tooltip_booster}
+tooltip_booster_distinct <- c(
+  "Set name",
+  "Number of distinct common",
+  "Number of distinct uncommon",
+  "Number of distinct rare",
+  "Number of distinct mythic",
+  "Number of distinct special"
+  
+)
+
+tooltip_booster_total_deck <- c(
+  "Set name",
+  "Number of deck with common",
+  "Number of deck with uncommon",
+    "Number of deck with rare",
+  "Number of deck with mythic",
+  "Number of deck with special"
+  
+)
+
+
+```
+
+
+::: {.panel-tabset .nav-pills}
+
+## Distinct cards in set  
+
+```{r}
+distinct_Missing_cards_by_set <- Missing_cards_by_set %>% 
+  select(set_name,starts_with("n_distinct_")) %>% 
+  rename_all(~str_remove(.,"n_distinct_")) %>% 
+  arrange(desc(common))
+
+
+htmltools::tagList(
+      DT::datatable( 
+        distinct_Missing_cards_by_set,
+        colnames = str_replace_all(colnames(distinct_Missing_cards_by_set), "_", " "),
+          callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltip_booster_distinct, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+"),
+      return_filter_js()
+    ),
+  filter = "top", rownames = FALSE,
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
+) 
+)
+```
+
+
+## Total number of deck with missing  
+
+
+```{r}
+Total_Missing_cards_by_set <- Missing_cards_by_set %>% 
+  select(set_name,starts_with("number_of_deck_")) %>% 
+  rename_all(~str_remove(.,"number_of_deck_")) %>% 
+  arrange(desc(common))
+
+
+htmltools::tagList(
+      DT::datatable( 
+        Total_Missing_cards_by_set,
+        colnames = str_replace_all(colnames(Total_Missing_cards_by_set), "_", " "),
+          callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltip_booster_total_deck, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+"),
+      return_filter_js()
+    ),
+  filter = "top", rownames = FALSE,
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
+) 
+)
+```
+
+
+:::
 
 
 
 # Number of missing cards by archetype 
 
 
-Exclude Archetype : `r paste0(exclude_archetype,collapse = " ,")`
+<!-- Exclude Archetype : `r paste0(exclude_archetype,collapse = " ,")` -->
 
 
 
