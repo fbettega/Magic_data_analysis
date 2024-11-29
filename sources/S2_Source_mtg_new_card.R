@@ -2329,11 +2329,16 @@ Generate_CI_plot_fun <- function(
   )  %>%
     ggplotly(
       tooltip = c("text"),
-      height = max(650,50 * nrow(df_ci_fun_param))
+      height = max(650,50 * nrow(df_ci_fun_param)),
+      ################### ajout temp
+      width = NULL, # Permet à Plotly de calculer automatiquement la largeur
+      autosize = TRUE
     )  %>%
     plotly::layout(
       legend = list(x = 0.0, y = 1), # Position précise de la légende dans le graphique Plotly
-      showlegend = TRUE 
+      showlegend = TRUE ,
+      ################### ajout temp
+      margin = list(l = 1, r = 1, t = 10, b = 10) # Réduction des marges gauche, droite, haut et bas
     )  %>%
     bslib::card(full_screen = TRUE)
   return(resulting_plot)
