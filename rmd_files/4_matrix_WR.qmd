@@ -594,7 +594,7 @@ Df_Expected_number_of_win_by_week <- df_base_all_data %>%
 
 Df_expected_of_week_sum <- rbind(
   Df_Expected_number_of_win_by_week %>%
-    mutate(Week = as.character(Week)) %>%
+    # mutate(Week = format(Week, nsmall = 2)) %>%
     group_by(Archetype, Week) %>%
     summarise(
       S_wr = sum(expected_win_WR), # /sum(n),
@@ -607,18 +607,30 @@ Df_expected_of_week_sum <- rbind(
     summarise(
       S_wr = sum(expected_win_WR), # / sum(n),
       S_ci = sum(expected_win_lower_ci), # / sum(n),
-      Week = "All",
+      Week = 0,
       .groups = "drop"
     ) %>%
     distinct()
 ) %>%
   mutate(
-    Week = factor(
-      Week,
-      levels = c(1:max(df_base_all_data$Week), "All")
-    )
-  ) %>% 
+    Week = factor(ifelse(Week == 0,"All",format(Week, nsmall = 2)),
+              levels = c(
+                  format(sort(unique(df_base_all_data$Week)), nsmall = 2),
+                  "All"
+                  # as.character(seq(1,max(Presence_df_base$Week)))
+              )
+)
+    # Week = factor(
+    #     format(Week, nsmall = 2) ,
+    #     levels = c(
+    #         format(sort(unique(df_base_all_data$Week)), nsmall = 2)
+    #         # levels = c(1:max(df_base_all_data$Week), "All")
+    #     )
+    # )
+) %>% 
   arrange(Week)
+  
+
 
 
 Df_wide_expected_of_week_sum <- Df_expected_of_week_sum %>%
@@ -640,15 +652,22 @@ Presence_for_best_deck_plot <- rbind(
     distinct(Matchups_OpponentArchetype, Week, n) %>%
     group_by(Matchups_OpponentArchetype) %>% summarise(
       n = sum(n),
-      Week = "All",
+      Week = 0,
       .groups = "drop"
     )
 ) %>%
   mutate(
-    Week = factor(
-      Week,
-      levels = c(1:max(Df_Expected_number_of_win_by_week$Week), "All")
-    )
+   Week = factor(ifelse(Week == 0,"All",format(Week, nsmall = 2)),
+              levels = c(
+                  format(sort(unique(Df_Expected_number_of_win_by_week$Week)), nsmall = 2),
+                  "All"
+                  # as.character(seq(1,max(Presence_df_base$Week)))
+              )
+) 
+    # Week = factor(
+    #   Week,
+    #   levels = c(1:max(Df_Expected_number_of_win_by_week$Week), "All")
+    # )
   ) %>%
   group_by(Week) %>%
   mutate(
@@ -826,16 +845,24 @@ Df_Base_Archetype_expected_of_week_sum <- rbind(
     summarise(
       S_wr = sum(expected_win_WR), # / sum(n),
       S_ci = sum(expected_win_lower_ci), # / sum(n),
-      Week = "All",
+      Week = 0,
       .groups = "drop"
     ) %>%
     distinct()
 ) %>%
   mutate(
-    Week = factor(
-      Week,
-      levels = c(1:max(df_base_all_data$Week), "All")
+    Week = factor(ifelse(Week == 0,"All",format(Week, nsmall = 2)),
+                  levels = c(
+                    format(sort(unique(df_base_all_data$Week)), nsmall = 2),
+                    "All"
+                             # as.character(seq(1,max(Presence_df_base$Week)))
+                  )
     )
+    
+    # Week = factor(
+    #   Week,
+    #   levels = c(1:max(df_base_all_data$Week), "All")
+    # )
   )
 
 
@@ -857,15 +884,24 @@ Presence_Base_Archetype_for_best_deck_plot <- rbind(
     distinct(Matchups_OpponentBase_Archetype, Week, n) %>%
     group_by(Matchups_OpponentBase_Archetype) %>% summarise(
       n = sum(n),
-      Week = "All",
+      Week = 0,
       .groups = "drop"
     )
 ) %>%
   mutate(
-    Week = factor(
-      Week,
-      levels = c(1:max(Df_Base_Archetype_Expected_number_of_win_by_week$Week), "All")
+        Week = factor(ifelse(Week == 0,"All",format(Week, nsmall = 2)),
+                  levels = c(
+                    format(sort(unique(Df_Base_Archetype_Expected_number_of_win_by_week$Week)), nsmall = 2),
+                    "All"
+                             # as.character(seq(1,max(Presence_df_base$Week)))
+                  )
     )
+    
+    
+    # Week = factor(
+    #   Week,
+    #   levels = c(1:max(Df_Base_Archetype_Expected_number_of_win_by_week$Week), "All")
+    # )
   ) %>%
   group_by(Week) %>%
   mutate(

@@ -169,12 +169,15 @@ spaghetti_plot_df <- Presence_df_base %>%
   mutate(Base_Archetype_percent = (Count_base_arch / Week_deck_number)) %>%
   distinct() %>% 
   group_by(Week) %>% 
-    mutate(Date = min(as_date(Date))) %>% 
+  mutate(Date = min(as_date(Date))) %>% 
   ungroup() %>%
   mutate(
     Week = factor(
-      Week,
-      levels = c(1:max(Presence_df_base$Week))
+      format(Week, nsmall = 2) ,
+      levels = c(
+        format(sort(unique(Presence_df_base$Week)), nsmall = 2)
+        # 1:max(Presence_df_base$Week)
+                 )
     )
   )
 
@@ -368,9 +371,10 @@ df_Ci_by_week <- rbind(
     Arch_winrate,CI_Arch_winrate ,Number_of_match#, Base_Arch_winrate,CI_Base_Arch_winrate
     ) %>% 
   mutate(
-    Week = factor(ifelse(Week == 0,"all",Week),
-                  levels = c("all",as.character(seq(1,max(Presence_df_base$Week)
-                                                    ))
+    Week = factor(ifelse(Week == 0,"all",format(Week, nsmall = 2)),
+                  levels = c("all",
+                             format(sort(unique(Presence_df_base$Week)), nsmall = 2)
+                             # as.character(seq(1,max(Presence_df_base$Week)))
                              )
                   )
     ) %>%
@@ -395,9 +399,10 @@ df_Ci_by_week2 <- rbind(
   mutate( Arch_winrate = Arch_winrate - Global_winrate) %>% 
   distinct() %>% 
   mutate(
-    Week = factor(ifelse(Week == 0,"all",Week),
-                  levels = c("all",as.character(seq(1,max(Presence_df_base$Week)
-                                                    ))
+    Week = factor(ifelse(Week == 0,"all",format(Week, nsmall = 2)),
+                  levels = c("all",
+                             format(sort(unique(Presence_df_base$Week)), nsmall = 2)
+                             # as.character(seq(1,max(Presence_df_base$Week)))
                              )
                   )
     ) %>% 
@@ -504,9 +509,11 @@ df_base_arch_Ci_by_week <- rbind(
     Arch_winrate,CI_Arch_winrate,Number_of_match #, Base_Arch_winrate,CI_Base_Arch_winrate
     ) %>% 
   mutate(
-    Week = factor(ifelse(Week == 0,"all",Week),
-                  levels = c("all",as.character(seq(1,max(Presence_base_arch_df_base$Week)
-                                                    ))
+    Week = factor(
+      ifelse(Week == 0,"all",format(Week, nsmall = 2)),
+      levels = c("all",
+                 format(sort(unique(Presence_base_arch_df_base$Week)), nsmall = 2)
+                 # as.character(seq(1,max(Presence_base_arch_df_base$Week)))
                              )
                   )
     ) %>% arrange(Base_Archetype_count)
@@ -529,9 +536,10 @@ df_base_arch_Ci_by_week2 <- rbind(
   mutate( Arch_winrate = Arch_winrate - Global_winrate) %>% 
   distinct() %>% 
   mutate(
-    Week = factor(ifelse(Week == 0,"all",Week),
-                  levels = c("all",as.character(seq(1,max(Presence_base_arch_df_base$Week)
-                                                    ))
+    Week = factor(ifelse(Week == 0,"all",format(Week, nsmall = 2)),
+                  levels = c("all",
+                             format(sort(unique(Presence_base_arch_df_base$Week)), nsmall = 2)
+                             # as.character(seq(1,max(Presence_base_arch_df_base$Week)))
                              )
                   )
     ) %>% arrange(Base_Archetype_count)

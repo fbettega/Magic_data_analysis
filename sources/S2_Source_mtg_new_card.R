@@ -2137,7 +2137,7 @@ best_player_result_fun <- function(
   
   top_player_df <- df_fun_top_player %>%
     group_by(!!rlang::sym(Arch_or_base_arch),Player) %>% 
-    mutate(n_deck_player = sum( Wins + Losses),.before = 1) %>% 
+    mutate(n_deck_player = sum(Wins + Losses),.before = 1) %>% 
     filter(n_deck_player >= top_n_player_fun) %>% 
     summarise( 
       Arch_winrate = winrate_1_data(
@@ -2199,8 +2199,16 @@ Generate_CI_plot_fun <- function(
     line_type = c("Average Winrate",  "Lower CI", "Upper CI")
   )
   
-  if(is.null(best_player_df_par_fun)){
-  df_plot_with_best_player <- df_ci_fun_param
+  if(is.null(best_player_df_par_fun) | nrow(best_player_df_par_fun) == 0){
+  df_plot_with_best_player <- df_ci_fun_param %>% 
+    mutate(
+      Number_of_best_player = NA,
+      Number_of_match_best_player = NA,
+      best_player_Arch_winrate = NA,
+      best_player_CI_Arch_winrate = NA
+    )
+  
+  additional_layers <- NULL
   } else {
     df_plot_with_best_player <- df_ci_fun_param %>% 
       mutate(join_arch = as.character(!!rlang::sym(Arch_or_base_arch))) %>% 
@@ -2209,7 +2217,31 @@ Generate_CI_plot_fun <- function(
         by = join_by(join_arch == !!rlang::sym(Arch_or_base_arch))
         ) %>% 
       select(-join_arch)
-    
+    additional_layers <- list(
+      geom_point(
+        data = df_plot_with_best_player %>%
+          filter(!is.na(best_player_Arch_winrate)),
+        aes(
+          y = !!rlang::sym("best_player_Arch_winrate"),
+          x = !!rlang::sym(Arch_or_base_arch),
+          color = "Best Player Winrate"
+        ),
+        shape = 17, # Forme différente pour distinguer
+        position = position_nudge(x = 0.3)
+      ),
+      geom_errorbar(
+        data = df_plot_with_best_player %>%
+          filter(!is.na(best_player_Arch_winrate)),
+        aes(
+          x = !!rlang::sym(Arch_or_base_arch),
+          ymin = !!rlang::sym("best_player_Arch_winrate") + !!rlang::sym("best_player_CI_Arch_winrate"),
+          ymax = !!rlang::sym("best_player_Arch_winrate") - !!rlang::sym("best_player_CI_Arch_winrate"),
+          color = "Best Player Winrate"
+        ),
+        width = 0.01,
+        position = position_nudge(x = 0.3)
+      )
+    )
   }
 
   resulting_plot <- (
@@ -2248,29 +2280,7 @@ Generate_CI_plot_fun <- function(
       width = .01
       ) +
       # Points et barres d'erreur pour les meilleurs joueurs
-      geom_point(
-        data = df_plot_with_best_player %>%
-          filter(!is.na(best_player_Arch_winrate)),
-        aes(
-          y = !!rlang::sym("best_player_Arch_winrate"),
-          x = !!rlang::sym(Arch_or_base_arch),
-          color = "Best Player Winrate"
-        ),
-        shape = 17, # Forme différente pour distinguer
-        position = position_nudge(x = 0.3)
-      ) +
-      geom_errorbar(
-        data = df_plot_with_best_player %>%
-          filter(!is.na(best_player_Arch_winrate)),
-        aes(
-          x = !!rlang::sym(Arch_or_base_arch) ,
-          ymin = !!rlang::sym("best_player_Arch_winrate") + !!rlang::sym("best_player_CI_Arch_winrate"),
-          ymax = !!rlang::sym("best_player_Arch_winrate") - !!rlang::sym("best_player_CI_Arch_winrate"),
-          color = "Best Player Winrate"
-        ),
-        width = 0.01,
-        position = position_nudge(x = 0.3)#position_dodge(0.75)
-      ) +
+      additional_layers + 
       geom_hline(
         data = ci_df_plot_lines_df,
         aes(yintercept = yintercept, color = line_type),
