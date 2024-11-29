@@ -27,7 +27,7 @@ pander::pandoc.p("")
 Introduction_char_vec_par_2_1 <-  paste0(
   "This chapter shows the representation of differences over time. Leagues are excluded from this analysis.\n\n
   File in 3 parts :\n
-The first shows the presence curves over time for each archetype or archetype base. Archetypes with too low a presence are deactivated by default but can be reactivated by clicking on the desired decks. By default, certain Archetypes are hidden if their number is less than 0.25%.\n
+The first shows the presence curves over time for each archetype or archetype base (weeks are expressed in 2 last digits years.weeks of the year). Archetypes with too low a presence are deactivated by default but can be reactivated by clicking on the desired decks. By default, certain Archetypes are hidden if their number is less than 0.25%.\n
 Leagues are includes in this part\n\n
 The second part shows the presence barchart of the different archetypes (archetype is define as other if their number is less than the minimum of 50 or 1%) and base archetypes for different time intervals: \n\n
 - all data\n
@@ -92,7 +92,7 @@ They are built on the following model (additionnal information in tooltip) one t
 - The confidence interval graphs show the averages winrates (without miror matchs) and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.",
 "\t- Top player 10 (top 10 lower CI winrate bound) average win rate and CI (A player need at least ", top_n_player, " rounds for Archetype and ",top_n_player/2," for base archetype) result are show above error bar\n",
 "- A complete matrix with all the information.\n
-The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time.\n
+The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time (weeks are expressed in 2 last digits years.weeks of the year).\n
 In order to determine an expected number of victories 2 criteria are used the average winrate and the lower bounds of the confidence interval.**Please note that this part is still under construction as some decks with too few matchups are included**.\n"
 )
 
@@ -165,7 +165,7 @@ Introduction_char_vec_par_6_2 <- "**A total of 6 quasibinomial regression models
 \t- Comparing each card count with a sufficient sample size *0* vs *1* vs *3-4* for example\n"
 
 
-Introduction_char_vec_par_6_3 <- "These different models are then used to determine the 7 complete decks (maindeck and sideboard) with the highest probability of victory for each archetype.\n
+Introduction_char_vec_par_6_3 <- "These different models are then used to determine the 7 complete decks (maindeck and sideboard) with the highest probability of victory for each archetype (weeks are expressed in 2 last digits years.weeks of the year).\n
 As well as the 7 maindecks and 7 sideboards with the highest probability of victory are presented for each archetype.**Warning: this second part can lead to inconsistent combinations.** It seemed useful if you want explore the maindecks and sides separately.\n\n
 Table shows the top7 decks: \n\n
 - Firstly base cards (present in all decklist).\n  
@@ -189,7 +189,7 @@ pander::pandoc.p("")
 
 
 Introduction_char_vec_par_7_1 <- paste0(
-  "This chapter is divided by week over the last ", last_week_number_7, " weeks.
+  "This chapter is divided by week over the last ", last_week_number_7, " weeks (weeks are expressed in 2 last digits years.weeks of the year).
   For each week the different tournaments with more than", min_tournament_size_7, "players.",
   "-For each tournament, a bar graph shows the presence of each archetype and base archetype, as well as their win rate and some additional information in tooltips.\n
 - A table shows the top8 decks, their basic archetype Archetype the player (which is a link to the decklist), and the decklist itself.\n"

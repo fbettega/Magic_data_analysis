@@ -208,11 +208,10 @@ potentiellement selecteur de deck sous contrainte en script annexe
 
 For the grouping of decks, the analyses are mainly centred around 2 concepts: archetype and base archetype. Base archetypes are very close to the archetypes returned by the XXX parser. The archetypes are a personal construction to try to solve two problems:  
 
-
 - giving more flexibility to predict certain decks considered unknown by the parser
 - Group together decks with a small number of players that would be very close to a deck with a larger number of players.
 
-
+Deck with banned cards or with 40 copies or more of a single card are excluded.
 
 
 ## Predict model
