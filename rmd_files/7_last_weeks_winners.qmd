@@ -43,8 +43,8 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>%
 
 ```{r initial_data_loading}
 pre_rename_Tournament_of_interest_df <- df_export %>%
-  filter(Tournament != paste0(params$format_param," League"),
-         Week	>= max(Week)-last_week_number_7	) %>% 
+  filter(Tournament != paste0(params$format_param," League")
+         ) %>% 
   group_by(TournamentFile) %>% 
   mutate(number_of_player = n()) %>% 
   ungroup() %>% 
@@ -55,7 +55,8 @@ pre_rename_Tournament_of_interest_df <- df_export %>%
       ),
          str_detect(Result,"Place$")
          ) %>% 
-  mutate(Place = as.integer(str_extract(Result,"^\\d+")))
+  mutate(Place = as.integer(str_extract(Result,"^\\d+")))  %>%
+  filter(Week >= sort(unique(Week), decreasing = TRUE)[last_week_number_7])
 
 
 rename_tournament <- pre_rename_Tournament_of_interest_df %>%  
@@ -74,7 +75,8 @@ rename_tournament <- pre_rename_Tournament_of_interest_df %>%
 Tournament_of_interest_df <- right_join(
   rename_tournament,
   pre_rename_Tournament_of_interest_df,
-  by = "TournamentFile") %>% 
+  by = "TournamentFile"
+  ) %>% 
   select(-Tournament.y) %>% 
   rename(Tournament = Tournament.x) %>% 
   mutate(
@@ -95,7 +97,6 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 # x <- unique(Tournament_of_interest_df$TournamentFile)# "modern-challenge-64-2024-09-2912692965"
 
 total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
-  
   # print(x)
   Title_df <- Tournament_of_interest_df %>%
     filter(TournamentFile == x) 

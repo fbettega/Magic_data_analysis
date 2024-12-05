@@ -10,11 +10,17 @@ library(rwantshue)
 # css: TOC.css
 source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R", local = TRUE)
+source("../sources/sources_script_specific/S3_Card_win_rate_table.R", local = TRUE)
 source("../sources/sources_script_specific/S4_matrix_WR.R", local = TRUE)
 params <- read_rds("../data/intermediate_result/temp_format_encours_for_param.rds")
 conflicted::conflicts_prefer(dplyr::filter)
 conflicted::conflicts_prefer(plotly::layout)
 loaded_base_data <- readRDS(paste0("../data/", params$format_param, "_data_meta_en_cours.rds"))
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>%
+filter(
+    !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
+        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
+)
 # Je ne compte pas faire de matrix pour les SUB archetype pour le moment Car les sample sizes sont trop souvent ridicules a réfléchir
 # Reflechir a inclusion player
 # A reflechir :
@@ -548,6 +554,736 @@ base_arch_ci_plot_one_month_final
 ```
 
 :::
+
+# Card winrate by matchup  
+only on valid deck and with matchup
+
+```{r card_winrate_by_matchup}
+Df_win_rate_matrix_base_with_deck_not_unnest <- 
+  Df_win_rate_matrix_simple_unnest_matchup %>%
+  select(-Matchups_OpponentArchetype) %>%
+  inner_join(
+    Df_win_rate_matrix_correct_maccro_archetype_oppo,
+    by = c(
+      "TournamentFile",
+      "Matchups_Opponent"
+    )
+  ) %>%
+  select(
+    id, Meta, Week, Date, Archetype, Base_Archetype, Player,Mainboard,Sideboard,Valide_deck,
+    Matchups_Opponent, Matchups_OpponentArchetype, Matchups_OpponentBase_Archetype, Matchups_Wins,
+    Matchups_Losses, Matchups_Draws, matches
+  ) %>%
+  mutate(
+    Matchups_OpponentArchetype = ifelse(Matchups_OpponentArchetype %in% Other_Archetype,
+      "Other",
+      Matchups_OpponentArchetype
+    ),
+    Matchups_OpponentBase_Archetype = ifelse(Matchups_OpponentBase_Archetype %in% Other_base_Archetype,
+      "Other",
+      Matchups_OpponentBase_Archetype
+    ),
+    Matchups_OpponentArchetype = factor(Matchups_OpponentArchetype, levels = rev(levels(Archetype))),
+    Matchups_OpponentBase_Archetype = factor(Matchups_OpponentBase_Archetype, levels = rev(levels(Base_Archetype)))
+  ) %>% 
+  filter(Valide_deck,
+         !is.null(Mainboard),
+         !is.null(Sideboard)
+         ) %>% 
+  mutate(
+    Wins = as.numeric(Matchups_Wins > Matchups_Losses),
+    Losses = as.numeric(Matchups_Wins < Matchups_Losses),
+    Draws = as.numeric(Wins == 0 & Losses == 0)
+  ) %>% 
+  select(-c(Matchups_Wins,Matchups_Losses,Matchups_Draws)) %>% 
+  group_by(Base_Archetype,Matchups_OpponentBase_Archetype) %>% 
+    mutate(
+      base_Archetype_count = n()
+    ) %>% 
+    ungroup() %>% 
+  group_by(Archetype, Matchups_OpponentArchetype ) %>% 
+    mutate(
+      Archetype_count = n()
+    ) %>% 
+    ungroup() 
+  
+```
+
+
+
+```{r Arch_cards_win_rate}
+Df_win_rate_matrix_card_winrate_arch_mainboard <-  
+  Count_and_winrates_cards_in_decklist_total(
+    df = Df_win_rate_matrix_base_with_deck_not_unnest %>% 
+      filter(Archetype_count > 10) ,
+    group_var = c("Archetype","Matchups_OpponentArchetype"),
+    colname_deck_list  = "Mainboard",
+    Group_arch_and_base_arch = FALSE
+    )
+
+Df_win_rate_matrix_card_winrate_arch_sideboard <- 
+  Count_and_winrates_cards_in_decklist_total(
+    df = Df_win_rate_matrix_base_with_deck_not_unnest %>% 
+      filter(Archetype_count > 10) ,
+    group_var = c("Archetype","Matchups_OpponentArchetype"),
+    colname_deck_list  = "Sideboard",
+    Group_arch_and_base_arch = FALSE
+    )
+```
+
+
+
+```{r Base_arch_cards_win_rate}
+Df_win_rate_matrix_card_winrate_base_arch_mainboard <- 
+  Count_and_winrates_cards_in_decklist_total(
+    df = Df_win_rate_matrix_base_with_deck_not_unnest %>% 
+      filter(base_Archetype_count > 10) %>% 
+      select(-Archetype_count) %>% 
+      rename(Archetype_count = base_Archetype_count),
+    group_var = c("Base_Archetype","Matchups_OpponentBase_Archetype"),
+    colname_deck_list  = "Mainboard",
+    Group_arch_and_base_arch = FALSE
+    )
+
+Df_win_rate_matrix_card_winrate_base_arch_sideboard <- 
+  Count_and_winrates_cards_in_decklist_total(
+    df = Df_win_rate_matrix_base_with_deck_not_unnest %>% 
+      filter(base_Archetype_count > 10) %>% 
+      select(-Archetype_count) %>% 
+      rename(Archetype_count = base_Archetype_count),
+    group_var = c("Base_Archetype","Matchups_OpponentBase_Archetype"),
+    colname_deck_list  = "Sideboard",
+    Group_arch_and_base_arch = FALSE
+    )
+```
+
+```{r table_tooltip_assignation}
+tooltips_deck_base <- c(
+  "Deck Archetype agregated",
+  "Deck opponent Archetype agregated",
+  "Number of decks in the archetype",
+  "Card name",
+  "Number of wins",
+  "Number of looses",
+  "Number of copies of the most represented card",
+  "Possible number of copies",
+  'Number of times and percentage where the card is not present in the most representative number of copies. For example, if "Most present count" = 4, this column counts the number of decks where the card is present 0, 1, 2 or 3 times.(include scryfall hyperlink to the cards)'
+)
+
+
+
+tooltips_deck_variable_arch <- c(
+  "Link to scry fall",
+  "Deck Archetype agregated",
+  "Deck opponent Archetype agregated",
+  "Number of decks include in the win rate computation of the card (exact number of copies)",
+  "Percent of deck with the card (exact number of copies) only deck with winrate",
+  "Number of wins",
+  "Number of looses",
+  "Card name",
+  "Number of copies of the card",
+  "Win rate of the card",
+  "95 % Confidence intervale of card win rate",
+  'Win rate of the card vs deck with different count for the card.For example, if "Count" = 4, the win rate of 4 copies minus the win rate of 0, 1, 2 or 3 copies.',
+  "95 % Confidence intervale of card win rate vs other",
+  "The confidence interval is different from 0. + means a strictly positive confidence interval - means a strictly negative confidence interval,  0 means a confidence interval covering 0.",
+  "Win rate of the card vs deck gobal win rate.",
+  "95 % Confidence intervale of card win rate vs vs deck gobal win rate.",
+  "The confidence interval is different from 0. + means a strictly positive confidence interval - means a strictly negative confidence interval,  0 means a confidence interval covering 0."
+)
+```
+
+
+## Archetype 
+
+::: {.panel-tabset .nav-pills}
+
+### Base cards Mainboard  
+
+The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.  
+
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_arch_mainboard$Card_always_in_deck_final %>%
+      filter(Most_present_Mainboard_Count >= 10) %>% 
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Main percent", #"link",
+  link_column = "scryfall_uri",
+        Card_name_col =   "Main Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
+  mutate(`Main Card` = as.factor(`Main Card` ),
+         `Main Count` = as.factor(`Main Count` )) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
+  filter = "top", rownames = FALSE,
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Base cards in Mainboard"
+  )
+)
+```
+
+### Variable Cards Mainboard  
+
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_arch_mainboard$Win_rate_df_final %>% 
+  filter(count_WR >= 10) %>%
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri",
+  Card_name_col =   "Main Card"  
+) %>%
+  select(-scry_fall_id,-search_Link) %>% 
+    mutate(`Main Card` = as.factor(`Main Card` ),
+      `Main Count` = as.factor(`Main Count` )) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  filter = "top", rownames = FALSE,
+  options = list(dom = "ltipr",  
+                 searchCols = list(
+                   NULL,NULL,NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), 
+  autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Mainboard cards"
+  )
+) %>% 
+  DT::formatPercentage(c(5,10,12,15),digits = 1)
+```
+
+### Base cards Sideboard  
+
+The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_arch_sideboard$Card_always_in_deck_final %>%
+      filter(Most_present_Sideboard_Count >= 10) %>% 
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Main percent", #"link",
+  link_column = "scryfall_uri",
+  Card_name_col =   "Side Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
+  mutate(`Side Card` = as.factor(`Side Card` ),
+      `Side Count` = as.factor(`Side Count` )) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
+  filter = "top", rownames = FALSE,
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Base cards in Sideboard"
+  )
+)
+```
+
+### Variable Cards Sideboard
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_arch_sideboard$Win_rate_df_final %>% 
+  filter(count_WR >= 10) %>%
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri",
+  Card_name_col =   "Side Card"  
+) %>%
+  select(-scry_fall_id,-search_Link) %>% 
+    mutate(`Side Card` = as.factor(`Side Card` ),
+      `Side Count` = as.factor(`Side Count` )) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  filter = "top", rownames = FALSE,
+  options = list(dom = "ltipr",  
+                 searchCols = list(
+                   NULL,NULL,NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), 
+  autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Sideboard cards"
+  )
+) %>% 
+  DT::formatPercentage(c(5,10,12,15),digits = 1)
+```
+
+:::  
+
+## Base Archetype  
+
+::: {.panel-tabset .nav-pills}
+
+### Base cards Mainboard  
+
+The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.  
+
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_base_arch_mainboard$Card_always_in_deck_final %>%
+      filter(Most_present_Mainboard_Count >= 10) %>% 
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Main percent", #"link",
+  link_column = "scryfall_uri",
+        Card_name_col =   "Main Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
+  mutate(`Main Card` = as.factor(`Main Card` ),
+      `Main Count` = as.factor(`Main Count` )) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
+  filter = "top", rownames = FALSE,
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Base cards in Mainboard"
+  )
+)
+```
+
+### Variable Cards Mainboard  
+
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_base_arch_mainboard$Win_rate_df_final %>% 
+  filter(count_WR >= 10) %>%
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Main Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Main Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri",
+  Card_name_col =   "Main Card"  
+) %>%
+  select(-scry_fall_id,-search_Link) %>% 
+    mutate(`Main Card` = as.factor(`Main Card` ),
+      `Main Count` = as.factor(`Main Count` )
+      ) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  filter = "top", rownames = FALSE,
+  options = list(dom = "ltipr",  
+                 searchCols = list(
+                   NULL,NULL,NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), 
+  autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Mainboard cards"
+  )
+) %>% 
+  DT::formatPercentage(c(5,10,12,15),digits = 1)
+```
+
+### Base cards Sideboard  
+
+The cards making up the base of the deck are those who a specif number of copies is present in 99% of decks or whose copies are absent from less than 10 decks.
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_base_arch_sideboard$Card_always_in_deck_final %>%
+      filter(Most_present_Sideboard_Count >= 10) %>% 
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "Not most present Main percent", #"link",
+  link_column = "scryfall_uri",
+        Card_name_col =   "Side Card"  
+    ) %>%
+    select(-scry_fall_id,-search_Link) %>% 
+  mutate(`Side Card` = as.factor(`Side Card` )) %>% 
+  arrange(
+    desc(`Archetype count`)
+          ),
+  filter = "top", rownames = FALSE,
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_base, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Base cards in Sideboard"
+  )
+)
+```
+
+### Variable Cards Sideboard
+```{r}
+DT::datatable(
+    Df_win_rate_matrix_card_winrate_base_arch_sideboard$Win_rate_df_final %>% 
+  filter(count_WR >= 10) %>%
+    rename_with(
+      ~ str_replace(
+        str_replace(
+          str_replace(
+            str_replace_all(., "_", " "),
+            "Mainboard", "Main"
+          ),
+          "Sideboard", "Side"
+        ),
+        "CardName", "Card"
+      )
+    ) %>% 
+  ungroup() %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Side Card" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Side Card" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link",#
+  link_column = "scryfall_uri",
+  Card_name_col =   "Side Card"  
+) %>%
+  select(-scry_fall_id,-search_Link) %>% 
+    mutate(
+      `Side Card` = as.factor(`Side Card` ),
+      `Side Count` = as.factor(`Side Count` )
+      ) %>% 
+  arrange(
+    desc(`count WR`)
+          ),
+  callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltips_deck_variable_arch, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+",
+      return_filter_js()
+    )
+  ),
+  filter = "top", rownames = FALSE,
+  options = list(dom = "ltipr",  
+                 searchCols = list(
+                   NULL,NULL,NULL,
+                   list(search = '10 ...'),
+                   NULL,NULL,NULL,NULL,
+                   list(search = '["Any"]' ),
+                   NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL
+  ), 
+  autoWidth = TRUE, pageLength = 25),
+escape = FALSE,
+  caption = htmltools::tags$caption(
+    style = "caption-side: top; text-align: center; color:black;  font-size:200% ;",
+    "Table : Sideboard cards"
+  )
+) %>% 
+  DT::formatPercentage(c(5,10,12,15),digits = 1)
+```
+
+
+:::  
 
 
 #  Best deck 

@@ -1684,9 +1684,12 @@ DF_presence_fun <- function(
 
   Presence_df_base <- df_base %>%
     ungroup() %>%
-    filter(
-      Week > (max(Week) - time_limit)
-    ) %>%
+    {if (!is.infinite(time_limit)) filter(.,
+      Week >= sort(unique(Week), decreasing = TRUE)[time_limit]
+      ) else .} %>% 
+    # filter(
+    #   Week > (max(Week) - time_limit)
+    # ) %>%
     group_by(Archetype) %>%
     mutate(
       Archetype_count = n(),

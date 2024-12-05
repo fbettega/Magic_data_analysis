@@ -235,9 +235,44 @@ Missing_cards_by_set <- not_owned_cards %>%
     values_from = c(n_distinct, number_of_deck),
     values_fill = 0
   )
-
-
 ```
+
+
+```{r create_table_missing_cards_by_set_and_rarity}
+Missing_cards_by_set_rarity_with_card_name <- not_owned_cards %>% 
+  group_by(CardName) %>% 
+  summarise(
+    n = n(),
+    .groups = "drop"
+    ) %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = Total_scryfall_table
+    ),
+    by = c("CardName" = "CardName")
+    ) %>%
+  left_join(
+    Total_scryfall_table %>% 
+      select(id,rarity,set,set_name,set_id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+      )
+    ) %>% 
+  distinct(CardName,rarity,set_name,.keep_all = TRUE) %>% 
+  select(-starts_with("colors.")) %>%  
+add_link_to_a_column(
+  df_add_link_fun =   .,
+  column_where_is_add = "link", #"link",
+  link_column = "scryfall_uri"
+) %>% 
+  select(-c(scry_fall_id,set_name,set_id)) %>% 
+  mutate(across(where(is.character),as.factor))  %>% 
+  relocate(n,.after = last_col()) %>% 
+  arrange(desc(n))
+```
+
 
 
 ```{r tooltip_booster}
@@ -255,13 +290,18 @@ tooltip_booster_total_deck <- c(
   "Set name",
   "Number of deck with common",
   "Number of deck with uncommon",
-    "Number of deck with rare",
+  "Number of deck with rare",
   "Number of deck with mythic",
   "Number of deck with special"
   
 )
 
-
+tooltip_missing_cards_by_rarity_and_set <- c(
+  "Cards names",
+  "Rarity of cards",
+  "Set name",
+  "Number of time missing in format"
+)
 ```
 
 
@@ -327,6 +367,28 @@ for (var i = 0; i < tips.length; i++) {
 )
 ```
 
+## Missing cards by set and rarity
+
+```{r print_missing_cards_by_set_and_rarity}
+htmltools::tagList(
+      DT::datatable( 
+        Missing_cards_by_set_rarity_with_card_name,
+        colnames = str_replace_all(colnames(Missing_cards_by_set_rarity_with_card_name), "_", " "),
+          callback = DT::JS(
+    paste0(
+      "var tips = ['", paste0(tooltip_missing_cards_by_rarity_and_set, collapse = "','"), "'],
+    header = table.columns().header();
+for (var i = 0; i < tips.length; i++) {
+  $(header[i]).attr('title', tips[i]);
+}
+"),
+      return_filter_js()
+    ),
+  filter = "top", rownames = FALSE,escape = FALSE,
+  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
+) 
+)
+```
 
 :::
 

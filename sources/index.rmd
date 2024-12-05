@@ -26,10 +26,21 @@ Code available at [https://github.com/fbettega/Modern_data_analysis/](https://gi
 
 ## [Modern](Modern/index.html)  
 
+**<span style="color: red;">Last update : `r as.Date(file.info("../outpout/Modern/7_last_weeks_winners.html")$mtime)`</span>**
+
 ## [Legacy](Legacy/index.html)  
+
+**<span style="color: red;">Last update : `r as.Date(file.info("../outpout/Legacy/7_last_weeks_winners.html")$mtime)`</span>**
 
 ## [Pauper](Pauper/index.html)  
 
+**<span style="color: red;">Last update : `r as.Date(file.info("../outpout/Pauper/7_last_weeks_winners.html")$mtime)`</span>**
+
 ## [Pioneer](Pioneer/index.html)  
 
+**<span style="color: red;">Last update : `r as.Date(file.info("../outpout/Pioneer/7_last_weeks_winners.html")$mtime)`</span>**
+
 ## [Vintage](Vintage/index.html)  
+
+**<span style="color: red;">Last update : `r as.Date(file.info("../outpout/Vintage/7_last_weeks_winners.html")$mtime)`</span>**
+

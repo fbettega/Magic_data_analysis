@@ -1,10 +1,12 @@
-Count_and_winrates_cards_in_decklist_total <- function(df,
-                                                       group_var,
-                                                       colname_deck_list # don't remove use for unnest
+Count_and_winrates_cards_in_decklist_total <- function(
+    df,
+    group_var,
+    colname_deck_list, # don't remove use for unnest
+    Group_arch_and_base_arch = TRUE
 ) {
   
   
-  if (group_var == "Base_Archetype") {
+  if ("Base_Archetype" %in% group_var & Group_arch_and_base_arch) {
     select_group_var <- c(group_var, "Archetype")
   } else {
     select_group_var <- group_var
@@ -27,14 +29,16 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
     )
   
   
-  df_new_card_base <- df %>%
+  df_new_unnest_simple <- df %>%
+    distinct(id,.keep_all = TRUE) %>% 
     unnest_longer(!!colname_deck_list) %>%
     unnest_wider(!!colname_deck_list, names_sep = "_") %>%
     group_by(id) %>%
     # a filtrer mes uniquement pour le main deck
     mutate(Number_of_cards := sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))) %>%
     filter(Number_of_cards >= expected_min_size) %>%
-    mutate(!!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
+    mutate(
+      !!rlang::sym(paste0(colname_deck_list, "_CardName")) := Card_agregueur(
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       ALL_mod = TRUE
     )) %>%
@@ -43,11 +47,18 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
       !!rlang::sym(paste0(colname_deck_list, "_Count")) :=
         sum(!!rlang::sym(paste0(colname_deck_list, "_Count")))
     ) %>%
-    distinct() %>%
-    inner_join(winrate_by_archetype, by = select_group_var) %>%
-    ungroup()
+    distinct()  %>%
+    ungroup() %>% 
+    select(id,starts_with(colname_deck_list))
   
   
+  df_new_card_base <- df %>%
+    select(-all_of(colname_deck_list)) %>% 
+    right_join(
+      df_new_unnest_simple,
+               by = join_by(id),
+               relationship = "many-to-many") %>%
+    inner_join(winrate_by_archetype, by = select_group_var)
   
   
   df_new_card_before_filter <- df_new_card_base %>%
@@ -134,7 +145,7 @@ Count_and_winrates_cards_in_decklist_total <- function(df,
     rbind(df_new_card) %>%
     # filter((Wins_card + Losses_card) > 10) %>%
     arrange(
-      desc(Archetype_count), !!rlang::sym(group_var),
+      desc(Archetype_count), !!!rlang::syms(group_var),
       !!rlang::sym(paste0(colname_deck_list, "_CardName")),
       !!rlang::sym(paste0(colname_deck_list, "_Count"))
     )

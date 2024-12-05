@@ -92,6 +92,10 @@ They are built on the following model (additionnal information in tooltip) one t
 - The confidence interval graphs show the averages winrates (without miror matchs) and 95% confidence intervals (calculated using the [Agresti-Coull method](https://en.wikipedia.org/wiki/Binomial_proportion_confidence_interval#Agresti%E2%80%93Coull_interval)). The vertical red line represents the mean of the winrates and the dotted blue lines represent the mean of the upper and lower bounds of the confidence interval.",
 "\t- Top player 10 (top 10 lower CI winrate bound) average win rate and CI (A player need at least ", top_n_player, " rounds for Archetype and ",top_n_player/2," for base archetype) result are show above error bar\n",
 "- A complete matrix with all the information.\n
+- Multiple table  with win rate of cards per matchup (only valid deck and matchup with more than 10 games are presented) : the first concentrates on the aggregated maccro archetypes and the second presents the sub-archetypes. 
+Each part is organised in the same way, repeated 2 times, one for the maindeck and one for the sideboard.\n\n
+-\t **Base cards**: These are the cards present in decks almost exclusively in a given number of copies (deck numbers without the most common count less than 10).\n
+-\t **Side/Mainboard cards**: Cards present in variable numbers in the decks
 The third part explores the notion of the best deck according to a given metagame using the winrates obtained using the complete games obtained on the data set and the presence of each archetype over time (weeks are expressed in 2 last digits years.weeks of the year).\n
 In order to determine an expected number of victories 2 criteria are used the average winrate and the lower bounds of the confidence interval.**Please note that this part is still under construction as some decks with too few matchups are included**.\n"
 )

@@ -8,8 +8,8 @@ not_all_arch_filter_S0 <- c(
   # "Modern",
   # "Legacy",
   # "Pauper",
-  # "Pioneer",
-  # "Vintage",
+  "Pioneer",
+  "Vintage",
   "All"
 )
 # Try catch because script is long allow shutdown if error
@@ -264,9 +264,10 @@ rmarkdown::render(
 
 if (file.exists("other_file/ssh_key/id_rsa")) {
   session <- ssh::ssh_connect(
-    "francois@176.31.183.129",
+    "francois@51.159.194.184",
     keyfile = "other_file/ssh_key/id_rsa"
     )
+  
   ssh::scp_upload(
     session, files = list.files("outpout/", full.names = TRUE),
     to = "/home/francois/docker/magic/magic_modern_meta/data/"
