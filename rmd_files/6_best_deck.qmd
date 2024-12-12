@@ -75,17 +75,17 @@ knitr::read_chunk("../sources/S1_introduction_text.R")
 ```{r compute_res_arch}
 total_result_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(
   fun_par_df = df_export,
-fun_parmin_arch_presence_fun = filter_archetype_count_6,
-fun_pardeck_or_side = c(
+  fun_parmin_arch_presence_fun = filter_archetype_count_6,
+  fun_pardeck_or_side = c(
   "All","Mainboard" ,"Sideboard"
   ),
-fun_partype_of_archetype = "Archetype",# "Archetype" "Base_Archetype"
-fun_parland_name_fun = Land_modern,
-fun_parmin_number_of_cards = min_sample_size_6,
-fun_parnumber_of_week = c(
-  Inf,2
-  ),
-fun_parNumber_of_deck_print = Number_of_deck,
+  fun_partype_of_archetype = "Archetype",# "Archetype" "Base_Archetype"
+  fun_parland_name_fun = Land_modern,
+  fun_parmin_number_of_cards = min_sample_size_6,
+  fun_parnumber_of_week = c(
+    Inf,2
+    ),
+  fun_parNumber_of_deck_print = Number_of_deck,
   db_scryfall_fun_par = modern_DB_card
 )
 ```
@@ -117,12 +117,14 @@ all_data_best_deck_arch_print_res <-
 ## Two weeks Data Model best deck prediction  
 ```{r print_result_2weeks, results='asis'}
 #, out.width="100%"
+
+# iteration <- "Living End"
 twoweeks_data_best_deck_arch_print_res <- 
   lapply(total_result_Archetype_best_deck_to_print$Archetype_consider,
          function(arch_encours){
     print_result_total_script_best_deck(
-    total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$global,
-    total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$main_side,
+    res_tot = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$global,
+    res_main_side = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$main_side,
     iteration = arch_encours
     ) 
          }
@@ -173,6 +175,7 @@ all_data_best_deck_arch_print_res <-
 twoweeks_data_best_deck_arch_print_res <- 
   lapply(total_result_base_Archetype_best_deck_to_print$Archetype_consider,
          function(arch_encours){
+           
     print_result_total_script_best_deck(
     total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$global,
     total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$main_side,

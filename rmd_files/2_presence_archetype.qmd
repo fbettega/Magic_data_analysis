@@ -20,7 +20,7 @@ loaded_base_data <- readRDS(paste0("../data/",params$format_param,"_data_meta_en
 # Manque ajouter du texte après les % pour la variation
 conflicted::conflicts_prefer(dplyr::filter)
 
-options(DT.warn.size=FALSE)
+options(DT.warn.size = FALSE)
 ```
 
 
@@ -121,18 +121,21 @@ colors_scales_presence_base_arch <- scheme$hex(
 
 one_week_inline <- Presence_df_base_all_data %>%
   filter(
-    Week > (max(Week) - 2)
+    Week >= sort(unique(Week), decreasing = TRUE)[2]
+    # Week > (max(Week) - 2)
   )
 
 two_week_inline <- Presence_df_base_all_data %>%
   filter(
-    Week > (max(Week) - 3)
+    Week >= sort(unique(Week), decreasing = TRUE)[3]
+    # Week > (max(Week) - 3)
   )
 
 
 one_month_inline <- Presence_df_base_all_data %>%
   filter(
-    Week > (max(Week) - 5)
+    Week >= sort(unique(Week), decreasing = TRUE)[5]
+    # Week > (max(Week) - 5)
   )
 ```
 
@@ -723,7 +726,25 @@ modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv",show_col_types 
   filter(
     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
       !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
-  )
+  ) %>% 
+  mutate(
+    `Shoot the Sheriff` = !str_detect(type_line,"Assassins|Mercenaries|Pirates|Rogues|Warlocks") & str_detect(type_line,"Creature"),
+    `Victim of Night` = !str_detect(type_line,"Vampire|Werewolf|Zombie") & str_detect(type_line,"Creature"),
+    `Ultimate Price` =  ifelse(
+      is.na(card_faces.colors.1.1),
+      !is.na(colors.2),
+      !is.na(card_faces.colors.1.2)
+    ) & str_detect(type_line,"Creature"),
+    Terror = (
+      ifelse(is.na(mana_cost),TRUE,!str_detect(mana_cost,"B")) &
+        !str_detect(type_line,"Artifact")
+      ) & str_detect(type_line,"Creature"), 
+    `Doom Blade` = ifelse(is.na(mana_cost),TRUE,!str_detect(mana_cost,"B")) & str_detect(type_line,"Creature"),
+    `Go for the Throat` = !str_detect(type_line,"Artifact") & str_detect(type_line,"Creature"),
+    `Power Word Kill`  = !str_detect(type_line,"Angel|Demon|Devil|Dragon") & str_detect(type_line,"Creature"),
+    `Hero's Demise` = str_detect(type_line,"Legendary") & str_detect(type_line,"Creature"),
+    `Cast Down` = !str_detect(type_line,"Legendary") & str_detect(type_line,"Creature")
+  ) 
 ```
 
 
@@ -937,7 +958,7 @@ number_of_copy_of_each_cards_final_table <-  rbind(
       is.na(winrate_count_castable),df_export$n_winrates,winrate_count_castable
       )
     ) %>% 
-    select(-scry_fall_id,-search_Link) %>% 
+    select(-search_Link) %>% 
     mutate(set = as.factor(set),
     ) %>% 
     relocate(set,.after = CardName)  %>% 
@@ -982,11 +1003,114 @@ number_of_copy_of_each_cards_final_table <-  rbind(
     )
 ```
 
+## Best 2 CMC black removal removal
+Compare number of target in format for 2 cmc black removal
+```{r}
+# Scryfall_search : oracle:destroy type:instant commander:B (game:paper) cmc=2 legal:modern
+removal_list <- c(
+  "Shoot the Sheriff", # Destroy target non-outlaw creature. (Assassins, Mercenaries, Pirates, Rogues, and Warlocks are outlaws. Everyone else is fair game.)
+  "Victim of Night", # Destroy target non-Vampire, non-Werewolf, non-Zombie creature.
+  "Ultimate Price", # Destroy target monocolored creature.
+  "Terror", # Destroy target nonartifact, nonblack creature
+  "Doom Blade", #  nonblack
+  "Go for the Throat", # Destroy target nonartifact creature.
+  "Power Word Kill", # Destroy target non-Angel, non-Demon, non-Devil, non-Dragon creature.
+  "Hero's Demise", # Destroy target legendary creature
+  "Cast Down" # nonlegendary
+  )
+
+legal_removal_list <- removal_list[removal_list %in% modern_DB_card$name]
+
+if(length(legal_removal_list) > 0){
+  Black_removal_target_df <- number_of_copy_of_each_cards_final_table %>%
+    filter(`Main side` == "All") %>% 
+    inner_join(
+      modern_DB_card %>% 
+        select(id,`Shoot the Sheriff`:`Cast Down`),
+      by = join_by(
+        `scry fall id` == id
+      )
+    ) %>% 
+    summarise(
+    `Shoot the Sheriff` = sum(`count presence` * `Shoot the Sheriff`),
+    `Victim of Night` = sum(`count presence` * `Victim of Night`),
+    `Ultimate Price` =  sum(`count presence` * `Ultimate Price`),
+    Terror = sum(`count presence` * Terror),
+    `Doom Blade` = sum(`count presence` * `Doom Blade`),
+    `Go for the Throat` = sum(`count presence` * `Go for the Throat`),
+    `Power Word Kill`  = sum(`count presence` * `Power Word Kill`),
+    `Hero's Demise` = sum(`count presence` * `Hero's Demise`),
+    `Cast Down` = sum(`count presence` * `Cast Down`),
+    ) %>% 
+    select(any_of(legal_removal_list)) %>% 
+    pivot_longer(everything(),
+                 names_to = "Cardname",
+                 values_to = "Number of target") %>% 
+    arrange(desc(`Number of target`)) %>%
+    left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "Cardname" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("Cardname" = "CardName")
+  ) %>% 
+    left_join(
+      modern_DB_card %>% 
+        select(id,scryfall_uri),
+      by = join_by(
+        scry_fall_id == id
+      )
+    ) %>% 
+    add_link_to_a_column(
+      df_add_link_fun =   .,
+      column_where_is_add = "Cardname", #"link",
+      link_column = "scryfall_uri",
+      Card_name_col =   "Cardname"         
+    )  %>% 
+    select(
+      -scry_fall_id,
+      -search_Link
+      )
+
+DT::datatable(
+ Black_removal_target_df,
+  callback = DT::JS(
+    paste0(
+#       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],
+#     header = table.columns().header();
+# for (var i = 0; i < tips.length; i++) {
+#   $(header[i]).attr('title', tips[i]);
+# }
+# ",
+return_filter_js()
+    )
+  ),
+filter = "top", rownames = FALSE,
+options = list(
+  dom = "ltipr",
+  searchCols = list(
+    NULL,NULL
+  ), autoWidth = TRUE, pageLength = 25
+),
+escape = FALSE
+)
+}
+
+
+
+ 
+
+
+```
+
+
 ## Number of copy of each cards 
 
 ```{r print_number_of_copy_of_each_cards}
 DT::datatable(
- number_of_copy_of_each_cards_final_table ,
+ number_of_copy_of_each_cards_final_table %>% 
+   select(-`scry fall id`),
   callback = DT::JS(
     paste0(
       "var tips = ['", paste0(tooltips_deck_new_cards, collapse = "','"), "'],

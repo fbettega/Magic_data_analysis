@@ -3,7 +3,7 @@ flextable_hyper_link_from_scry_fall <- function(
     scry_fall_df = df_with_link_any
 ){
   out <- lapply(text, function(x){
-    if(x %in% scry_fall_df$CardName){
+    if(x %in% scry_fall_df$CardName) {
       flextable::hyperlink_text(
         x ,
         url = scry_fall_df$scryfall_uri[scry_fall_df$CardName == x]
@@ -167,158 +167,158 @@ format_model_list <- function(
         )
       
     }
-    if (is.null(x$model_ridgge)) {
-      Model_ridge_encours <- NULL
-    } else {
-      model_format_table_ridge <- cbind(
-        bhat = x$model_ridgge$bhat,
-        se = x$model_ridgge$se,
-        confint = confint(x$model_ridgge),
-        pval = x$model_ridgge$pval
-      ) %>%
-        as.data.frame() %>%
-        rename(
-          OR = V1
-        ) %>%
-        mutate(
-          OR = exp(OR),
-          lower = exp(lower),
-          upper = exp(upper)
-        ) %>%
-        rownames_to_column("Card_name") %>%
-        mutate(
-          Card_name = str_remove_all(Card_name, "`"),
-          Card_name = sub("(\\D(?=\\d))", "\\1:", Card_name, perl = TRUE)
-        ) %>%
-        right_join(
-          x$model_ridgge$data %>%
-            select(where(is.factor)) %>%
-            pivot_longer(everything()) %>%
-            group_by(name, value) %>%
-            summarise(
-              N = n(),
-              .groups = "drop"
-            ) %>%
-            rowwise() %>%
-            mutate(Card_name = paste0(name, ":", value), .before = 1),
-          by = join_by(Card_name)
-        ) %>%
-        mutate(
-          sort_col = paste0(
-            str_extract(Card_name, "[:alpha:]+(?=:)"),
-            ifelse(is.na(OR), "0",
-                   as.numeric(str_extract(Card_name, "(?<=:)\\d{1}")) + 1
-            )
-          )
-        ) %>%
-        arrange(sort_col) %>%
-        select(-sort_col) %>%
-        mutate(
-          Archetype = as.character(x$model_ridgge$Archetype), .before = 1
-        )
-      
-      
-      
-      
-      
-      
-      
-      
-      DF_Model_ridge_encours <- model_format_table_ridge %>%
-        separate_wider_delim(
-          Card_name,
-          delim = ":",
-          names = c("Card_name", "quantity")
-        ) %>%
-        mutate(
-          `95% CI` = ifelse(is.na(lower) & is.na(upper), NA, paste0(
-            # round(value * (100 * percent),round_val)," ",
-            
-            round(lower, 2),
-            "; ",
-            round(upper, 2)
-          )), .before = pval
-        ) %>%
-        select(-c(se, Archetype, lower, upper, name, value)) %>%
-        relocate(N, .before = OR) %>%
-        group_by(Card_name) %>%
-        rename(` ` = quantity)
-      
-      
-      df_with_link_ridge <-
-        data.frame(
-          CardName = DF_Model_ridge_encours$Card_name
-        ) %>%
-        left_join(
-          join_with_scryfall(
-            Df_with_cardname =   .,
-            cardname_col = "CardName",
-            scry_fall_df = scry_fall_db_format_par
-          ),
-          by = c("CardName" = "CardName")
-        ) %>%
-        inner_join(
-          scry_fall_db_format_par %>%
-            select(id, scryfall_uri),
-          by = join_by(
-            scry_fall_id == id
-          )
-        ) %>%
-        select(-scry_fall_id) %>%
-        distinct()
-      
-      
-      Model_ridge_encours <- gt::gt(DF_Model_ridge_encours) %>%
-        gt::sub_missing() %>%
-        gt::fmt_number(
-          columns = -N
-        ) %>%
-        gt::cols_align(
-          align = c("center"),
-          columns = everything()
-        ) %>%
-        gt::tab_spanner(
-          label = gt::html(paste0(
-            "<b>", unique(model_format_table_ridge$Archetype), " N :",
-            unique((DF_Model_ridge_encours %>%
-                      summarise(n = sum(N)))$n),
-            "</b>"
-          )),
-          columns = everything()
-        ) %>%
-        gt::text_transform(
-          locations = gt::cells_row_groups(),
-          fn = function(x) {
-            # print(x)
-            lapply(x, function(y) {
-              tibble(
-                base_name = y
-              ) %>%
-                left_join(
-                  df_with_link_ridge,
-                  by = join_by(base_name == CardName)
-                ) %>%
-                mutate(
-                  final_name = gt::html(ifelse(
-                    !is.na(scryfall_uri),
-                    paste0(
-                      '<a href=\"', scryfall_uri, '"><b>', base_name, "</b></a>"
-                    ),
-                    paste0("<b>", base_name, "</b>")
-                  ))
-                ) %>%
-                pull(final_name)
-            })
-          }
-        )
-    }
+    # if (is.null(x$model_ridgge)) {
+    #   Model_ridge_encours <- NULL
+    # } else {
+    #   model_format_table_ridge <- cbind(
+    #     bhat = x$model_ridgge$bhat,
+    #     se = x$model_ridgge$se,
+    #     confint = confint(x$model_ridgge),
+    #     pval = x$model_ridgge$pval
+    #   ) %>%
+    #     as.data.frame() %>%
+    #     rename(
+    #       OR = V1
+    #     ) %>%
+    #     mutate(
+    #       OR = exp(OR),
+    #       lower = exp(lower),
+    #       upper = exp(upper)
+    #     ) %>%
+    #     rownames_to_column("Card_name") %>%
+    #     mutate(
+    #       Card_name = str_remove_all(Card_name, "`"),
+    #       Card_name = sub("(\\D(?=\\d))", "\\1:", Card_name, perl = TRUE)
+    #     ) %>%
+    #     right_join(
+    #       x$model_ridgge$data %>%
+    #         select(where(is.factor)) %>%
+    #         pivot_longer(everything()) %>%
+    #         group_by(name, value) %>%
+    #         summarise(
+    #           N = n(),
+    #           .groups = "drop"
+    #         ) %>%
+    #         rowwise() %>%
+    #         mutate(Card_name = paste0(name, ":", value), .before = 1),
+    #       by = join_by(Card_name)
+    #     ) %>%
+    #     mutate(
+    #       sort_col = paste0(
+    #         str_extract(Card_name, "[:alpha:]+(?=:)"),
+    #         ifelse(is.na(OR), "0",
+    #                as.numeric(str_extract(Card_name, "(?<=:)\\d{1}")) + 1
+    #         )
+    #       )
+    #     ) %>%
+    #     arrange(sort_col) %>%
+    #     select(-sort_col) %>%
+    #     mutate(
+    #       Archetype = as.character(x$model_ridgge$Archetype), .before = 1
+    #     )
+    #   
+    #   
+    #   
+    #   
+    #   
+    #   
+    #   
+    #   
+    #   DF_Model_ridge_encours <- model_format_table_ridge %>%
+    #     separate_wider_delim(
+    #       Card_name,
+    #       delim = ":",
+    #       names = c("Card_name", "quantity")
+    #     ) %>%
+    #     mutate(
+    #       `95% CI` = ifelse(is.na(lower) & is.na(upper), NA, paste0(
+    #         # round(value * (100 * percent),round_val)," ",
+    #         
+    #         round(lower, 2),
+    #         "; ",
+    #         round(upper, 2)
+    #       )), .before = pval
+    #     ) %>%
+    #     select(-c(se, Archetype, lower, upper, name, value)) %>%
+    #     relocate(N, .before = OR) %>%
+    #     group_by(Card_name) %>%
+    #     rename(` ` = quantity)
+    #   
+    #   
+    #   df_with_link_ridge <-
+    #     data.frame(
+    #       CardName = DF_Model_ridge_encours$Card_name
+    #     ) %>%
+    #     left_join(
+    #       join_with_scryfall(
+    #         Df_with_cardname =   .,
+    #         cardname_col = "CardName",
+    #         scry_fall_df = scry_fall_db_format_par
+    #       ),
+    #       by = c("CardName" = "CardName")
+    #     ) %>%
+    #     inner_join(
+    #       scry_fall_db_format_par %>%
+    #         select(id, scryfall_uri),
+    #       by = join_by(
+    #         scry_fall_id == id
+    #       )
+    #     ) %>%
+    #     select(-scry_fall_id) %>%
+    #     distinct()
+    #   
+    #   
+    #   Model_ridge_encours <- gt::gt(DF_Model_ridge_encours) %>%
+    #     gt::sub_missing() %>%
+    #     gt::fmt_number(
+    #       columns = -N
+    #     ) %>%
+    #     gt::cols_align(
+    #       align = c("center"),
+    #       columns = everything()
+    #     ) %>%
+    #     gt::tab_spanner(
+    #       label = gt::html(paste0(
+    #         "<b>", unique(model_format_table_ridge$Archetype), " N :",
+    #         unique((DF_Model_ridge_encours %>%
+    #                   summarise(n = sum(N)))$n),
+    #         "</b>"
+    #       )),
+    #       columns = everything()
+    #     ) %>%
+    #     gt::text_transform(
+    #       locations = gt::cells_row_groups(),
+    #       fn = function(x) {
+    #         # print(x)
+    #         lapply(x, function(y) {
+    #           tibble(
+    #             base_name = y
+    #           ) %>%
+    #             left_join(
+    #               df_with_link_ridge,
+    #               by = join_by(base_name == CardName)
+    #             ) %>%
+    #             mutate(
+    #               final_name = gt::html(ifelse(
+    #                 !is.na(scryfall_uri),
+    #                 paste0(
+    #                   '<a href=\"', scryfall_uri, '"><b>', base_name, "</b></a>"
+    #                 ),
+    #                 paste0("<b>", base_name, "</b>")
+    #               ))
+    #             ) %>%
+    #             pull(final_name)
+    #         })
+    #       }
+    #     )
+    # }
     
     
     return(
       list(
         Model_any = Model_any_encours,
-        Model_count = Model_count_encours,
-        model_ridge = Model_ridge_encours
+        Model_count = Model_count_encours#,
+        # model_ridge = Model_ridge_encours
       )
     )
   })
@@ -529,7 +529,8 @@ Generate_and_format_model_result <-
     type_of_archetype,
     land_name_fun,
     min_number_of_cards = min_sample_size_5,
-    db_scryfall_fun_par) {
+    db_scryfall_fun_par
+    ) {
     
     result_pre_treatement <- Prepare_df_for_long_for_model(
       df_base_fun = df_base_fun,
@@ -698,14 +699,14 @@ print_main_side <- function(
       )
     }
     pander::pandoc.p("")
-    if (!is.null(res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$model_ridge)) {
-      pander::pandoc.header("Ridge", level = 5)
-      print(
-        htmltools::tagList(
-          res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$model_ridge
-        )
-      )
-    }
+    # if (!is.null(res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$model_ridge)) {
+    #   pander::pandoc.header("Ridge", level = 5)
+    #   print(
+    #     htmltools::tagList(
+    #       res_encours_fun$uncomon_card_format_model_res[[iteration_print]]$model_ridge
+    #     )
+    #   )
+    # }
     # close nav pill
     pander::pandoc.p(":::")
   }

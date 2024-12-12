@@ -1282,7 +1282,6 @@ escape = FALSE,
   DT::formatPercentage(c(5,10,12,15),digits = 1)
 ```
 
-
 :::  
 
 
@@ -1569,7 +1568,7 @@ Df_Base_Archetype_Expected_number_of_win_by_week <- df_base_all_data %>%
 
 Df_Base_Archetype_expected_of_week_sum <- rbind(
   Df_Base_Archetype_Expected_number_of_win_by_week %>%
-    mutate(Week = as.character(Week)) %>%
+    # mutate(Week = as.character(Week)) %>%
     group_by(Base_Archetype, Week) %>%
     summarise(
       S_wr = sum(expected_win_WR), # /sum(n),
@@ -1590,7 +1589,7 @@ Df_Base_Archetype_expected_of_week_sum <- rbind(
   mutate(
     Week = factor(ifelse(Week == 0,"All",format(Week, nsmall = 2)),
                   levels = c(
-                    format(sort(unique(df_base_all_data$Week)), nsmall = 2),
+                    format(sort(unique(Df_Base_Archetype_Expected_number_of_win_by_week$Week)), nsmall = 2),
                     "All"
                              # as.character(seq(1,max(Presence_df_base$Week)))
                   )

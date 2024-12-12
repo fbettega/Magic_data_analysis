@@ -1,15 +1,14 @@
 library(yaml)
 source("sources/S0_source_init.R")
 Reupdate_scryfall_db <- FALSE #TRUE FALSE
-
 # suppressPackageStartupMessages()
 reparse_arch <- TRUE  #TRUE FALSE
 not_all_arch_filter_S0 <- c(
   # "Modern",
   # "Legacy",
   # "Pauper",
-  "Pioneer",
-  "Vintage",
+  # "Pioneer",
+  # "Vintage",
   "All"
 )
 # Try catch because script is long allow shutdown if error
@@ -57,19 +56,32 @@ sys.source(
 #   "https://github.com/Jiliac/MTGODecklistCache.git",
 #   "ArchetypeParser/MTGODecklistCache_J/"
 #   )
-deck_list_repo_base <-  git2r::repository("ArchetypeParser/MTGODecklistCache_B/")
-deck_list_repo <- git2r::repository("ArchetypeParser/MTGODecklistCache_J/")
-deck_list_format <- git2r::repository("ArchetypeParser/MTGOFormatData/")
+
+################################################################################
+# test automatise github
+# deck_list_repo_base <-  git2r::repository("ArchetypeParser/MTGODecklistCache_B/")
+path_decklist_repo <- "ArchetypeParser/MTGODecklistCache/"
+jiliac_decklist_repo <- "ArchetypeParser/MTGODecklistCache_J/"
+Format_path_repo <- "ArchetypeParser/MTGOFormatData/"
+deck_list_repo <- git2r::repository(jiliac_decklist_repo)
+deck_list_format <- git2r::repository(Format_path_repo)
+
 
 # Sys.sleep(7200)
-pull_deck_list_repo_base <- git2r::pull(repo = deck_list_repo_base)
+# pull_deck_list_repo_base <- git2r::pull(repo = deck_list_repo_base)
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
 
 
+# system('git config --global user.email "francois.bettega@gmail.com"', intern = TRUE)
+# system('git config --global user.name "fbettega"', intern = TRUE)
+
+system(paste("cmd /c \"cd /d", path_decklist_repo, "&& git fetch jiliac\""), intern = TRUE)
+system(paste("cmd /c \"cd /d", path_decklist_repo, "&& git  merge -X theirs jiliac/master --no-edit\""), intern = TRUE)
+system(paste("cmd /c \"cd /d", path_decklist_repo, "&& git pull --no-edit\""), intern = TRUE)
+
 tictoc::tic("Scryfall update data")
  
-
 
 scryfall_update <- update_scryfall_data(
   "../scry_fall_to_csv/",

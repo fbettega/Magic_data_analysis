@@ -410,7 +410,9 @@ name_list_of_df_with_arch <- function(list) {
 # function that create all models from a prepare df
 
 
-model_unco_cards_fun <- function(df_fun) {
+model_unco_cards_fun <- function(
+    df_fun
+    ) {
   cols_fun <- df_fun %>%
     select(ends_with("_CardName")) %>%
     colnames() %>%
@@ -466,9 +468,18 @@ model_unco_cards_fun <- function(df_fun) {
             ~ fct_infreq(as.factor(.))
           )
         ) %>%
-        select(where(~ n_distinct(.) > 1))
-      
-      
+        select(where(~ n_distinct(.) > 1)) %>% 
+        rownames_to_column("id") %>% 
+        group_by(across(-c( Wins ,Losses))) %>% 
+        summarise(
+          id = list(id),
+          Wins = sum(Wins),
+          Losses = sum(Losses),
+          .groups = "drop"
+        ) %>% 
+        relocate(
+          Wins,Losses,.before = 1
+        )
       
       model_unco_tot_fun <- df_fun %>%
         filter(Archetype == x) %>%
@@ -516,7 +527,18 @@ model_unco_cards_fun <- function(df_fun) {
           )
         ) %>%
         # remove card with only 1+ like basic land fetch ....
-        select(where(~ n_distinct(.) > 1))
+        select(where(~ n_distinct(.) > 1)) %>% 
+        rownames_to_column("id") %>% 
+        group_by(across(-c( Wins ,Losses))) %>% 
+        summarise(
+          id = list(id),
+          Wins = sum(Wins),
+          Losses = sum(Losses),
+          .groups = "drop"
+        ) %>% 
+        relocate(
+          Wins,Losses,.before = 1
+        )
       
       if (nrow(df_model) == 0) {
         model_res <- NULL
@@ -526,71 +548,27 @@ model_unco_cards_fun <- function(df_fun) {
         model_res_any <- model_removing_alias_var(
           df = model_unco_tot_fun # , interaction_fun = interaction_term[x]
         )
-        
         model_res <- model_removing_alias_var(
           df = df_model # , interaction_fun = interaction_term[x]
         )
         
-        
-        df_mod <- rbind(
-          df_model %>%
-            rownames_to_column("id") %>% 
-            select(-Losses) %>%
-            uncount(Wins) %>%
-            mutate(
-              Y = 1,
-              .before = 1
-            ),
-          df_model %>%
-            rownames_to_column("id") %>% 
-            select(-Wins) %>%
-            uncount(Losses) %>%
-            mutate(
-              Y = 0,
-              .before = 1
-            )
-        ) %>%
-          # remove card with only 1+ like basic land fetch ....
-          # here because some rare deck as W 0 and L 0 and can be the only one with distinct value
-          select(where(~ n_distinct(.) > 1))
-        
-        
-        if (ncol(df_model) <= 3) {
-          fit_ridge <- NULL
-        } else {
-          
-          
-          
-          x_mat_model <- model.matrix(
-            ~., # (.)^2,
-            dplyr::select(df_mod, -c(Y,id))
-          )[, -1] %>%
-            as_tibble() %>%
-            select(where(~ n_distinct(.) > 1)) %>%
-            as.matrix()
-          
-          y_count <- df_mod$Y
-          
-          
-          fit_ridge <- suppressWarnings(
-            ridge.proj(x_mat_model,
-                       y_count,
-                       family = "binomial",
-                       suppress.grouptesting = TRUE
-            )
-          )
-          
-          fit_ridge$data <- df_mod
-          fit_ridge$Archetype <- x
-        }
         model_res_any$Archetype <- x
         model_res$Archetype <- x
+        model_res_any$id <- tibble(
+          rownames = row.names(model_unco_tot_fun),
+          id = model_unco_tot_fun$id
+          )
+        model_res$id <- tibble(
+          rownames = row.names(df_model),
+          id = df_model$id
+        )
+        
       }
       return(
         list(
           Model_any = model_res_any,
-          Model_count = model_res,
-          model_ridgge = fit_ridge
+          Model_count = model_res #,
+          # model_ridgge = fit_ridge
         )
       )
     }
@@ -611,7 +589,7 @@ model_removing_alias_var <- function(
   )
   
   res <- glm(formula_model,
-             data = df,
+             data = df %>% select(-id),
              family = quasibinomial # binomial
   )
   

@@ -109,6 +109,7 @@ $$OR = \frac{p_1/(1-p_1)}{p_2/(1-p_2)}$$
 
 
 ```{r result_archetype_mainboard}
+# Rprof("deck_ana")
 Main_res_Archetype <- Generate_and_format_model_result(
   df_base_fun = df_export,
   min_arch_presence_fun = filter_archetype_count_5,
@@ -118,6 +119,10 @@ Main_res_Archetype <- Generate_and_format_model_result(
   min_number_of_cards = min_sample_size_5,
   db_scryfall_fun_par = modern_DB_card
 )
+# Rprof(NULL)
+# 
+# a <- summaryRprof("rmd_files/deck_ana")
+# b <- a$by.self
 ```
 
 ```{r result_archetype_sideboard}

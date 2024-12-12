@@ -40,7 +40,14 @@ lapply_around_table_list <- function(
 }
 
 
-unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_fun){
+unlist_side_or_main <- function(
+    df,
+    Archetype_fun,
+    Model,
+    top_x_rank,
+    Week_fun,
+    cols_fun
+    ){
   not_colfuns <- ifelse(cols_fun == "Sideboard","Mainboard","Sideboard")
   # if(Archetype_fun == "Footfalls") browser()
   if(nrow(df %>% 
@@ -53,7 +60,12 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
           ) %>% 
           mutate(Date = lubridate::date(Date))%>% 
           select(-all_of(not_colfuns)) %>% 
-          filter(Week >= (max(Week) - Week_fun)) %>% 
+          # filter(Week >= sort(unique(Week), decreasing = TRUE)[last_week_number_7])
+          {if (!is.infinite(Week_fun)) filter(.,
+                                                Week >= sort(unique(Week),
+                                                             decreasing = TRUE)[Week_fun]
+          ) else .} %>% 
+          # filter(Week >= (max(Week) - Week_fun)) %>% 
           filter(Archetype == Archetype_fun) %>%
           filter(type_of_model == Model) %>% 
           filter(rank <= max(sort(rank)[1:top_x_rank]))) ==0
@@ -71,7 +83,12 @@ unlist_side_or_main <- function(df,Archetype_fun,Model,top_x_rank,Week_fun,cols_
       ) %>% 
       mutate(Date = lubridate::date(Date))%>% 
       select(-all_of(not_colfuns)) %>% 
-      filter(Week >= (max(Week) - Week_fun)) %>% 
+      # filter(Week >= sort(unique(Week), decreasing = TRUE)[last_week_number_7])
+      {if (!is.infinite(Week_fun)) filter(.,
+                                          Week >= sort(unique(Week),
+                                                       decreasing = TRUE)[Week_fun]
+      ) else .} %>% 
+      # filter(Week >= (max(Week) - Week_fun)) %>% 
       filter(Archetype == Archetype_fun) %>%
       filter(type_of_model == Model) %>% 
       filter(rank <= max(sort(rank)[1:top_x_rank])) %>% 
@@ -386,11 +403,13 @@ Get_best_deck_from_model <- function(
     base_df,
     number
 ){
+  # x <- model_list[[1]]
   result_best_deck <- lapply(model_list, function(x){
     best_any <- get_best_deck_sub_fun(
-      x$Model_any,
-      base_df,
-      number) %>% mutate(type_of_model = "Any",.before = 4)
+      model_list_spe = x$Model_any,
+      base_df = base_df,
+      number = number
+      ) %>% mutate(type_of_model = "Any",.before = 4)
     
     best_count <- get_best_deck_sub_fun(
       x$Model_count,
@@ -408,13 +427,21 @@ Get_best_deck_from_model <- function(
 
 get_best_deck_sub_fun <-  function(model_list_spe,base_df,number){
   if (number == Inf){number <- nrow(model_list_spe$data)}
+  id_table <- model_list_spe$id %>% 
+    unnest_longer(id) %>% 
+    distinct(rownames,.keep_all = TRUE)
+  
   proba <- (
+    (
     data.frame(
-      id = rownames(model_list_spe$data),
+      rownames = rownames(model_list_spe$data),
       proba = model_list_spe$fitted.values 
     ) %>% 
       arrange(desc(proba))
-  )[1:number,]
+  )[1:number,] 
+  ) %>% 
+    left_join(id_table,join_by(rownames)) %>% 
+    select(-rownames)
   
   res <- proba %>% 
     left_join(base_df,by = "id") %>% 
@@ -568,6 +595,18 @@ print_result_total_script_best_deck <- function(
     res_main_side,
     iteration) {
   #, out.width="100%"
+  if( is.null(
+    unlist(
+      c(res_tot[[iteration]],
+        res_main_side[[iteration]]),
+      recursive = TRUE
+    )
+  )){
+    pander::pandoc.p("")
+  }else{
+    
+    
+    # res_main_side[[iteration]]$any res_main_side[[iteration]]$count res_tot[[iteration]]$count res_tot[[iteration]]$any
   
   pander::pandoc.header(iteration, level = 3)
   pander::pandoc.p("")
@@ -641,4 +680,5 @@ print_result_total_script_best_deck <- function(
   pander::pandoc.p("")
   pander::pandoc.p("")
   
-}
+  }
+  }
