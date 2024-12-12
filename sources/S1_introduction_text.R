@@ -45,6 +45,7 @@ Additional information is available in tooltip (for Archetype and base archetype
 "In particular, the publication of the top32 only for results from MTGO led to an overestimation of the winrates, the winrates were centred.\n\n
 The last part present : \n
 - The représentation of each colors combinations in the format\n
+- Number of target for 2 cmc black removal.\n
 - The presence of different cards in the format.\n
 Leagues are includes in this part\n\n
 "
@@ -133,7 +134,6 @@ Introduction_char_vec_par_5_2 <-
 - **Uncommon Cards**, These cards are not always included in decks, quasibinomial regression models are created using the wins and losses of each deck : \n
 \t- Comparing for each card presence *+1* vs absence *0*\n
 \t- Comparing each card count with a sufficient sample size *0* vs *1* vs *3-4* for example.\n
-\t- In an attempt to take account of potential collinearity between the variables, a penalised ridge regression model was also implemented for the counts of cards.\n    
     "
 
   )
