@@ -52,7 +52,7 @@ top_8_table_and_plot_prez_generator <- function(
         all_of(cols_fun),all_of(not_colfuns),Place,Player,AnchorUri, Archetype,Base_Archetype
       ) %>% 
       select(-all_of(not_colfuns)) %>% 
-      filter(Place <= max(sort(Place)[1:top_x_rank])) %>% 
+      filter(Place <= max(sort(Place)[1:top_x_rank],na.rm = TRUE)) %>% 
       arrange(Place) %>% 
       unnest_longer(!!rlang::sym(cols_fun)) %>%
       unnest_wider(!!rlang::sym(cols_fun), names_sep = "_") %>% 
@@ -61,7 +61,7 @@ top_8_table_and_plot_prez_generator <- function(
     return(Unnest_filter_table)
   }
   
-  
+    
   Df_combine_base <- rbind(
     unlist_side_or_main_deck_winner(
       Tournament_of_interest_en_cours, 
@@ -70,7 +70,7 @@ top_8_table_and_plot_prez_generator <- function(
     ),
     unlist_side_or_main_deck_winner(
       Tournament_of_interest_en_cours,
-      top_x_rank =8,
+      top_x_rank = 8,
       "Sideboard"
     )
   )  

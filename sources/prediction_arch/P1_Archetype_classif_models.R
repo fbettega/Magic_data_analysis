@@ -360,6 +360,7 @@ total_DB_card <- read_csv("data/mtg_data/DBcarte_oracle.csv",show_col_types = FA
     legalities.vintage == "legal" |
       legalities.vintage ==  "restricted"
   )  
+
 # %>% 
 #   filter(layout != "token",
 #          layout != "art_series" ,
@@ -368,13 +369,21 @@ total_DB_card <- read_csv("data/mtg_data/DBcarte_oracle.csv",show_col_types = FA
   
 
 
+# if(format_param == "Modern"){
+# custom_illegal_cards <- c("The One Ring","Jegantha, the Wellspring","Amped Raptor")
+# }else{
+  custom_illegal_cards <- c()
+# }
+# 24,652
+
 
 
 df_export_pre_60_filter_remove_bann <- Ban_patch(
   df = df_export_pre_60_filter,
   scryfall_db = total_DB_card,
   Format_fun_par = format_param,
-  Date_cutoff = date_cut
+  Date_cutoff = date_cut,
+  custom_illegal_cards = custom_illegal_cards
 )  %>% 
   # add rules if a fall back is more than 1%  and n > 100 meta it become an archetype
   mutate(

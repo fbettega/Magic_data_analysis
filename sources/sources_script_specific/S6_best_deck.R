@@ -62,10 +62,10 @@ unlist_side_or_main <- function(
           select(-all_of(not_colfuns)) %>% 
           # filter(Week >= sort(unique(Week), decreasing = TRUE)[last_week_number_7])
           {if (!is.infinite(Week_fun)) filter(.,
-                                                Week >= sort(unique(Week),
-                                                             decreasing = TRUE)[Week_fun]
+                                              Week >= tail(head(sort(unique(Week), decreasing = TRUE),Week_fun),1)
+                                              # Week >= sort(unique(Week),
+                                              #                decreasing = TRUE)[Week_fun]
           ) else .} %>% 
-          # filter(Week >= (max(Week) - Week_fun)) %>% 
           filter(Archetype == Archetype_fun) %>%
           filter(type_of_model == Model) %>% 
           filter(rank <= max(sort(rank)[1:top_x_rank]))) ==0
@@ -83,12 +83,11 @@ unlist_side_or_main <- function(
       ) %>% 
       mutate(Date = lubridate::date(Date))%>% 
       select(-all_of(not_colfuns)) %>% 
-      # filter(Week >= sort(unique(Week), decreasing = TRUE)[last_week_number_7])
       {if (!is.infinite(Week_fun)) filter(.,
-                                          Week >= sort(unique(Week),
-                                                       decreasing = TRUE)[Week_fun]
+                                          Week >= tail(head(sort(unique(Week), decreasing = TRUE),Week_fun),1)
+                                          # Week >= sort(unique(Week),
+                                          #              decreasing = TRUE)[Week_fun]
       ) else .} %>% 
-      # filter(Week >= (max(Week) - Week_fun)) %>% 
       filter(Archetype == Archetype_fun) %>%
       filter(type_of_model == Model) %>% 
       filter(rank <= max(sort(rank)[1:top_x_rank])) %>% 

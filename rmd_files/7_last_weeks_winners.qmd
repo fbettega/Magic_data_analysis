@@ -56,7 +56,10 @@ pre_rename_Tournament_of_interest_df <- df_export %>%
          str_detect(Result,"Place$")
          ) %>% 
   mutate(Place = as.integer(str_extract(Result,"^\\d+")))  %>%
-  filter(Week >= sort(unique(Week), decreasing = TRUE)[last_week_number_7])
+  filter(
+    Week >= tail(head(sort(unique(Week), decreasing = TRUE),last_week_number_7),1)
+    # Week >= sort(unique(Week), decreasing = TRUE)[last_week_number_7]
+         )
 
 
 rename_tournament <- pre_rename_Tournament_of_interest_df %>%  
@@ -94,7 +97,7 @@ scheme <- iwanthue(seed = 42, force_init = TRUE)
 
 
 ```{r run_main_result}
-# x <- unique(Tournament_of_interest_df$TournamentFile)# "modern-challenge-64-2024-09-2912692965"
+# x <- "modern-showcase-qualifier-2024-11-3012708857" unique(Tournament_of_interest_df$TournamentFile)# 
 
 total_result <- lapply(unique(Tournament_of_interest_df$TournamentFile), function(x){
   # print(x)

@@ -17,7 +17,7 @@ group_linear_comb_cards <- function(df_long) {
     ) %>%
     group_split(Archetype)
   
-  x <- df_wide_linear_comb[[2]]
+  # x <- df_wide_linear_comb[[2]]
   res_group_df_to_join <- lapply(df_wide_linear_comb, function(x) {
     # print(unique(x$Archetype))
     df_linear_comb_apply_encours <- x %>%
@@ -379,7 +379,9 @@ model_preparation_df <- function(
     cols_fun = deck_or_side
   )
   
-  groupe_cards_uncommon_data <- group_linear_comb_cards(df_long = Model_data_Uncommon_cards)
+  groupe_cards_uncommon_data <- group_linear_comb_cards(
+    df_long = Model_data_Uncommon_cards
+    )
   
   return(
     list(

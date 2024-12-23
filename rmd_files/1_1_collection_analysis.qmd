@@ -454,11 +454,16 @@ Summary_missing_cards_by_archetype <-
       number_of_deck_with_missing
     ),
     number_of_deck_without_missing = Archetype_count - number_of_deck_with_missing,
-    Archetype = as.factor(paste0(Archetype, " : ", Archetype_count)),
+    Archetype = as.factor(
+      # paste0(
+      Archetype
+      # , " : ", Archetype_count)
+      ),
     number_of_deck_with_missing = number_of_deck_with_missing,
     Percent_of_deck_with_missing_cards = number_of_deck_with_missing / Archetype_count
-  ) %>%
-  select(-Archetype_count)
+  ) %>% 
+  relocate(Archetype_count,.after = Archetype) %>% 
+  rename(n = Archetype_count) 
 
 
 
@@ -468,6 +473,7 @@ Summary_missing_cards_by_archetype <-
 ```{r tooltip_aggregate_archetype_missing}
 tooltip_aggregate_archetype_missing <- c(
   "Deck Archetype agregated",
+  "Number of deck",
   "Number of cards missing (4 copy count for 4)",
   "Number of deck with atleast one missing",
   "Average number of missing cards [minimum ; maximum]",
@@ -498,7 +504,13 @@ for (var i = 0; i < tips.length; i++) {
       return_filter_js()
     ),
   filter = "top", rownames = FALSE,
-  options = list(dom = "ltipr", autoWidth = TRUE, pageLength = 25)
+  options = list(dom = "ltipr",    searchCols = list(
+    NULL,list(search = '10 ...'),
+    NULL,NULL,
+    NULL,NULL,
+    NULL,NULL
+  ),
+  autoWidth = TRUE, pageLength = 25)
 ) %>% 
   DT::formatPercentage(
     c("Percent_of_deck_with_missing_cards"),

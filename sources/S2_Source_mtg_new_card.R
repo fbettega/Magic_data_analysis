@@ -129,10 +129,14 @@ sanitize_string <- function(text) {
 search_for_illegal_cards <- function(
   df_illeg,
   cards_db,
-  Format_fun_par
+  Format_fun_par,
+  custom_illegal_cards
   ){
   # conflicted::conflicts_prefer(dplyr::lag)
   
+  
+    
+    
   Base_df <- rbind(df_illeg %>%
     unnest_longer(Mainboard) %>%
     unnest_wider(Mainboard,
@@ -168,6 +172,15 @@ search_for_illegal_cards <- function(
       !!sym(paste0("legalities.",tolower(Format_fun_par))) := "Troll deck"
     )
   
+  DB_of_cards_to_join <- cards_db %>% 
+    select(id ,name,!!sym(paste0("legalities.",tolower(Format_fun_par))) ) %>% 
+    mutate(!!sym(paste0("legalities.",tolower(Format_fun_par))) := 
+             ifelse(name %in% custom_illegal_cards,
+                    "banned",
+                    !!sym(paste0("legalities.",tolower(Format_fun_par))))
+           ) %>% 
+    select(-name)
+  
   
   join_with_scryfall_df_res <- Base_df %>% 
     select(id,CardName) %>% 
@@ -179,9 +192,7 @@ search_for_illegal_cards <- function(
       ),
       by = c("CardName" = "CardName")
     ) %>%
-    left_join(
-      cards_db %>% 
-        select(id ,!!sym(paste0("legalities.",tolower(Format_fun_par))) ),
+    left_join(DB_of_cards_to_join,
       by = join_by(
         scry_fall_id == id
       )
@@ -205,15 +216,16 @@ Ban_patch <- function(
     df ,
     scryfall_db,
     Format_fun_par,
-    Date_cutoff
+    Date_cutoff,
+    custom_illegal_cards = c()
 ) {
   # Search deck id with ban cards in side or deck
   illegal_cards_id <- search_for_illegal_cards(
     df_illeg = df,
     cards_db =  scryfall_db,
-    Format_fun_par = Format_fun_par
+    Format_fun_par = Format_fun_par,
+    custom_illegal_cards = custom_illegal_cards
   )
-  
   
 
   # Get unique id when ban cards is in both side and main
@@ -1682,14 +1694,15 @@ DF_presence_fun <- function(
     time_limit = Inf,
     compare_time_limit = NULL) {
 
+  
+
+  
+  
   Presence_df_base <- df_base %>%
     ungroup() %>%
     {if (!is.infinite(time_limit)) filter(.,
-      Week >= sort(unique(Week), decreasing = TRUE)[time_limit]
+      Week >= tail(head(sort(unique(Week), decreasing = TRUE),time_limit),1)
       ) else .} %>% 
-    # filter(
-    #   Week > (max(Week) - time_limit)
-    # ) %>%
     group_by(Archetype) %>%
     mutate(
       Archetype_count = n(),

@@ -121,21 +121,21 @@ colors_scales_presence_base_arch <- scheme$hex(
 
 one_week_inline <- Presence_df_base_all_data %>%
   filter(
-    Week >= sort(unique(Week), decreasing = TRUE)[2]
-    # Week > (max(Week) - 2)
+          Week >= tail(head(sort(unique(Week), decreasing = TRUE),2),1)
+    # Week >= sort(unique(Week), decreasing = TRUE)[2]
   )
 
 two_week_inline <- Presence_df_base_all_data %>%
   filter(
-    Week >= sort(unique(Week), decreasing = TRUE)[3]
-    # Week > (max(Week) - 3)
+          Week >= tail(head(sort(unique(Week), decreasing = TRUE),3),1)
+    # Week >= sort(unique(Week), decreasing = TRUE)[3]
   )
 
 
 one_month_inline <- Presence_df_base_all_data %>%
   filter(
-    Week >= sort(unique(Week), decreasing = TRUE)[5]
-    # Week > (max(Week) - 5)
+    Week >= tail(head(sort(unique(Week), decreasing = TRUE),5),1)
+    # Week >= sort(unique(Week), decreasing = TRUE)[5]
   )
 ```
 

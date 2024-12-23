@@ -72,10 +72,8 @@ deck_list_format <- git2r::repository(Format_path_repo)
 pull_deck_list_repo <- git2r::pull(repo = deck_list_repo)
 pull_format_repo <- git2r::pull(repo = deck_list_format)
 
-
 # system('git config --global user.email "francois.bettega@gmail.com"', intern = TRUE)
 # system('git config --global user.name "fbettega"', intern = TRUE)
-
 system(paste("cmd /c \"cd /d", path_decklist_repo, "&& git fetch jiliac\""), intern = TRUE)
 system(paste("cmd /c \"cd /d", path_decklist_repo, "&& git  merge -X theirs jiliac/master --no-edit\""), intern = TRUE)
 system(paste("cmd /c \"cd /d", path_decklist_repo, "&& git pull --no-edit\""), intern = TRUE)
@@ -312,7 +310,6 @@ error = function(e) {
   # cancel shutdown use : system("shutdown -a")
   print(paste0("shutdown cause of error"))
   system("shutdown /s /t 60")
-
 }
 )
 
