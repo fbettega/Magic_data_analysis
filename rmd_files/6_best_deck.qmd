@@ -19,16 +19,18 @@ source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R")
 source("../sources/sources_script_specific/S5_6_model_deck.R")
 source("../sources/sources_script_specific/S6_best_deck.R")
-params <- read_rds( "../data/intermediate_result/temp_format_encours_for_param.rds")
-options(kableExtra.auto_format = FALSE,
-        DT.warn.size = FALSE)
+params <- read_rds("../data/intermediate_result/temp_format_encours_for_param.rds")
+options(
+  kableExtra.auto_format = FALSE,
+  DT.warn.size = FALSE
+)
 # loaded_base_data <- readRDS("data/data_meta_en_cours.rds")
 
-modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>% 
-    filter(
-        !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
-        !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
-    )
+modern_DB_card <- read_csv("../data/mtg_data/DBcarte_oracle.csv") %>%
+  filter(
+    !!sym(paste0("legalities.", tolower(params$format_param))) == "legal" |
+      !!sym(paste0("legalities.", tolower(params$format_param))) == "restricted"
+  )
 
 # sample size minimum pour etre un groupe
 Land_modern <- modern_DB_card %>%
@@ -49,17 +51,17 @@ Land_modern <- modern_DB_card %>%
 
 rm(tmp)
 
-df_export <- readRDS(paste0("../data/",params$format_param,"_data_meta_en_cours.rds")) %>%
-      # include filter bad deck
-  filter(Valide_deck) %>% 
+df_export <- readRDS(paste0("../data/", params$format_param, "_data_meta_en_cours.rds")) %>%
+  # include filter bad deck
+  filter(Valide_deck) %>%
   mutate(
     Deck_winrate = winrate_1_data(Wins, Losses)
   ) %>%
-  group_by(Archetype) %>% 
+  group_by(Archetype) %>%
   mutate(
     Archetype_count = n()
   ) %>%
-  filter(Archetype != "Unknown") %>% 
+  filter(Archetype != "Unknown") %>%
   ungroup()
 
 Number_of_deck <- 7
@@ -77,14 +79,14 @@ total_result_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(
   fun_par_df = df_export,
   fun_parmin_arch_presence_fun = filter_archetype_count_6,
   fun_pardeck_or_side = c(
-  "All","Mainboard" ,"Sideboard"
+    "All", "Mainboard", "Sideboard"
   ),
-  fun_partype_of_archetype = "Archetype",# "Archetype" "Base_Archetype"
+  fun_partype_of_archetype = "Archetype", # "Archetype" "Base_Archetype"
   fun_parland_name_fun = Land_modern,
   fun_parmin_number_of_cards = min_sample_size_6,
   fun_parnumber_of_week = c(
-    Inf,2
-    ),
+    Inf, 2
+  ),
   fun_parNumber_of_deck_print = Number_of_deck,
   db_scryfall_fun_par = modern_DB_card
 )
@@ -93,42 +95,43 @@ total_result_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(
 
 # Archetype  
 ```{r, Introduction_chunk_6_best_deck, results='asis'}
-
 ```
 
 
 ## All Data Model best deck prediction  
 ```{r print_result_all_data, results='asis'}
-#, out.width="100%"
+# , out.width="100%"
 # arch_encours <- total_result_Archetype_best_deck_to_print$Archetype_consider[1]
-all_data_best_deck_arch_print_res <- 
-  lapply(total_result_Archetype_best_deck_to_print$Archetype_consider,
-         function(arch_encours){
-    print_result_total_script_best_deck(
-    res_tot = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$global,
-    res_main_side = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$main_side,
-    iteration = arch_encours
-    ) 
-         }
-         )
+all_data_best_deck_arch_print_res <-
+  lapply(
+    total_result_Archetype_best_deck_to_print$Archetype_consider,
+    function(arch_encours) {
+      print_result_total_script_best_deck(
+        res_tot = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$global,
+        res_main_side = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$main_side,
+        iteration = arch_encours
+      )
+    }
+  )
 ```
 
 
 ## Two weeks Data Model best deck prediction  
 ```{r print_result_2weeks, results='asis'}
-#, out.width="100%"
+# , out.width="100%"
 
 # iteration <- "Living End"
-twoweeks_data_best_deck_arch_print_res <- 
-  lapply(total_result_Archetype_best_deck_to_print$Archetype_consider,
-         function(arch_encours){
-    print_result_total_script_best_deck(
-    res_tot = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$global,
-    res_main_side = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$main_side,
-    iteration = arch_encours
-    ) 
-         }
-         )
+twoweeks_data_best_deck_arch_print_res <-
+  lapply(
+    total_result_Archetype_best_deck_to_print$Archetype_consider,
+    function(arch_encours) {
+      print_result_total_script_best_deck(
+        res_tot = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$global,
+        res_main_side = total_result_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$main_side,
+        iteration = arch_encours
+      )
+    }
+  )
 ```
 
 
@@ -136,51 +139,51 @@ twoweeks_data_best_deck_arch_print_res <-
 ```{r compute_res_base_arch}
 total_result_base_Archetype_best_deck_to_print <- generate_total_result_of_best_deck(
   fun_par_df = df_export,
-fun_parmin_arch_presence_fun = filter_archetype_count_6,
-fun_pardeck_or_side = c("All","Mainboard" ,"Sideboard"),
-fun_partype_of_archetype = "Base_Archetype",# "Archetype" "Base_Archetype"
-fun_parland_name_fun = Land_modern,
-fun_parmin_number_of_cards = min_sample_size_6,
-fun_parnumber_of_week = c(Inf,2),
-fun_parNumber_of_deck_print = Number_of_deck,
+  fun_parmin_arch_presence_fun = filter_archetype_count_6,
+  fun_pardeck_or_side = c("All", "Mainboard", "Sideboard"),
+  fun_partype_of_archetype = "Base_Archetype", # "Archetype" "Base_Archetype"
+  fun_parland_name_fun = Land_modern,
+  fun_parmin_number_of_cards = min_sample_size_6,
+  fun_parnumber_of_week = c(Inf, 2),
+  fun_parNumber_of_deck_print = Number_of_deck,
   db_scryfall_fun_par = modern_DB_card
 )
 ```
 
 
 ```{r,intro_second_time ,ref.label=c('Introduction_chunk_6_best_deck'), results='asis'}
-
 ```
 
 
 ## All Data Model best deck prediction  
 ```{r print_result_all_data_base_arch, results='asis'}
-#, out.width="100%"
-all_data_best_deck_arch_print_res <- 
-  lapply(total_result_base_Archetype_best_deck_to_print$Archetype_consider,
-         function(arch_encours){
-    print_result_total_script_best_deck(
-    total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$global,
-    total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$main_side,
-    iteration = arch_encours
-    ) 
-         }
-         )
+# , out.width="100%"
+all_data_best_deck_arch_print_res <-
+  lapply(
+    total_result_base_Archetype_best_deck_to_print$Archetype_consider,
+    function(arch_encours) {
+      print_result_total_script_best_deck(
+        total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$global,
+        total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_Inf$main_side,
+        iteration = arch_encours
+      )
+    }
+  )
 ```
 
 
 ## Two weeks Data Model best deck prediction  
 ```{r print_result_2weeks_base_arch, results='asis'}
-#, out.width="100%"
-twoweeks_data_best_deck_arch_print_res <- 
-  lapply(total_result_base_Archetype_best_deck_to_print$Archetype_consider,
-         function(arch_encours){
-           
-    print_result_total_script_best_deck(
-    total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$global,
-    total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$main_side,
-    iteration = arch_encours
-    ) 
-         }
-         )
+# , out.width="100%"
+twoweeks_data_best_deck_arch_print_res <-
+  lapply(
+    total_result_base_Archetype_best_deck_to_print$Archetype_consider,
+    function(arch_encours) {
+      print_result_total_script_best_deck(
+        total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$global,
+        total_result_base_Archetype_best_deck_to_print$resulting_gt_table$number_of_week_2$main_side,
+        iteration = arch_encours
+      )
+    }
+  )
 ```

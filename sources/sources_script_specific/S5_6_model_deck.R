@@ -308,6 +308,7 @@ model_preparation_df <- function(
     min_arch_presence_fun,
     deck_or_side,
     min_number_of_cards) {
+  
   Uncommon_cards_pre_process <- df_prett_fun$df_agreg %>%
     # filter(count_iteration_cards == most_common_count) %>%
     filter(
@@ -330,6 +331,9 @@ model_preparation_df <- function(
     )
   
   
+  if(nrow(Uncommon_cards_pre_process) == 0 ){
+    Uncommon_cards <- NULL
+    }else{
   Uncommon_cards_agreg_out <- Agreg_count_by_cards(
     Uncommon_cards_pre_process,
     deck_or_side,
@@ -339,7 +343,7 @@ model_preparation_df <- function(
   Uncommon_cards <- Uncommon_cards_agreg_out %>%
     group_by(
       Archetype, !!rlang::sym(paste0(deck_or_side, "_CardName"))
-    )
+    )}
   
   # Récupération des cartes a 1 niveaux après agreg
   Base_cards_and_base_count <-
@@ -372,7 +376,7 @@ model_preparation_df <- function(
     name_list_of_df_with_arch()
   
   
-  
+  if(!is.null(Uncommon_cards)){
   Model_data_Uncommon_cards <- prepare_df_for_model(
     df_fun = Uncommon_cards,
     base_df = df_prett_fun$df_land_agreg,
@@ -382,7 +386,9 @@ model_preparation_df <- function(
   groupe_cards_uncommon_data <- group_linear_comb_cards(
     df_long = Model_data_Uncommon_cards
     )
-  
+  }else{
+    groupe_cards_uncommon_data <- NULL
+  }
   return(
     list(
       group_com_unco_cards_res = groupe_cards_uncommon_data,

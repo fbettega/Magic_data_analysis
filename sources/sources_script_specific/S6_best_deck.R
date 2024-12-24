@@ -482,6 +482,7 @@ get_models_for_best_deck <- function(
     min_number_of_cards = get_models_fun_parmin_number_of_cards
   )
   
+  if(!is.null(df_after_model_preparation$group_com_unco_cards_res)){
   result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
     df_fun = df_after_model_preparation$group_com_unco_cards_res
   ) %>%
@@ -490,8 +491,9 @@ get_models_for_best_deck <- function(
         df_after_model_preparation$group_com_unco_cards_res$Archetype
         )
       )
-  
-  
+  }else{
+    result_models_Uncommon_cards_all_arch <- NULL
+  }
   return(result_models_Uncommon_cards_all_arch)
   
 }

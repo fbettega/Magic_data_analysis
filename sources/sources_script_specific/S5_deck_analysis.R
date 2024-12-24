@@ -551,6 +551,8 @@ Generate_and_format_model_result <-
     
     
     # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
+    
+    if(!is.null(DF_prepare_for_model$group_com_unco_cards_res)){
     result_models_Uncommon_cards_all_arch <- model_unco_cards_fun(
       df_fun = DF_prepare_for_model$group_com_unco_cards_res
     ) %>%
@@ -567,7 +569,9 @@ Generate_and_format_model_result <-
           DF_prepare_for_model$group_com_unco_cards_res$Archetype
           )
         )
-    
+    }else{
+      uncomon_card_format_model <- NULL
+    }
     
     Df_base_number_to_print <- result_pre_treatement$df_land_agreg %>%
       ungroup() %>%

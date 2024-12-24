@@ -125,6 +125,7 @@ Main_res_Archetype <- Generate_and_format_model_result(
 # b <- a$by.self
 ```
 
+
 ```{r result_archetype_sideboard}
 Side_res_Archetype <- Generate_and_format_model_result(
   df_base_fun = df_export,
