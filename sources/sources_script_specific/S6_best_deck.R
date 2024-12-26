@@ -49,6 +49,7 @@ unlist_side_or_main <- function(
     cols_fun
     ){
   not_colfuns <- ifelse(cols_fun == "Sideboard","Mainboard","Sideboard")
+  
   # if(Archetype_fun == "Footfalls") browser()
   if(nrow(df %>% 
           filter(Archetype == Archetype_fun) ) == 0 |
@@ -68,8 +69,8 @@ unlist_side_or_main <- function(
           ) else .} %>% 
           filter(Archetype == Archetype_fun) %>%
           filter(type_of_model == Model) %>% 
-          filter(rank <= max(sort(rank)[1:top_x_rank]))) ==0
-     
+          filter(rank <= max(sort(rank)[1:top_x_rank]))
+          ) ==0
   ){
     Unnest_filter_table <- NULL
     
@@ -332,12 +333,18 @@ Best_deck_get_table_function <- function(res_fun_init_main,
 ) {
   
   if (identical(res_fun_init_main , res_fun_init_side)) {
+    if(nrow(res_fun_init_main) == 0){
+      format_table <- NULL
+    } else{
+    
     Df_combine <- rbind(
       unlist_side_or_main(
-        res_fun_init_main, Archetype_fun, Model,
-        top_x_rank,
-        Week_fun,
-        "Mainboard"
+        df = res_fun_init_main,
+        Archetype_fun = Archetype_fun,
+        Model = Model,
+        top_x_rank = top_x_rank,
+        Week_fun = Week_fun,
+        cols_fun = "Mainboard"
       ),
       unlist_side_or_main(
         res_fun_init_side, Archetype_fun, Model,
@@ -356,7 +363,13 @@ Best_deck_get_table_function <- function(res_fun_init_main,
       maind_and_side = "All", #"Main" "Side"
       db_scry_fall_generator_sub_dun = db_format_best_deck_table_fun
     )
+    }
   } else {
+    
+    
+    if(nrow(res_fun_init_main) == 0){
+      format_table_main <- NULL
+    } else{
     format_table_main <- table_generator_sub_fun(
       df_fun =  unlist_side_or_main(
         res_fun_init_main, Archetype_fun, Model,
@@ -371,6 +384,11 @@ Best_deck_get_table_function <- function(res_fun_init_main,
       maind_and_side = "Main" , #"Main" "Side"
       db_scry_fall_generator_sub_dun = db_format_best_deck_table_fun
     )
+    }
+    if(nrow(res_fun_init_side) == 0){
+      format_table_side <- NULL
+    } else{
+    
     format_table_side <- table_generator_sub_fun(
       df_fun = unlist_side_or_main(
         res_fun_init_side, Archetype_fun, Model,
@@ -385,6 +403,7 @@ Best_deck_get_table_function <- function(res_fun_init_main,
       maind_and_side = "Side", #"Main" "Side"
       db_scry_fall_generator_sub_dun = db_format_best_deck_table_fun
     )
+    }
     
     format_table <- list(
       main = format_table_main,
@@ -516,7 +535,7 @@ generate_total_result_of_best_deck <- function(
   # all_main_side_fun <- fun_pardeck_or_side[1]
   list_of_Model_result_total_fun <- lapply(fun_pardeck_or_side, 
                                            function(all_main_side_fun){
-    # print(all_main_side_fun)
+     # print(all_main_side_fun)
     
     fun_par_df <- fun_par_df %>%
       mutate(Archetype = !!rlang::sym(fun_partype_of_archetype))
