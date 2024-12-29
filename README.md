@@ -77,10 +77,10 @@ Table below list format includes and starting date
 
 | Format  | Start date |
 |:--------|:-----------|
-| Modern  | 26/08/2024 |
+| Modern  | 08/12/2024 |
 | Legacy  | 26/08/2024 |
 | Pauper  | 13/05/2024 |
-| Pioneer | 26/08/2024 |
+| Pioneer | 16/12/2024 |
 | Vintage | 26/08/2024 |
 
 ## Base data format
