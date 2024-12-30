@@ -287,7 +287,7 @@ by = c("CardName" = "CardName")
     column_where_is_add = "link", #"link",
     link_column = "scryfall_uri"
     ) %>% 
-  select(-c(set_name,set_id)) %>% 
+  select(-c(set_name,set_id,scry_fall_id)) %>% 
   mutate(across(where(is.character),as.factor))  %>% 
   relocate(n,.after = last_col()) %>% 
   arrange(desc(n))
