@@ -113,7 +113,8 @@ Prepare_df_for_long_for_model <- function(
     deck_or_side,
     type_of_archetype,
     land_name_fun,
-    min_number_of_cards = min_sample_size_5) {
+    min_number_of_cards = min_sample_size_5
+    ) {
 
   if (deck_or_side == "All") {
   
@@ -135,13 +136,13 @@ Prepare_df_for_long_for_model <- function(
         arrange(desc(Archetype_count)) %>%
         unnest_longer(Mainboard) %>%
         unnest_wider(Mainboard, names_sep = "_") %>%
-        mutate(
+        {if(nrow(.)>0) mutate(.,
           Mainboard_CardName =  paste0(Mainboard_CardName,"_main")
-               ) %>% 
-        rename(
+        ) else . } %>% 
+        {if(nrow(.)>0) rename(.,
           `_CardName` = Mainboard_CardName,
           `_Count` = Mainboard_Count
-        ),
+        ) else . },
       df_base_fun %>%
         mutate(Archetype = !!rlang::sym(type_of_archetype)) %>%
         filter(!is.na(Wins)) %>%
@@ -159,14 +160,14 @@ Prepare_df_for_long_for_model <- function(
         arrange(desc(Archetype_count)) %>%
         unnest_longer(Sideboard) %>%
         unnest_wider(Sideboard, names_sep = "_") %>%
-        mutate(
+        {if(nrow(.)>0)  mutate(.,
           Sideboard_CardName = paste0(
             Sideboard_CardName,"_side")
-        ) %>% 
-        rename(
+        ) else . } %>% 
+        {if(nrow(.)>0) rename(.,
           `_CardName` = Sideboard_CardName,
           `_Count` = Sideboard_Count
-        )
+        ) else . }
     )
     deck_or_side <- ""
   } else {
@@ -188,6 +189,13 @@ Prepare_df_for_long_for_model <- function(
       unnest_longer(!!deck_or_side) %>%
       unnest_wider(!!deck_or_side, names_sep = "_")
   }
+  
+  if(nrow(df_Archetype_unnest_without_selection) == 0){
+    Df_archetype_cards_agreg = NULL
+    Df_archetype_cards_land_name_agreg = NULL
+    Deck_win_rate_join = NULL
+    List_of_consider_arch = NULL
+  } else {
   
   df_Archetype_long <- df_Archetype_unnest_without_selection %>%
     # mutate(Mainboard_CardName = Card_agregueur(Mainboard_CardName)) %>%
@@ -287,13 +295,15 @@ Prepare_df_for_long_for_model <- function(
     summarise(Archetype_winrate = sum(Wins) / (sum(Wins) + sum(Losses))) %>%
     ungroup()
   
-  
+  List_of_consider_arch = sort(levels(df_Archetype_long$Archetype))
+  }
+
   return(
     list(
       df_agreg = Df_archetype_cards_agreg,
       df_land_agreg = Df_archetype_cards_land_name_agreg,
       deck_winrate = Deck_win_rate_join,
-      Archetype_list = sort(levels(df_Archetype_long$Archetype))
+      Archetype_list = List_of_consider_arch
     )
   )
 }
@@ -309,6 +319,9 @@ model_preparation_df <- function(
     deck_or_side,
     min_number_of_cards) {
   
+  if(is.null(df_prett_fun$df_agreg)){
+    Uncommon_cards_pre_process <- data.frame()
+  } else {
   Uncommon_cards_pre_process <- df_prett_fun$df_agreg %>%
     # filter(count_iteration_cards == most_common_count) %>%
     filter(
@@ -329,7 +342,7 @@ model_preparation_df <- function(
       },
       min_count_group = !!rlang::sym(paste0(deck_or_side, "_Count"))
     )
-  
+  }
   
   if(nrow(Uncommon_cards_pre_process) == 0 ){
     Uncommon_cards <- NULL
@@ -343,8 +356,12 @@ model_preparation_df <- function(
   Uncommon_cards <- Uncommon_cards_agreg_out %>%
     group_by(
       Archetype, !!rlang::sym(paste0(deck_or_side, "_CardName"))
-    )}
+    )
+  }
   
+  if(is.null(df_prett_fun$df_agreg)){
+    Base_cards_and_base_count <- data.frame()
+  } else {
   # Récupération des cartes a 1 niveaux après agreg
   Base_cards_and_base_count <-
     df_prett_fun$df_agreg %>%
@@ -374,7 +391,7 @@ model_preparation_df <- function(
     left_join(df_prett_fun$deck_winrate, by = "Archetype") %>%
     group_split(Archetype) %>%
     name_list_of_df_with_arch()
-  
+  }
   
   if(!is.null(Uncommon_cards)){
   Model_data_Uncommon_cards <- prepare_df_for_model(

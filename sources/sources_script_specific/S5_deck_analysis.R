@@ -541,6 +541,7 @@ Generate_and_format_model_result <-
       min_number_of_cards = min_sample_size_5
     )
     
+
     DF_prepare_for_model <- model_preparation_df(
       df_prett_fun = result_pre_treatement,
       min_arch_presence_fun = filter_archetype_count_5,
@@ -548,7 +549,7 @@ Generate_and_format_model_result <-
       min_number_of_cards = min_sample_size_5
     )
     
-    
+
     
     # Projet avec les images des cartes pour arborescence deck list penser a mettre en gras le compte le plus rreprésenter pour base card and base count
     
@@ -573,6 +574,8 @@ Generate_and_format_model_result <-
       uncomon_card_format_model <- NULL
     }
     
+    
+    if (!is.null(result_pre_treatement$df_land_agreg)){
     Df_base_number_to_print <- result_pre_treatement$df_land_agreg %>%
       ungroup() %>%
       distinct(id, .keep_all = TRUE) %>%
@@ -582,6 +585,10 @@ Generate_and_format_model_result <-
         Losses = sum(Losses), 
         .groups = "drop"
       )
+    } else {
+      Df_base_number_to_print <- NULL
+      
+    }
     
     return(
       list(

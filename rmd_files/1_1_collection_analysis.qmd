@@ -185,13 +185,14 @@ not_owned_cards <-
 # Boosters Tables
 ```{r}
 Total_scryfall_table <-  read_csv("../data/mtg_data/DBcarte.csv") %>% 
-filter(
+  filter(
     !!sym(paste0("legalities.",tolower(params$format_param))) == "legal" |
         !!sym(paste0("legalities.",tolower(params$format_param))) ==  "restricted"
     ) %>% 
   filter(booster) %>%
   filter(digital == FALSE) %>%  # Exclure les cartes exclusivement numériques
-  filter(!set_type %in% c("alchemy", "arena", "mtgo"))
+  filter(!set_type %in% c("alchemy", "arena", "mtgo")) %>% 
+  filter(set != "plst")
 
 
 Missing_cards_by_set <- not_owned_cards %>% 
@@ -239,6 +240,9 @@ Missing_cards_by_set <- not_owned_cards %>%
 
 
 ```{r create_table_missing_cards_by_set_and_rarity}
+
+
+
 Missing_cards_by_set_rarity_with_card_name <- not_owned_cards %>% 
   group_by(CardName) %>% 
   summarise(
@@ -255,19 +259,35 @@ Missing_cards_by_set_rarity_with_card_name <- not_owned_cards %>%
     ) %>%
   left_join(
     Total_scryfall_table %>% 
-      select(id,rarity,set,set_name,set_id,scryfall_uri),
+      select(id,rarity,set,set_name,set_id#,scryfall_uri
+             ),
     by = join_by(
       scry_fall_id == id
       )
     ) %>% 
   distinct(CardName,rarity,set_name,.keep_all = TRUE) %>% 
-  select(-starts_with("colors.")) %>%  
-add_link_to_a_column(
-  df_add_link_fun =   .,
-  column_where_is_add = "link", #"link",
-  link_column = "scryfall_uri"
-) %>% 
-  select(-c(scry_fall_id,set_name,set_id)) %>% 
+  select(-starts_with("colors."),-scry_fall_id)  %>% 
+  left_join(
+     join_with_scryfall(
+    Df_with_cardname =   .,
+    cardname_col = "CardName" ,
+    scry_fall_df = modern_DB_card
+),
+by = c("CardName" = "CardName")
+  ) %>%
+  left_join(
+    modern_DB_card %>% 
+      select(id,scryfall_uri),
+    by = join_by(
+      scry_fall_id == id
+    )
+  ) %>% 
+  add_link_to_a_column(
+    df_add_link_fun =   .,
+    column_where_is_add = "link", #"link",
+    link_column = "scryfall_uri"
+    ) %>% 
+  select(-c(set_name,set_id)) %>% 
   mutate(across(where(is.character),as.factor))  %>% 
   relocate(n,.after = last_col()) %>% 
   arrange(desc(n))
