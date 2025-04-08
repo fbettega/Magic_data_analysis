@@ -116,7 +116,7 @@ match_double_face <-  Deck_list_cards_count %>%
   filter(cards_id_temp %notin% initial_match$cards_id_temp) %>% 
     inner_join(
       collection_archi %>% 
-        filter(collect_id %notin% initial_match$collect_id) %>% 
+        # filter(collect_id %notin% initial_match$collect_id) %>% 
         mutate(
           Name = str_remove(Name,"\\s+//.*$")
           ),
