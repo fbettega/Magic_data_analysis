@@ -4,12 +4,12 @@ Reupdate_scryfall_db <- FALSE #TRUE FALSE
 # suppressPackageStartupMessages()
 reparse_arch <- TRUE  #TRUE FALSE
 not_all_arch_filter_S0 <- c(
-  # "Modern",
+  # "Modern"#,
   # "Legacy",
   # "Pauper",
   # "Pioneer",
   # "Vintage",
-  "All"
+   "All"
 )
 # Try catch because script is long allow shutdown if error
 tryCatch(
@@ -302,7 +302,7 @@ log_df <- log_df_fun(
   tictoc_res = paste0(tictoc::tic.log(format = TRUE))
 )
 
-tictoc::tic.clearlog()
+# tictoc::tic.clearlog()
 # cancel shutdown use : system("shutdown -a")
 system("shutdown /s /t 30")
 },

@@ -56,6 +56,8 @@ color_comb_list <- c(
 
 # download from https://github.com/dmlc/xgboost/releases
 # install.packages("xgboost_r_gpu_win64_82d846bbeb83c652a0b1dff0e3519e67569c4a3d.tar.gz", repos = NULL, type="source")
+
+# devtools::install_github("dmlc/xgboost", subdir = "R-package")
 # install.packages("glmnet")
 
 rerun_ml <- TRUE # TRUE FALSE
@@ -481,7 +483,8 @@ known_arch <- df_export %>%
   prett_fun_classif("Mainboard") %>%
   mutate(
     Archetype = as.factor(Archetype)
-  )
+  ) %>% 
+  distinct()
 ################################################################################
 
 if (!rerun_ml) {
@@ -525,7 +528,8 @@ Result_raw_decision_treec5 <- model_generic_grid_fun(
   grid = grid_decision_tree_base_c5,
   model_name = "decision_c5_tree_tidy",
   data_name = "raw_data",
-  number_of_core = 5
+  # remove para because of ram 
+  number_of_core =1#5
 )
 
 

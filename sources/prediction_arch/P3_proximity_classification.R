@@ -127,7 +127,7 @@ data_dedup <- data_wide_total %>%
 
 # 2. Rejoindre cette version dédupliquée à la dataframe de départ
 data_wide <- data_wide_total  %>%
-  left_join(data_dedup, by = colnames(data_wide)[!colnames(data_wide) %in% "id"])
+  left_join(data_dedup, by = colnames(data_wide_total)[!colnames(data_wide_total) %in% "id"])
 
 
 
