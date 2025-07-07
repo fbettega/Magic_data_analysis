@@ -8,8 +8,8 @@ not_all_arch_filter_S0 <- c(
   # "Legacy",
   # "Pauper",
   # "Pioneer",
-  # "Vintage",
-   "All"
+  # "Vintage"#,
+   # "All"
 )
 # Try catch because script is long allow shutdown if error
 tryCatch(
@@ -307,7 +307,8 @@ log_df <- log_df_fun(
 system("shutdown /s /t 30")
 },
 error = function(e) {
-  error_message <- capture.output(print(e))
+  # error_message <- capture.output(print(e))
+  error_message <- capture.output(rlang::cnd_print(e))
   error_message <- paste("Une erreur s'est produite :",
                          paste(
                            error_message,
@@ -315,8 +316,7 @@ error = function(e) {
   
   # Écrire l'erreur dans le fichier
   cat(error_message, file = "outpout/erreur_log.txt")
-  
-  
+
   # cancel shutdown use : system("shutdown -a")
   print(paste0("shutdown cause of error"))
   system("shutdown /s /t 60")

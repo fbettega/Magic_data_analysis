@@ -483,8 +483,7 @@ known_arch <- df_export %>%
   prett_fun_classif("Mainboard") %>%
   mutate(
     Archetype = as.factor(Archetype)
-  ) %>% 
-  distinct()
+  ) 
 ################################################################################
 
 if (!rerun_ml) {

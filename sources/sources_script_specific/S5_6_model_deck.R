@@ -16,8 +16,7 @@ group_linear_comb_cards <- function(df_long) {
       id_cols = c(Archetype, id)
     ) %>%
     group_split(Archetype)
-  
-  # x <- df_wide_linear_comb[[2]]
+  # x <- df_wide_linear_comb[[8]]
   res_group_df_to_join <- lapply(df_wide_linear_comb, function(x) {
     # print(unique(x$Archetype))
     df_linear_comb_apply_encours <- x %>%
@@ -36,35 +35,71 @@ group_linear_comb_cards <- function(df_long) {
     linear_combo <- caret::findLinearCombos(
       df_linear_comb_apply_encours
     )$linearCombos
-    
-    linear_combo_definition <- function(
-    fun_list_of_linear_comb,
-    n = 1) {
-      # print(n)
+    ###########################################################################
+    # code précèdant échouant a merger certains overlaping groupe 
+    # linear_combo_definition <- function(
+    # fun_list_of_linear_comb,
+    # n = 1) {
+    #   # print(n)
+    #   
+    #   res <- fun_list_of_linear_comb %>%
+    #     # check whether any numbers of an element are in any of the elements
+    #     map(~ map_lgl(fun_list_of_linear_comb, purrr::compose(any, `%in%`), .x)) %>%
+    #     unique() %>% # drop duplicated groups
+    #     map(~ reduce(fun_list_of_linear_comb[.x], union))
+    #   
+    #   if (length(res) != length(fun_list_of_linear_comb)) {
+    #     res <- linear_combo_definition(
+    #       fun_list_of_linear_comb = res,
+    #       n = n + 1
+    #     )
+    #   }
+    #   
+    #   return(res)
+    # }
+    # 
+    # 
+    # named_and_groups_combo <-
+    #   linear_combo_definition(fun_list_of_linear_comb = linear_combo) %>%
+    #   
+    #   lapply(., function(x) colnames(df_linear_comb_apply_encours)[x])
+    merge_overlapping_groups <- function(groups) {
+      # S'assurer que tous les éléments sont des vecteurs
+      groups <- lapply(groups, unique)
+      changed <- TRUE
       
-      res <- fun_list_of_linear_comb %>%
-        # check whether any numbers of an element are in any of the elements
-        map(~ map_lgl(fun_list_of_linear_comb, purrr::compose(any, `%in%`), .x)) %>%
-        unique() %>% # drop duplicated groups
-        map(~ reduce(fun_list_of_linear_comb[.x], union))
-      
-      if (length(res) != length(fun_list_of_linear_comb)) {
-        res <- linear_combo_definition(
-          fun_list_of_linear_comb = res,
-          n = n + 1
-        )
+      while (changed) {
+        changed <- FALSE
+        new_groups <- list()
+        
+        while (length(groups) > 0) {
+          current <- groups[[1]]
+          groups <- groups[-1]
+          
+          overlaps <- sapply(groups, function(g) length(intersect(g, current)) > 0)
+          
+          if (any(overlaps)) {
+            current <- unique(c(current, unlist(groups[overlaps])))
+            groups <- groups[!overlaps]
+            changed <- TRUE
+          }
+          
+          new_groups[[length(new_groups) + 1]] <- current
+        }
+        
+        groups <- new_groups
       }
       
-      return(res)
+      return(groups)
     }
-    named_and_groups_combo <-
-      linear_combo_definition(fun_list_of_linear_comb = linear_combo) %>%
-      
-      lapply(., function(x) colnames(df_linear_comb_apply_encours)[x])
-    
+    # Fusionne les groupes linéaires avec chevauchement
+    linear_combo_merged <- merge_overlapping_groups(linear_combo)
+    named_and_groups_combo <- lapply(linear_combo_merged, function(x) colnames(df_linear_comb_apply_encours)[x])
+    ###########################################################################
     df_res <- x
     if (length(named_and_groups_combo) > 0) {
       for (i in seq_along(named_and_groups_combo)) {
+        
         df_res <- df_res %>%
           rowwise() %>%
           mutate(

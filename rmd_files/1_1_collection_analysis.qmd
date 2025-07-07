@@ -4,6 +4,10 @@ title: "Collection Tracker"
 
 ```{r setup, include=FALSE, message = FALSE, warning = FALSE} 
 library(tidyverse)
+# params  <-  list()
+# format_param <- "Vintage"
+# params$format_param <- format_date_en_cours$format_param
+
 source("../sources/MTG_function_base_FB/global_mtg_sources.R")
 source("../sources/S2_Source_mtg_new_card.R",local = TRUE)
 options(DT.warn.size = FALSE)

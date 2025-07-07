@@ -77,9 +77,9 @@ Table below list format includes and starting date
 
 | Format  | Start date |
 |:--------|:-----------|
-| Modern  | 16/12/2024 |
-| Legacy  | 16/12/2024 |
-| Pauper  | 13/05/2024 |
+| Modern  | 31/03/2025 |
+| Legacy  | 31/03/2025 |
+| Pauper  | 31/03/2025 |
 | Pioneer | 16/12/2024 |
 | Vintage | 26/08/2024 |
 
